@@ -1,6 +1,7 @@
 abbrev_defs
 /auto-save-list/
 /elpa/
+/eshell/
 test.hs
 test.ml
 test.rkt
