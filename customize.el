@@ -74,6 +74,43 @@
 				(define-key haskell-mode-map "C-c h" 'haskell-hoogle)
 				(setq haskell-hoogle-command "hoogle")))
 
+;; AUCTeX
+(setq TeX-auto-save t)
+(setq TeX-parse-self t)
+(setq-default TeX-master nil)
+
+;; LaTeX
+(add-hook 'LaTeX-mode-hook 'visual-line-mode)
+(add-hook 'LaTeX-mode-hook 'flyspell-mode)
+(add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+(add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+(setq reftex-plug-into-AUCTeX t)
+(setq TeX-PDF-mode t)
+
+;; Make latexmk available via C-c C-c
+;; Note: SyncTeX is setup via $HOME/.latexmkrc
+(add-hook 'LaTeX-mode-hook
+          (lambda ()
+            (push
+             '("latexmk" "latexmk -pdf %s" TeX-run-TeX nil t
+               :help "Run latexmk on file")
+             TeX-command-list)
+            (push
+             '("pdflatex" "pdflatex %s" TeX-run-TeX nil t
+               :help "Run latexmk on file")
+             TeX-command-list)))
+
+(add-hook 'TeX-mode-hook
+          '(lambda ()
+             (setq TeX-command-default "pdflatex")))
+
+;; Set Preview as the default pdf viewer
+(setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
+(setq TeX-view-program-list
+      '(("PDF Viewer"
+         "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
+
+;; For R and other stats programs
 (require 'ess)
 
 (require 'color-theme)
