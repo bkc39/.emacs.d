@@ -47,7 +47,8 @@
     exec-path-from-shell
     whitespace
     zenburn-theme
-    ido-ubiquitous)
+    ido-ubiquitous
+    request)
   "A list of packages to ensure are installed at launch")
 
 ;; function to ensure that all of the above packages are installed. 
