@@ -78,6 +78,7 @@
 (setq TeX-auto-save t)
 (setq TeX-parse-self t)
 (setq-default TeX-master nil)
+(require 'auto-complete-auctex)
 
 ;; LaTeX
 (add-hook 'LaTeX-mode-hook 'visual-line-mode)
@@ -113,6 +114,21 @@
 ;; For R and other stats programs
 (require 'ess)
 
+;; Markdown mode
+(autoload 'markdown-mode "markdown-mode"
+  "Major mode for editing Markdown files" t)
+(add-to-list 'auto-mode-alist '("\\.text\\'" . markdown-mode))
+(add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode))
+(add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
+
+(add-hook 'markdown-mode-hook
+          (lambda ()
+            (when buffer-file-name
+              (add-hook 'after-save-hook
+                        'check-parens
+                        nil t))))
+
+;; Color theme
 (require 'color-theme)
 (color-theme-initialize)
 (load-theme 'zenburn t)
