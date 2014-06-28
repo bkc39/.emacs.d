@@ -49,6 +49,7 @@
     zenburn-theme
     ido-ubiquitous
     request
+    request-deferred
     json)
   "A list of packages to ensure are installed at launch")
 
