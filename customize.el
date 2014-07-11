@@ -112,7 +112,7 @@
          "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
 
 ;; For R and other stats programs
-(require 'ess)
+(require 'ess-site)
 
 ;; Markdown mode
 (autoload 'markdown-mode "markdown-mode"
@@ -127,6 +127,21 @@
               (add-hook 'after-save-hook
                         'check-parens
                         nil t))))
+
+;; R
+(custom-set-variables
+ '(ess-R-font-lock-keywords
+   (quote ((ess-R-fl-keyword:modifiers  . t)
+           (ess-R-fl-keyword:fun-defs   . t)
+           (ess-R-fl-keyword:keywords   . t)
+           (ess-R-fl-keyword:assign-ops . t)
+           (ess-R-fl-keyword:constants  . t)
+           (ess-fl-keyword:fun-calls    . t)
+           (ess-fl-keyword:numbers      . t)
+           (ess-fl-keyword:operators    . t)
+           (ess-fl-keyword:delimiters   . t)
+           (ess-fl-keyword:=)
+           (ess-R-fl-keyword:F&T)))))
 
 ;; Color theme
 (require 'color-theme)
