@@ -31,6 +31,7 @@
     ac-c-headers
     ac-math
     ac-nrepl
+    flymake-easy
     flymake-cppcheck
     flymake-css
     flymake-cursor
@@ -55,7 +56,8 @@
     json
     oauth
     oauth2
-    swift-mode)
+    swift-mode
+    w3m)
   "A list of packages to ensure are installed at launch")
 
 ;; function to ensure that all of the above packages are installed. 
