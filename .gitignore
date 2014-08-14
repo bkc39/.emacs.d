@@ -7,3 +7,6 @@ test.ml
 test.rkt
 /url/
 /request/
+tramp
+tutor
+flycheck_customize.el
