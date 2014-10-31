@@ -1,8 +1,6 @@
 ;;; pkg.el --- My list of packages
 ;;; Commentary:
 
-(require 'package)
-
 ;;; Code:
 (add-to-list 'package-archives
 	     '("melpa" . "http://melpa.milkbox.net/packages/") t)
@@ -10,7 +8,6 @@
 	     '("marmalade" . "http://marmalade-repo.org/packages/") t)
 (add-to-list 'package-archives
              '("gnu" . "http://elpa.gnu.org/packages/"))
-(package-initialize)
 
 ;; Required Packages
 (defvar required-packages
@@ -69,8 +66,8 @@
 (defun packages-installed-p ()
   "Check if packages are installed."
   (loop for p in required-packages
-	when (not (package-installed-p p)) do (return nil)
-	finally (return t)))
+        when (not (package-installed-p p)) do (return nil)
+        finally (return t)))
 
 ;; If not all packages are installed, check them one by one and
 ;; install the missing ones.
