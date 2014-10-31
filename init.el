@@ -3,7 +3,7 @@
 ;;;   loaded on start.
 
 ;;; Code:
-(load "~/.emacs.d/customize.el")
+(add-hook 'after-init-hook (lambda () (load "~/.emacs.d/customize.el")))
 
 ;; Sets the default font
 (set-frame-font "Andale Mono")
