@@ -87,10 +87,10 @@
 (add-hook 'after-init-hook #'global-flycheck-mode)
 
 ;; For indenting entire code blocks
-;; (eval-after-load "haskell-mode"
-;;   '(progn
-;;      (define-key haskell-mode-map (kbd "C-,") 'haskell-move-nested-left)
-;;      (define-key haskell-mode-map (kbd "C-.") 'haskell-move-nested-right)))
+(eval-after-load "haskell-mode"
+  '(progn
+     (define-key haskell-mode-map (kbd "C-,") 'haskell-move-nested-left)
+     (define-key haskell-mode-map (kbd "C-.") 'haskell-move-nested-right)))
 
 ;; For Interactive Haskell Mode
 (custom-set-variables
