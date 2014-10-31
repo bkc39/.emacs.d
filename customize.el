@@ -6,16 +6,13 @@
 (load "~/.emacs.d/pkg.el")
 
 ;; Sets the PATH environment variable
-(require 'exec-path-from-shell)
 (when (memq window-system '(mac ns))
   (exec-path-from-shell-initialize))
 
 ;; Binds 'git status' to C-c m
-(require 'magit)
 (define-key global-map (kbd "C-C m") 'magit-status)
 
 ;; Starts up yasnippet
-;; (require 'yasnippet)
 ;; (yas-global-mode 0)
 ;; (add-hook 'term-mode-hook
 ;; 	  (lambda ()
@@ -38,7 +35,6 @@
              (local-set-key (kbd "RET") 'newline-and-indent)
 
              ;; clean up whitespace at save
-             (require 'whitespace)
              (make-local-variable 'before-save-hook)
              (add-hook 'before-save-hook 'whitespace-cleanup)
 
@@ -120,7 +116,6 @@
 (setq TeX-auto-save t)
 (setq TeX-parse-self t)
 (setq-default TeX-master nil)
-(require 'auto-complete-auctex)
 
 ;; LaTeX
 (defvar reftex-plug-into-AUCTeX)
@@ -154,9 +149,6 @@
       '(("PDF Viewer"
          "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
 
-;; For R and other stats programs
-(require 'ess-site)
-
 ;; Markdown mode
 (autoload 'markdown-mode "markdown-mode"
   "Major mode for editing Markdown files" t)
@@ -187,7 +179,6 @@
            (ess-R-fl-keyword:F&T)))))
 
 ;; Color theme
-(require 'color-theme)
 (color-theme-initialize)
 (load-theme 'zenburn t)
 
