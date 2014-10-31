@@ -33,6 +33,7 @@
     ac-c-headers
     ac-math
     ac-nrepl
+    ac-geiser
     flymake-easy
     flymake-cppcheck
     flymake-css
@@ -59,7 +60,9 @@
     oauth
     oauth2
     swift-mode
-    w3m)
+    w3m
+    rainbow-delimiters
+    geiser)
   "A list of packages to ensure are installed at launch.")
 
 ;; function to ensure that all of the above packages are installed.
