@@ -8,3 +8,4 @@ test.*
 tramp
 tutor
 flycheck_customize.el
+*.dat
