@@ -1,7 +1,12 @@
+;;; init.el --- emacs initialization file.
+;;; Commentary:
+;;;   loaded on start.
+
+;;; Code:
 (load "~/.emacs.d/customize.el")
 
 ;; Sets the default font
-(set-default-font "Andale Mono")
+(set-frame-font "Andale Mono")
 
 ;; Enables line numbers
 (global-linum-mode 1)
@@ -34,6 +39,9 @@
 
 ;; Accept 'y' and 'n' as answers to yes/no questions
 (defalias 'yes-or-no-p 'y-or-n-p)
+(defvar dabbrev-case-distinction)
+(defvar dabbrev-case-fold-search)
+(defvar windmove-wrap-around)
 (setq dabbrev-case-distinction nil)
 (setq dabbrev-case-fold-search nil)
 (setq windmove-wrap-around t)
@@ -45,3 +53,6 @@
 
 ;; Turns off the tool bar
 (tool-bar-mode -1)
+
+(provide 'init)
+;;; init.el ends here
