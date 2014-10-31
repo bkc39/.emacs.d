@@ -1,3 +1,8 @@
+;;; customize.el --- package customizations
+;;; Commentary:
+;;;   where all my language-specific packages are configured
+
+;;; Code:
 (load "~/.emacs.d/pkg.el")
 
 ;; Sets the PATH environment variable
@@ -11,7 +16,7 @@
 
 ;; Starts up yasnippet
 ;; (require 'yasnippet)
-;; (yas-global-mode 1)
+;; (yas-global-mode 0)
 ;; (add-hook 'term-mode-hook
 ;; 	  (lambda ()
 ;; 	    (setq yas-dont-activate t)))
@@ -76,19 +81,20 @@
              ;; Flycheck
              (flycheck-select-checker 'haskell-hlint)
              ;; Set up hoogle
-             (define-key haskell-mode-map "C-c h" 'haskell-hoogle)
              (setq haskell-hoogle-command "hoogle")
              (define-key haskell-mode-map (kbd "M-[") 'align)
-             (define-key haskell-mode-map [f8] 'haskell-navigate-imports)))
+             (define-key haskell-mode-map [f8] 'haskell-navigate-imports)
+             ))
+
 
 ;; Flycheck stuff
 (add-hook 'after-init-hook #'global-flycheck-mode)
 
 ;; For indenting entire code blocks
-(eval-after-load "haskell-mode"
-  '(progn
-     (define-key haskell-mode-map (kbd "C-,") 'haskell-move-nested-left)
-     (define-key haskell-mode-map (kbd "C-.") 'haskell-move-nested-right)))
+;; (eval-after-load "haskell-mode"
+;;   '(progn
+;;      (define-key haskell-mode-map (kbd "C-,") 'haskell-move-nested-left)
+;;      (define-key haskell-mode-map (kbd "C-.") 'haskell-move-nested-right)))
 
 ;; For Interactive Haskell Mode
 (custom-set-variables
@@ -109,12 +115,15 @@
 (define-key haskell-mode-map (kbd "SPC") 'haskell-mode-contextual-space)
  
 ;; AUCTeX
+(defvar TeX-auto-save)
+(defvar TeX-parse-self)
 (setq TeX-auto-save t)
 (setq TeX-parse-self t)
 (setq-default TeX-master nil)
 (require 'auto-complete-auctex)
 
 ;; LaTeX
+(defvar reftex-plug-into-AUCTeX)
 (add-hook 'LaTeX-mode-hook 'visual-line-mode)
 (add-hook 'LaTeX-mode-hook 'flyspell-mode)
 (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
@@ -181,3 +190,6 @@
 (require 'color-theme)
 (color-theme-initialize)
 (load-theme 'zenburn t)
+
+(provide 'customize)
+;;; customize.el ends here
