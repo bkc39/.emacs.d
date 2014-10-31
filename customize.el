@@ -5,6 +5,13 @@
 ;;; Code:
 (load "~/.emacs.d/pkg.el")
 
+;; Ido mode
+(ido-mode t)
+
+;; Auto complete
+(ac-config-default)
+(global-auto-complete-mode t)
+
 ;; Flycheck stuff
 (custom-set-variables
  '(flycheck-check-syntax-automatically '(save idle-change))
@@ -56,6 +63,7 @@
 (setq auto-mode-alist
       (append '(("\\.clj$" . clojure-mode))
               auto-mode-alist))
+(add-hook 'clojure-mode-hook 'rainbow-delimeters-mode)
 
 ;; Scala
 (autoload 'scala-mode2 "scala-mode2"
@@ -178,6 +186,13 @@
            (ess-fl-keyword:delimiters   . t)
            (ess-fl-keyword:=)
            (ess-R-fl-keyword:F&T)))))
+
+;; Racket
+(add-hook 'geiser-mode-hook 'rainbow-delimeters)
+(add-hook 'geiser-mode-hook 'ac-geiser-setup)
+(add-hook 'geiser-repl-mode-hook 'ac-geiser-setup)
+(eval-after-load "auto-complete"
+  '(add-to-list 'auto-complete-mode 'geiser-repl-mode))
 
 ;; Color theme
 (color-theme-initialize)
