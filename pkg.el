@@ -1,5 +1,9 @@
-;; pkg.el -- My list of packages
+;;; pkg.el --- My list of packages
+;;; Commentary:
+
 (require 'package)
+
+;;; Code:
 (add-to-list 'package-archives
 	     '("melpa" . "http://melpa.milkbox.net/packages/") t)
 (add-to-list 'package-archives
@@ -58,11 +62,12 @@
     oauth2
     swift-mode
     w3m)
-  "A list of packages to ensure are installed at launch")
+  "A list of packages to ensure are installed at launch.")
 
-;; function to ensure that all of the above packages are installed. 
+;; function to ensure that all of the above packages are installed.
 (require 'cl)
 (defun packages-installed-p ()
+  "Check if packages are installed."
   (loop for p in required-packages
 	when (not (package-installed-p p)) do (return nil)
 	finally (return t)))
@@ -78,3 +83,6 @@
   (dolist (p required-packages)
     (when (not (package-installed-p p))
       (package-install p))))
+
+(provide 'pkg)
+;;; pkg.el ends here
