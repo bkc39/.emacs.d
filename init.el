@@ -4,6 +4,7 @@
 
 ;;; Code:
 (add-hook 'after-init-hook (lambda () (load "~/.emacs.d/customize.el")))
+(add-hook 'after-init-hook #'global-flycheck-mode)
 
 ;; Sets the default font
 (set-frame-font "Andale Mono")

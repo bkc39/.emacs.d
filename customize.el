@@ -5,6 +5,11 @@
 ;;; Code:
 (load "~/.emacs.d/pkg.el")
 
+;; Flycheck stuff
+(custom-set-variables
+ '(flycheck-check-syntax-automatically '(save idle-change))
+ '(flycheck-idle-change-delay 15.0))
+
 ;; Sets the PATH environment variable
 (when (memq window-system '(mac ns))
   (exec-path-from-shell-initialize))
@@ -69,11 +74,11 @@
 
 (add-hook 'haskell-mode-hook 'interactive-haskell-mode)
 (add-hook 'haskell-mode-hook 'turn-on-haskell-doc-mode)
-(add-hook 'haskell-mode-hook 'turn-on-haskell-indent)
 (add-hook 'haskell-mode-hook 'imenu-add-menubar-index)
 (add-hook 'haskell-mode-hook 'haskell-auto-insert-module-template)
 (add-hook 'haskell-mode-hook
           '(lambda ()
+             (haskell-indentation-mode)
              ;; Flycheck
              (flycheck-select-checker 'haskell-hlint)
              ;; Set up hoogle
@@ -81,10 +86,6 @@
              (define-key haskell-mode-map (kbd "M-[") 'align)
              (define-key haskell-mode-map [f8] 'haskell-navigate-imports)
              ))
-
-
-;; Flycheck stuff
-(add-hook 'after-init-hook #'global-flycheck-mode)
 
 ;; For indenting entire code blocks
 (eval-after-load "haskell-mode"
