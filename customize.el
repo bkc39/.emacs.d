@@ -233,6 +233,20 @@
      (autoload 'pymacs-load "pymacs" nil t)
      (pymacs-load "ropemacs" "rope-")))
 
+;; C/C++
+;; (defun add-c-automplete-sources ()
+;;   "Add the c autocomplete headers."
+;;   )
+
+(add-hook 'c-mode-hook
+          '(lambda ()
+             (add-to-list 'ac-sources 'ac-c-headers)
+             (add-to-list 'ac-sources 'ac-source-clang)))
+
+(add-hook 'c++-mode-hook
+          '(lambda ()
+             (add-to-list 'ac-sources 'ac-c-headers)
+             (add-to-list 'ac-sources 'ac-source-clang)))
 
 ;; Color theme
 (color-theme-initialize)

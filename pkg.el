@@ -30,6 +30,7 @@
     auto-complete
     auto-complete-auctex
     auto-complete-c-headers
+    auto-complete-clang
     ac-c-headers
     ac-math
     ac-nrepl
@@ -45,6 +46,7 @@
     flymake-python-pyflakes
     flymake-racket
     flymake-shell
+    flycheck-google-cpplint
     google-c-style
     ess
     auctex
