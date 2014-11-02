@@ -107,8 +107,7 @@
              ;; Set up hoogle
              (setq haskell-hoogle-command "hoogle")
              (define-key haskell-mode-map (kbd "M-[") 'align)
-             (define-key haskell-mode-map [f8] 'haskell-navigate-imports)
-             ))
+             (define-key haskell-mode-map [f8] 'haskell-navigate-imports)))
 
 ;; For indenting entire code blocks
 (eval-after-load "haskell-mode"

@@ -35,17 +35,7 @@
     ac-math
     ac-nrepl
     ac-geiser
-    flymake-easy
-    flymake-cppcheck
-    flymake-css
-    flymake-cursor
-    flymake-gjshint
-    flymake-google-cpplint
-    flymake-haskell-multi
-    flymake-json
-    flymake-python-pyflakes
-    flymake-racket
-    flymake-shell
+    flycheck
     flycheck-google-cpplint
     google-c-style
     ess
