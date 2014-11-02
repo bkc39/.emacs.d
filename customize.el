@@ -11,6 +11,7 @@
 ;; Auto complete
 (ac-config-default)
 (global-auto-complete-mode t)
+(autopair-global-mode 1)
 
 ;; Flycheck stuff
 (custom-set-variables
@@ -63,7 +64,21 @@
 (setq auto-mode-alist
       (append '(("\\.clj$" . clojure-mode))
               auto-mode-alist))
-(add-hook 'clojure-mode-hook 'rainbow-delimeters-mode)
+(add-hook 'clojure-mode-hook 'rainbow-delimiters-mode)
+
+;; paredit
+(autoload
+  'enable-paredit-mode
+  "paredit"
+  "Turn on pseudo-structural editing of Lisp code." t)
+(add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
+(add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+(add-hook 'ielm-mode-hook             #'enable-paredit-mode)
+(add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+(add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
+(add-hook 'scheme-mode-hook           #'enable-paredit-mode)
+(add-hook 'clojure-mode-hook           #'enable-paredit-mode)
+(add-hook 'racket-mode-hook           #'enable-paredit-mode)
 
 ;; Scala
 (autoload 'scala-mode2 "scala-mode2"
@@ -188,11 +203,36 @@
            (ess-R-fl-keyword:F&T)))))
 
 ;; Racket
-(add-hook 'geiser-mode-hook 'rainbow-delimeters)
+(add-hook 'racket-mode 'geiser-mode)
+(add-hook 'geiser-mode-hook 'rainbow-delimiters)
 (add-hook 'geiser-mode-hook 'ac-geiser-setup)
 (add-hook 'geiser-repl-mode-hook 'ac-geiser-setup)
 (eval-after-load "auto-complete"
   '(add-to-list 'auto-complete-mode 'geiser-repl-mode))
+
+;; Python
+(eval-after-load "python-mode"
+  '(progn
+     (setq
+      python-shell-interpreter "ipython"
+      python-shell-interpreter-args ""
+      python-shell-prompt-regexp "In \\[[0-9]+\\]: "
+      python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: "
+      python-shell-completion-setup-code
+      "from IPython.core.completerlib import module_completion"
+      python-shell-completion-module-string-code
+      "';'.join(module_completion('''%s'''))\n"
+      python-shell-completion-string-code
+      "';'.join(get_ipython().Completer.all_completions('''%s'''))\n")
+
+                                        ; for pymacs docs
+     (autoload 'pymacs-apply "pymacs")
+     (autoload 'pymacs-call "pymacs")
+     (autoload 'pymacs-eval "pymacs" nil t)
+     (autoload 'pymacs-exec "pymacs" nil t)
+     (autoload 'pymacs-load "pymacs" nil t)
+     (pymacs-load "ropemacs" "rope-")))
+
 
 ;; Color theme
 (color-theme-initialize)

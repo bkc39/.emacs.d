@@ -62,7 +62,10 @@
     swift-mode
     w3m
     rainbow-delimiters
-    geiser)
+    geiser
+    pymacs
+    paredit
+    autopair)
   "A list of packages to ensure are installed at launch.")
 
 ;; function to ensure that all of the above packages are installed.
