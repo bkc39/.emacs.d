@@ -251,6 +251,13 @@
 (load-file (let ((coding-system-for-read 'utf-8))
                 (shell-command-to-string "agda-mode locate")))
 
+(add-hook 'agda2-mode-hook
+          (lambda ()
+            (customize-set-variable
+             'agda2-highlight-face-groups
+             'default-faces)))
+
+
 ;; Color theme
 (color-theme-initialize)
 (load-theme 'zenburn t)
