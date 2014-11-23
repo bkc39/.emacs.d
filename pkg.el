@@ -57,7 +57,8 @@
     geiser
     pymacs
     paredit
-    autopair)
+    autopair
+    cider)
   "A list of packages to ensure are installed at launch.")
 
 ;; function to ensure that all of the above packages are installed.
