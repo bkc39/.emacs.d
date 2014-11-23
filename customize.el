@@ -253,9 +253,8 @@
 
 (add-hook 'agda2-mode-hook
           (lambda ()
-            (customize-set-variable
-             'agda2-highlight-face-groups
-             'default-faces)))
+            (customize-set-variable 'agda2-highlight-face-groups
+                                    'default-faces)))
 
 
 ;; Color theme
