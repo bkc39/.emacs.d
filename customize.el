@@ -247,6 +247,10 @@
              (add-to-list 'ac-sources 'ac-c-headers)
              (add-to-list 'ac-sources 'ac-source-clang)))
 
+;; Agda
+(load-file (let ((coding-system-for-read 'utf-8))
+                (shell-command-to-string "agda-mode locate")))
+
 ;; Color theme
 (color-theme-initialize)
 (load-theme 'zenburn t)
