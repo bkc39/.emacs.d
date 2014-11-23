@@ -45,6 +45,7 @@
     exec-path-from-shell
     whitespace
     zenburn-theme
+    color-theme-solarized
     ido-ubiquitous
     request
     request-deferred
