@@ -59,7 +59,8 @@
     pymacs
     paredit
     autopair
-    cider)
+    cider
+    anaconda-mode)
   "A list of packages to ensure are installed at launch.")
 
 ;; function to ensure that all of the above packages are installed.

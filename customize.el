@@ -101,8 +101,9 @@
 (add-hook 'haskell-mode-hook 'haskell-auto-insert-module-template)
 (add-hook 'haskell-mode-hook
           '(lambda ()
-             (haskell-indentation-mode)
              ;; Flycheck
+             (haskell-indentation-mode -1)
+             (haskell-indent-mode 1)
              (flycheck-select-checker 'haskell-hlint)
              ;; Set up hoogle
              (setq haskell-hoogle-command "hoogle")
@@ -210,27 +211,50 @@
   '(add-to-list 'auto-complete-mode 'geiser-repl-mode))
 
 ;; Python
-(eval-after-load "python-mode"
-  '(progn
-     (setq
-      python-shell-interpreter "ipython"
-      python-shell-interpreter-args ""
-      python-shell-prompt-regexp "In \\[[0-9]+\\]: "
-      python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: "
-      python-shell-completion-setup-code
-      "from IPython.core.completerlib import module_completion"
-      python-shell-completion-module-string-code
-      "';'.join(module_completion('''%s'''))\n"
-      python-shell-completion-string-code
-      "';'.join(get_ipython().Completer.all_completions('''%s'''))\n")
+(add-hook 'python-mode-hook 'anaconda-mode)
+(setq
+ python-shell-interpreter "ipython"
+ python-shell-interpreter-args "--matplotlib"
+ python-shell-prompt-regexp "In \\[[0-9]+\\]: "
+ python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: "
+ python-shell-completion-setup-code
+   "from IPython.core.completerlib import module_completion"
+ python-shell-completion-module-string-code
+   "';'.join(module_completion('''%s'''))\n"
+ python-shell-completion-string-code
+ "';'.join(get_ipython().Completer.all_completions('''%s'''))\n")
 
                                         ; for pymacs docs
-     (autoload 'pymacs-apply "pymacs")
-     (autoload 'pymacs-call "pymacs")
-     (autoload 'pymacs-eval "pymacs" nil t)
-     (autoload 'pymacs-exec "pymacs" nil t)
-     (autoload 'pymacs-load "pymacs" nil t)
-     (pymacs-load "ropemacs" "rope-")))
+
+(defmacro after (mode &rest body)
+  `(eval-after-load ,mode
+     '(progn ,@body)))
+
+(after 'auto-complete
+       (add-to-list 'ac-dictionary-directories "~/.emacs.d/dict")
+       (setq ac-use-menu-map t)
+       (define-key ac-menu-map "\C-n" 'ac-next)
+       (define-key ac-menu-map "\C-p" 'ac-previous))
+
+(after 'auto-complete-config
+       (ac-config-default)
+       (when (file-exists-p
+              (expand-file-name "/Users/bkc39/.emacs.d/elisp/Pymacs"))
+         (ac-ropemacs-initialize)
+         (ac-ropemacs-setup)))
+
+(after 'auto-complete-autoloads
+       (autoload
+         'auto-complete-mode
+         "auto-complete"
+         "enable auto-complete-mode"
+         t
+         nil)
+       (add-hook 'python-mode-hook
+                 (lambda ()
+                   (require 'auto-complete-config)
+                   (add-to-list 'ac-sources 'ac-source-ropemacs)
+                   (auto-complete-mode))))
 
 ;; C/C++
 ;; (defun add-c-automplete-sources ()
@@ -254,8 +278,10 @@
 (add-hook 'agda2-mode-hook
           (lambda ()
             (customize-set-variable 'agda2-highlight-face-groups
-                                    'default-faces)))
-
+                                    'default-faces)
+            (customize-set-variable
+             'agda2-include-dirs
+             (list "/Users/bkc39/Documents/cs/agda/agda-stdlib/src" "."))))
 
 ;; Color theme
 (color-theme-initialize)
