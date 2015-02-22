@@ -64,7 +64,6 @@
 (setq auto-mode-alist
       (append '(("\\.clj$" . clojure-mode))
               auto-mode-alist))
-(add-hook 'clojure-mode-hook 'rainbow-delimiters-mode)
 
 ;; paredit
 (autoload
@@ -99,11 +98,12 @@
 (add-hook 'haskell-mode-hook 'turn-on-haskell-doc-mode)
 (add-hook 'haskell-mode-hook 'imenu-add-menubar-index)
 (add-hook 'haskell-mode-hook 'haskell-auto-insert-module-template)
+(add-hook 'haskell-mode-hook 'turn-on-hi2)
+(add-hook 'haskell-mode-hook #'hindent-mode)
 (add-hook 'haskell-mode-hook
           '(lambda ()
+             (setq hindent-style "chris-done")
              ;; Flycheck
-             (haskell-indentation-mode -1)
-             (haskell-indent-mode 1)
              (flycheck-select-checker 'haskell-hlint)
              ;; Set up hoogle
              (setq haskell-hoogle-command "hoogle")
@@ -142,7 +142,6 @@
 (setq-default TeX-master nil)
 
 ;; LaTeX
-(defvar reftex-plug-into-AUCTeX)
 (add-hook 'LaTeX-mode-hook 'visual-line-mode)
 (add-hook 'LaTeX-mode-hook 'flyspell-mode)
 (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
@@ -204,7 +203,6 @@
 
 ;; Racket
 (add-hook 'racket-mode 'geiser-mode)
-(add-hook 'geiser-mode-hook 'rainbow-delimiters)
 (add-hook 'geiser-mode-hook 'ac-geiser-setup)
 (add-hook 'geiser-repl-mode-hook 'ac-geiser-setup)
 (eval-after-load "auto-complete"
