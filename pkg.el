@@ -5,6 +5,8 @@
 (add-to-list 'package-archives
 	     '("melpa" . "http://melpa.milkbox.net/packages/") t)
 (add-to-list 'package-archives
+	     '("melpa-stable" . "http://melpa-stable.org/packages/"))
+(add-to-list 'package-archives
 	     '("marmalade" . "http://marmalade-repo.org/packages/") t)
 (add-to-list 'package-archives
              '("gnu" . "http://elpa.gnu.org/packages/"))
@@ -21,6 +23,8 @@
     clojure-cheatsheet
     clojure-test-mode
     haskell-mode
+    hindent
+    hi2
     tuareg
     java-snippets
     javadoc-lookup
@@ -54,13 +58,14 @@
     oauth2
     swift-mode
     w3m
-    rainbow-delimiters
     geiser
     pymacs
     paredit
     autopair
     cider
-    anaconda-mode)
+    anaconda-mode
+    rust-mode
+    sr-speedbar)
   "A list of packages to ensure are installed at launch.")
 
 ;; function to ensure that all of the above packages are installed.
