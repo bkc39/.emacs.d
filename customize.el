@@ -222,9 +222,11 @@
  python-shell-completion-string-code
  "';'.join(get_ipython().Completer.all_completions('''%s'''))\n"
  python-check-command "pylint")
+
+(setq jedi:server-command
+      '("~/.emacs.d/elpa/jedi-core-20150305.212/jediepcserver.py"))
 (add-hook 'python-mode-hook 'jedi:setup)
 (setq jedi:complete-on-dot t)
-
 
 (add-hook 'c-mode-hook
           '(lambda ()
