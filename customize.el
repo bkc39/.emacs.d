@@ -79,6 +79,13 @@
 (add-hook 'clojure-mode-hook           #'enable-paredit-mode)
 (add-hook 'racket-mode-hook           #'enable-paredit-mode)
 
+;; Racket
+(add-hook 'racket-mode 'geiser-mode)
+(add-hook 'geiser-mode-hook 'ac-geiser-setup)
+(add-hook 'geiser-repl-mode-hook 'ac-geiser-setup)
+(eval-after-load "auto-complete"
+  '(add-to-list 'auto-complete-mode 'geiser-repl-mode))
+
 ;; Scala
 (autoload 'scala-mode2 "scala-mode2"
   "Major mode for editing Scala files" t)
@@ -201,13 +208,6 @@
            (ess-fl-keyword:=)
            (ess-R-fl-keyword:F&T)))))
 
-;; Racket
-(add-hook 'racket-mode 'geiser-mode)
-(add-hook 'geiser-mode-hook 'ac-geiser-setup)
-(add-hook 'geiser-repl-mode-hook 'ac-geiser-setup)
-(eval-after-load "auto-complete"
-  '(add-to-list 'auto-complete-mode 'geiser-repl-mode))
-
 ;; Python
 (add-hook 'python-mode-hook 'anaconda-mode)
 (setq
@@ -240,15 +240,15 @@
 
 ;; Agda
 (load-file (let ((coding-system-for-read 'utf-8))
-                (shell-command-to-string "agda-mode locate")))
+               (shell-command-to-string "agda-mode locate")))
 
 (add-hook 'agda2-mode-hook
-          (lambda ()
-            (customize-set-variable 'agda2-highlight-face-groups
-                                    'default-faces)
-            (customize-set-variable
-             'agda2-include-dirs
-             (list "/Users/bkc39/Documents/cs/agda/agda-stdlib/src" "."))))
+         (lambda ()
+           (customize-set-variable 'agda2-highlight-face-groups
+                                   'default-faces)
+           (customize-set-variable
+            'agda2-include-dirs
+            (list "/Users/bkc39/Documents/cs/agda/agda-stdlib/src" "."))))
 
 ;; Smalltalk
 (setq auto-mode-alist
@@ -274,6 +274,13 @@
 ;; Color theme
 (color-theme-initialize)
 (load-theme 'zenburn t)
+
+;; Jabber -- sets up gchat
+(setq jabber-account-list
+      (cons (list "pl.proofs@gmail.com"
+                  '(:network-server . "talk.google.com")
+                  '(:connection-type . ssl))
+            jabber-account-list))
 
 (provide 'customize)
 ;;; customize.el ends here
