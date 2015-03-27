@@ -38,6 +38,9 @@
 ;; Don't wrap lines
 (setq-default truncate-lines t)
 
+;; Turn off the scroll bar.
+(scroll-bar-mode -1)
+
 ;; Accept 'y' and 'n' as answers to yes/no questions
 (defalias 'yes-or-no-p 'y-or-n-p)
 (defvar dabbrev-case-distinction)
