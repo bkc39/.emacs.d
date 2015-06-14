@@ -3,17 +3,10 @@
 
 ;;; Code:
 (add-to-list 'package-archives
-	     '("melpa" . "http://melpa.milkbox.net/packages/") t)
-;; (add-to-list 'package-archives
-;; 	     '("melpa-stable" . "http://melpa-stable.org/packages/"))
-(add-to-list 'package-archives
-	     '("marmalade" . "http://marmalade-repo.org/packages/") t)
-(add-to-list 'package-archives
-             '("gnu" . "http://elpa.gnu.org/packages/"))
+             '("melpa" . "http://melpa.org/packages/"))
+;; (when (< emacs-major-version 24)
+;;   (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
 (package-initialize)
-
-(when (not package-archive-contents)
-  (package-refresh-contents))
 
 ;; Required Packages
 (defvar required-packages
@@ -70,7 +63,8 @@
     rust-mode
     sr-speedbar
     jedi-core
-    jabber)
+    jabber
+    pydoc-info)
   "A list of packages to ensure are installed at launch.")
 
 ;; function to ensure that all of the above packages are installed.
