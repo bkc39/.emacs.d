@@ -70,6 +70,7 @@
   'enable-paredit-mode
   "paredit"
   "Turn on pseudo-structural editing of Lisp code." t)
+
 (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
 (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
 (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
@@ -142,8 +143,6 @@
 (define-key haskell-mode-map (kbd "SPC") 'haskell-mode-contextual-space)
  
 ;; AUCTeX
-(defvar TeX-auto-save)
-(defvar TeX-parse-self)
 (setq TeX-auto-save t)
 (setq TeX-parse-self t)
 (setq-default TeX-master nil)
@@ -175,9 +174,10 @@
 
 ;; Set Preview as the default pdf viewer
 (setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
-(setq TeX-view-program-list
-      '(("PDF Viewer"
-         "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
+(setq
+ TeX-view-program-list
+ '(("PDF Viewer"
+    "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
 
 ;; Markdown mode
 (autoload 'markdown-mode "markdown-mode"
@@ -194,6 +194,29 @@
                         nil t))))
 
 ;; R
+(autoload 'R-mode "ess-site.el" "" t)
+(add-to-list 'auto-mode-alist '("\\.R\\'" . R-mode))
+
+(add-hook 'R-mode-hook
+          (lambda ()
+            ;; for some reason this gets set to 4 somewhere
+            (setq ess-indent-level 2)
+            ;; also gets set to electric-indent for some reason
+            (local-set-key (kbd "C-j") 'newline-and-indent)
+            ;; disable '_' ==> '<-'
+            (local-unset-key "_")
+            (local-set-key (kbd "C-c {")
+                           #'(lambda ()
+                               (interactive)
+                               (insert "{")
+                               (newline 2)
+                               (insert "}")
+                               (ess-indent-or-complete)
+                               (forward-line -1)
+                               (ess-indent-or-complete)))))
+
+
+
 (custom-set-variables
  '(ess-R-font-lock-keywords
    (quote ((ess-R-fl-keyword:modifiers  . t)
@@ -209,24 +232,35 @@
            (ess-R-fl-keyword:F&T)))))
 
 ;; Python
-(add-hook 'python-mode-hook 'anaconda-mode)
+(defun system-is-mac ()
+  "Determines if the system type is a mac."
+  (eq system-type 'darwin))
+
+(defun system-is-linux ()
+  "Determines if the system type is a mac."
+  (eq system-type 'gnu/linux))
+
 (setq
  python-shell-interpreter "ipython"
- python-shell-interpreter-args "--matplotlib"
+ python-shell-interpreter-args
+ (if (system-is-mac)
+     "--matplotlib=osx --colors=Linux"
+   (if (system-is-linux)
+       "--gui=wx --matplotlib=wx --colors=Linux"))
  python-shell-prompt-regexp "In \\[[0-9]+\\]: "
  python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: "
  python-shell-completion-setup-code
-   "from IPython.core.completerlib import module_completion"
+ "from IPython.core.completerlib import module_completion"
  python-shell-completion-module-string-code
-   "';'.join(module_completion('''%s'''))\n"
+ "';'.join(module_completion('''%s'''))\n"
  python-shell-completion-string-code
- "';'.join(get_ipython().Completer.all_completions('''%s'''))\n"
- python-check-command "pylint")
+ "';'.join(get_ipython().Completer.all_completions('''%s'''))\n")
 
-(setq jedi:server-command
-      '("~/.emacs.d/elpa/jedi-core-20150305.212/jediepcserver.py"))
-(add-hook 'python-mode-hook 'jedi:setup)
-(setq jedi:complete-on-dot t)
+(setq ein:use-auto-complete 1)
+(setq ein:query-timeout 1000)
+
+; pydoc info
+(require 'pydoc-info)
 
 (add-hook 'c-mode-hook
           '(lambda ()
