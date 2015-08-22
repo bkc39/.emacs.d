@@ -58,8 +58,11 @@
 ;; Turns off the tool bar
 (tool-bar-mode -1)
 
-(provide 'init)
-;;; init.el ends here
+;; set C-x p to previous buffer
+(global-set-key (kbd "C-x p")
+                (lambda ()
+                  (interactive)
+                  (other-window -1)))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -122,3 +125,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
+
+(provide 'init)
+;;; init.el ends here
