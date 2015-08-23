@@ -116,7 +116,15 @@
              ;; Set up hoogle
              (setq haskell-hoogle-command "hoogle")
              (define-key haskell-mode-map (kbd "M-[") 'align)
-             (define-key haskell-mode-map [f8] 'haskell-navigate-imports)))
+             (define-key haskell-mode-map [f8] 'haskell-navigate-imports)
+
+             ;; REPL keyboard shortcuts
+             (define-key haskell-mode-map (kbd "C-c C-l") 'haskell-process-load-file)
+             (define-key haskell-mode-map (kbd "C-c C-t") 'haskell-process-do-type)
+             (define-key haskell-mode-map (kbd "C-c C-i") 'haskell-process-do-info)
+             (define-key haskell-mode-map (kbd "C-c C-c") 'haskell-process-cabal-build)
+             (define-key haskell-mode-map (kbd "C-c c") 'haskell-process-cabal)
+             (define-key haskell-mode-map (kbd "SPC") 'haskell-mode-contextual-space)))
 
 ;; For indenting entire code blocks
 (eval-after-load "haskell-mode"
@@ -134,13 +142,7 @@
  '(haskell-process-suggest-hoogle-imports t)
  '(haskell-process-type 'cabal-repl))
 
-;; REPL keyboard shortcuts
-(define-key haskell-mode-map (kbd "C-c C-l") 'haskell-process-load-file)
-(define-key haskell-mode-map (kbd "C-c C-t") 'haskell-process-do-type)
-(define-key haskell-mode-map (kbd "C-c C-i") 'haskell-process-do-info)
-(define-key haskell-mode-map (kbd "C-c C-c") 'haskell-process-cabal-build)
-(define-key haskell-mode-map (kbd "C-c c") 'haskell-process-cabal)
-(define-key haskell-mode-map (kbd "SPC") 'haskell-mode-contextual-space)
+
  
 ;; AUCTeX
 (setq TeX-auto-save t)
