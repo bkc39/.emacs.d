@@ -3,66 +3,13 @@
 ;;;   loaded on start.
 
 ;;; Code:
-(add-hook 'after-init-hook (lambda () (load "~/.emacs.d/customize.el")))
-(add-hook 'after-init-hook #'global-flycheck-mode)
-
-;; Sets the default font
-(set-frame-font "Andale Mono")
-
-;; Enables line numbers
-(global-linum-mode 1)
-
-;; Enables column numbers
-(setq column-number-mode t)
-
-;; Spaces for tabs
-(setq-default indent-tabs-mode nil)
-
-;; Set window size to 80 characters
-(add-to-list 'default-frame-alist '(width . 81))
-
-;; Don't scroll when pointer reaches end of screen
-(setq auto-window-vscroll nil)
-(setq backup-inhibited t)
-
-;; Prevent autoscroll from jumping
-(setq scroll-conservatively 10000)
-
-;; Sets the initial prompt
-(setq
- initial-scratch-message
- ";; Appreciate every single person. Look at them like a golden,
-;; million-dollar baby.
-;;                    - Lil B 'The BASED God'")
-
-;; Don't wrap lines
-(setq-default truncate-lines t)
-
-;; Turn off the scroll bar.
-(scroll-bar-mode -1)
-
-;; Accept 'y' and 'n' as answers to yes/no questions
-(defalias 'yes-or-no-p 'y-or-n-p)
-(defvar dabbrev-case-distinction)
-(defvar dabbrev-case-fold-search)
-(defvar windmove-wrap-around)
-(setq dabbrev-case-distinction nil)
-(setq dabbrev-case-fold-search nil)
-(setq windmove-wrap-around t)
-(setq echo-keystrokes 0.1)
-(setq delete-active-region nil)
-
-;; Turn off start message
-(setq inhibit-startup-message t)
-
-;; Turns off the tool bar
-(tool-bar-mode -1)
-
-;; set C-x p to previous buffer
-(global-set-key (kbd "C-x p")
-                (lambda ()
-                  (interactive)
-                  (other-window -1)))
+(load "~/.emacs.d/startup-utils")
+(recursively-add-directory-to-load-path "~/.emacs.d/elisp")
+(add-hook 'after-init-hook
+          '(lambda ()
+             (require 'pkg)
+             (require 'setup)
+             (setup/setup-all)))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -88,8 +35,8 @@
      (ess-fl-keyword:=)
      (ess-R-fl-keyword:F&T))))
  '(fci-rule-color "#383838")
- '(flycheck-check-syntax-automatically (quote (save idle-change)))
- '(flycheck-idle-change-delay 15.0)
+ '(flycheck-check-syntax-automatically (quote (mode-enabled)))
+ '(flycheck-idle-change-delay 1000)
  '(haskell-process-auto-import-loaded-modules t)
  '(haskell-process-log nil)
  '(haskell-process-suggest-hoogle-imports t)
@@ -125,7 +72,6 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
-
 
 (provide 'init)
 ;;; init.el ends here

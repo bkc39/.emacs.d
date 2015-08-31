@@ -4,8 +4,10 @@
 ;;; Code:
 (add-to-list 'package-archives
              '("melpa" . "http://melpa.org/packages/"))
-;; (when (< emacs-major-version 24)
-;;   (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
+
+(when (< emacs-major-version 24)
+  (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
+
 (package-initialize)
 
 ;; Required Packages
@@ -25,6 +27,7 @@
     java-snippets
     javadoc-lookup
     scala-mode2
+    ensime
     scheme-complete
     racket-mode
     auto-complete
@@ -66,7 +69,8 @@
     jabber
     pydoc-info
     web-mode
-    jsx-mode)
+    jsx-mode
+    dash)
   "A list of packages to ensure are installed at launch.")
 
 ;; function to ensure that all of the above packages are installed.
