@@ -45,14 +45,12 @@ If DEBUG is non-nil then the added directories are logged in the
   (eq system-type 'gnu/linux))
 
 (defun startup-utils:byte-compile-all ()
-  "Byte compile all files in the emacs home directory."
+  "Byte compile all files in the Emacs home directory."
   (interactive)
   (byte-recompile-file (expand-file-name "~/.emacs.d/startup-utils.el")
                        nil 0 nil)
   (byte-recompile-directory (expand-file-name "~/.emacs.d/elisp")
-                            0 nil)
-  (byte-recompile-file (expand-file-name "~/.emacs.d/init.el")
-                       nil 0 nil))
+                            0 nil))
 
 (provide 'startup-utils)
 ;;; startup-utils.el ends here
