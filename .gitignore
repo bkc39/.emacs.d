@@ -11,3 +11,12 @@ flycheck_customize.el
 *.dat
 /Pymacs/
 /ropemacs/
+*.elc
+/.python-environments/
+/gst-mode/
+/bin/
+cider-history
+/jabber-avatar-cache/
+pyvenv.cfg
+
+
