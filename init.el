@@ -5,11 +5,13 @@
 ;;; Code:
 (load "~/.emacs.d/startup-utils")
 (recursively-add-directory-to-load-path "~/.emacs.d/elisp")
+(setq server-socket-dir (format "/tmp/emacs%d" (user-uid)))
 (add-hook 'after-init-hook
           '(lambda ()
              (require 'pkg)
              (require 'setup)
-             (setup/setup-all)))
+             (setup/setup-all)
+             (electric-indent-mode nil)))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.

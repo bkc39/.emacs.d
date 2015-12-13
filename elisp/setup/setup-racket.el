@@ -16,7 +16,9 @@
 (add-hook 'racket-repl-mode-hook #'racket-unicode-input-method-enable)
 (add-hook 'racket-mode-hook
           '(lambda ()
-             (setq tab-always-indent 'complete)))
+             (setq tab-always-indent 'complete)
+             (when (require 'agda-input nil :noerror)
+               (set-input-method "Agda"))))
 
 (provide 'setup-racket)
 ;;; setup-racket.el ends here

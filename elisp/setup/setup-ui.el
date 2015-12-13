@@ -6,7 +6,11 @@
 ;;; Code:
 
 ;; Sets the default font
-(set-frame-font "Andale Mono")
+(set-frame-font
+ (cond
+  ((member "Anonymous Pro" (font-family-list)) "Anonymous Pro 12")
+  ((member "Monaco" (font-family-list)) "Monaco 12")
+  (t (message "Desired font not found -- using default"))))
 
 ;; Enables line numbers
 (global-linum-mode 1)
