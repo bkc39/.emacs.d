@@ -24,6 +24,9 @@
 ;; Turn off the scroll bar.
 (scroll-bar-mode -1)
 
+;; Turn off the damn bell
+(setq ring-bell-function 'ignore)
+
 ;; Turn off start message
 (setq inhibit-startup-message t)
 

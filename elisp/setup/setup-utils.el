@@ -16,9 +16,9 @@
 (ido-mode t)
 
 ;; Auto complete
-(ac-config-default)
-(global-auto-complete-mode t)
-(autopair-global-mode 1)
+;; (ac-config-default)
+;; (global-auto-complete-mode t)
+;; (autopair-global-mode 1)
 
 ;; Flycheck stuff
 (custom-set-variables
@@ -34,6 +34,8 @@
                   '(:network-server . "talk.google.com")
                   '(:connection-type . ssl))
             jabber-account-list))
+
+(message "end of setup-utils")
 
 (provide 'setup-utils)
 ;;; setup-utils.el ends here

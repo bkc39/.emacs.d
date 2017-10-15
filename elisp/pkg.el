@@ -2,6 +2,7 @@
 ;;; Commentary:
 
 ;;; Code:
+(require 'package)
 (add-to-list 'package-archives
              '("melpa" . "http://melpa.org/packages/"))
 
@@ -19,32 +20,31 @@
     clojure-mode
     clojure-snippets
     clojure-cheatsheet
-    clojure-test-mode
     haskell-mode
     hindent
     hi2
     tuareg
     java-snippets
     javadoc-lookup
-    scala-mode2
+    ;; scala-mode2
     ensime
     scheme-complete
     racket-mode
-    auto-complete
-    auto-complete-auctex
-    auto-complete-c-headers
-    auto-complete-clang
-    ac-c-headers
-    ac-math
-    ac-nrepl
-    ac-geiser
+    ;; auto-complete
+    ;; auto-complete-auctex
+    ;; auto-complete-c-headers
+    ;; auto-complete-clang
+    ;; ac-c-headers
+    ;; ac-math
+    ;; ac-nrepl
+    ;; ac-geiser
     flycheck
-    flycheck-google-cpplint
+    ;; flycheck-google-cpplint
     google-c-style
     ess
     auctex
     markdown-mode
-    color-theme-wombat
+    ;; color-theme-wombat
     exec-path-from-shell
     whitespace
     zenburn-theme
@@ -58,7 +58,7 @@
     swift-mode
     w3m
     geiser
-    pymacs
+    ;; pymacs
     paredit
     autopair
     cider

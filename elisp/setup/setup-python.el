@@ -13,8 +13,9 @@
 ;; turn off warnings for the topevel setq's
 (with-no-warnings
   ;; set up the python shell to be ipython
+  (setq python-shell-completion-native nil)
   (setq python-shell-interpreter "ipython")
-  (setq python-shell-interpreter-args "--matplotlib")
+  (setq python-shell-interpreter-args "--simple-prompt -i --matplotlib")
   (setq python-shell-prompt-regexp "In \\[[0-9]+\\]: ")
   (setq python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: ")
   (setq python-shell-completion-setup-code
@@ -25,9 +26,9 @@
          "';'.join(get_ipython().Completer.all_completions('''%s'''))\n")
   
   ;; set up jedi
-  (setq jedi:server-command
-        (list (concat setup-python:python-framework-directory
-                      "lib/python3.4/site-packages/jediepcserver.py")))
+  ;; (setq jedi:server-command
+  ;;       (list (concat setup-python:python-framework-directory
+  ;;                     "lib/python3.4/site-packages/jediepcserver.py")))
   (setq jedi:setup-keys t)
   (setq jedi:complete-on-dot t))
 

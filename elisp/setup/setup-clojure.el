@@ -11,7 +11,7 @@
       (append '(("\\.clj$" . clojure-mode))
               auto-mode-alist))
 
-(require 'clojure-mode-extra-font-locking)
+;; (require 'clojure-mode-extra-font-locking)
 
 (add-hook 'clojure-mode-hook 'rainbow-delimiters-mode)
 (add-hook 'clojure-mode-hook 'enable-paredit-mode)

@@ -19,7 +19,7 @@ Intended to be added to the AFTER-INIT-HOOK"
   (require 'setup-lisp)
   (require 'setup-clojure)
   (require 'setup-racket)
-  (require 'setup-scala)
+  ;; (require 'setup-scala)
   (require 'setup-latex)
   (require 'setup-markdown)
   (require 'setup-R)

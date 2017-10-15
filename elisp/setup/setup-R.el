@@ -15,6 +15,7 @@
             (local-set-key (kbd "C-j") 'newline-and-indent)
             ;; disable '_' ==> '<-'
             (local-unset-key "_")
+            (ess-toggle-underscore nil)
             (local-set-key (kbd "C-c {")
                            #'(lambda ()
                                (interactive)

@@ -16,6 +16,10 @@
 ;;  'load-path
 ;;  (expand-file-name "~/.emacs.d/elisp/structured-haskell-mode/elisp"))
 
+;; (autoload 'ghc-init "ghc" nil t)
+;; (autoload 'ghc-debug "ghc" nil t)
+;; (add-hook 'haskell-mode-hook (lambda () (ghc-init)))
+
 (setq auto-mode-alist
       (append '(("\\.hs$" . haskell-mode)
                 ("\\.lhs$" . haskell-mode))
@@ -53,7 +57,7 @@
   ;; Contextually do clever things on the space key, in particular:
   ;;   1. Complete imports, letting you choose the module name.
   ;;   2. Show the type of the symbol after the space.
-  (define-key haskell-mode-map (kbd "SPC") 'haskell-mode-contextual-space)
+  ;; (define-key haskell-mode-map (kbd "SPC") 'haskell-mode-contextual-space)
 
   ;; Jump to the imports. Keep tapping to jump between import
   ;; groups. C-u f8 to jump back again.
@@ -85,19 +89,28 @@
     (define-key haskell-mode-map (kbd "M-n s")
       #'comment-sections:insert-section))
 
+  (add-to-list 'company-backends 'company-ghc)
+  (custom-set-variables '(company-ghc-show-info t))
+
+  ;; (ghc-init)
+  ;; (hare-init)
+
   ;; lambda text replacement 
-  (font-lock-add-keywords
-   nil `((,(concat "\\(" (regexp-quote "\\") "\\)")
-          (0 (progn (compose-region (match-beginning 1) (match-end 1)
-                                    ,(make-char 'greek-iso8859-7 107))
-                    nil))))))
+  ;; (font-lock-add-keywords
+  ;;  nil `((,(concat "\\(" (regexp-quote "\\") "\\)")
+  ;;         (0 (progn (compose-region (match-beginning 1) (match-end 1)
+  ;;                                   ,(make-char 'greek-iso8859-7 107))
+  ;;                   nil)))))
+  )
+
 
 (custom-set-variables
  '(haskell-process-suggest-remove-import-lines t)
  '(haskell-process-auto-import-loaded-modules t)
  '(haskell-process-log t)
  '(haskell-tags-on-save t)
- '(haskell-process-suggest-hoogle-imports t))
+ '(haskell-process-suggest-hoogle-imports t)
+ '(haskell-process-type 'stack-ghci))
 
 ;; Useful to have these keybindings for .cabal files, too.
 (defun haskell-cabal-hook ()
@@ -105,6 +118,8 @@
   (define-key haskell-cabal-mode-map (kbd "C-c c") 'haskell-process-cabal)
   (define-key haskell-cabal-mode-map (kbd "C-`") 'haskell-interactive-bring)
   (define-key haskell-cabal-mode-map [?\C-c ?\C-z] 'haskell-interactive-switch))
+
+(message "done setting up haskell")
 
 (provide 'setup-haskell)
 ;;; setup-haskell.el ends here
