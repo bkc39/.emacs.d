@@ -33,6 +33,9 @@
 ;; Turns off the tool bar
 (tool-bar-mode -1)
 
+;; Turn off the menu bar
+(menu-bar-mode -1)
+
 ;; Color theme
 (color-theme-initialize)
 (load-theme 'zenburn t)
@@ -80,6 +83,8 @@
 
 ;; turn this nonsense off. It screws up various modes indentation
 (electric-indent-mode nil)
+
+(setq user-mail-address "bkc@botlab.trade")
 
 (provide 'setup-ui)
 ;;; setup-ui.el ends here
