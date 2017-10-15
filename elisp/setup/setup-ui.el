@@ -86,6 +86,9 @@
  'after-change-major-mode-hook
  (lambda () (electric-indent-mode -1)))
 
+;; globally enable company mode
+(add-hook 'after-init-hook 'global-company-mode)
+
 (setq user-mail-address "bkc@botlab.trade")
 
 (provide 'setup-ui)
