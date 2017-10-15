@@ -82,7 +82,9 @@
 (define-key global-map (kbd "C-c m") 'magit-status)
 
 ;; turn this nonsense off. It screws up various modes indentation
-(electric-indent-mode nil)
+(add-hook
+ 'after-change-major-mode-hook
+ (lambda () (electric-indent-mode -1)))
 
 (setq user-mail-address "bkc@botlab.trade")
 
