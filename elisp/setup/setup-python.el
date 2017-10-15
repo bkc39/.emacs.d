@@ -4,9 +4,25 @@
 
 ;;; Code:
 
+(defvar setup-python:shell-python-command
+  "python3"
+  "Command to run python from the shell")
+
 (defvar setup-python:python-framework-directory
-  "/Library/Frameworks/Python.framework/Versions/3.4/"
+  (shell-command-to-string
+   (concat setup-python:shell-python-command
+           " "
+           "-m site --user-site"))
   "Path to the system version of Python.")
+
+(setq jedi:install-server--command
+      '("pip3"
+        "install"
+        "--upgrade"
+        "/home/bkc/.emacs.d/elpa/jedi-core-20170121.610/"))
+
+(setq jedi:server-args
+      '("--sys-path" setup-python:python-framework-directory))
 
 (add-hook 'python-mode-hook 'jedi:setup)
 
@@ -24,11 +40,6 @@
         "';'.join(module_completion('''%s'''))\n")
   (setq  python-shell-completion-string-code
          "';'.join(get_ipython().Completer.all_completions('''%s'''))\n")
-  
-  ;; set up jedi
-  ;; (setq jedi:server-command
-  ;;       (list (concat setup-python:python-framework-directory
-  ;;                     "lib/python3.4/site-packages/jediepcserver.py")))
   (setq jedi:setup-keys t)
   (setq jedi:complete-on-dot t))
 
