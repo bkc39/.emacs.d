@@ -8,8 +8,8 @@
 ;; Sets the default font
 (set-frame-font
  (cond
-  ((member "Anonymous Pro" (font-family-list)) "Anonymous Pro 12")
-  ((member "Monaco" (font-family-list)) "Monaco 12")
+  ((member "Anonymous Pro" (font-family-list)) "Anonymous Pro 10")
+  ((member "Monaco" (font-family-list)) "Monaco 10")
   (t (message "Desired font not found -- using default"))))
 
 ;; Enables line numbers
