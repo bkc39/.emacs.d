@@ -9,10 +9,13 @@
   "Command to run python from the shell")
 
 (defvar setup-python:python-framework-directory
-  (shell-command-to-string
-   (concat setup-python:shell-python-command
-           " "
-           "-m site --user-site"))
+  (replace-regexp-in-string
+   "\n$"
+   ""
+   (shell-command-to-string
+    (concat setup-python:shell-python-command
+            " "
+            "-m site --user-site")))
   "Path to the system version of Python.")
 
 (setq jedi:install-server--command
@@ -22,7 +25,7 @@
         "/home/bkc/.emacs.d/elpa/jedi-core-20170121.610/"))
 
 (setq jedi:server-args
-      '("--sys-path" setup-python:python-framework-directory))
+      (list "--sys-path" setup-python:python-framework-directory))
 
 (add-hook 'python-mode-hook 'jedi:setup)
 
