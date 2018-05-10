@@ -80,15 +80,15 @@
 
 ;; Binds 'git status' to C-c m
 (define-key global-map (kbd "C-c m") 'magit-status)
-
-;; turn this nonsense off. It screws up various modes indentation
-(add-hook
- 'after-change-major-mode-hook
- (lambda () (electric-indent-mode -1)))
+(advice-add
+ #'magit-key-mode-popup-committing :after
+ (lambda ()
+   (magit-key-mode-toggle-option
+    (quote committing)
+    "--no-verify")))
 
 ;; globally enable company mode
 (add-hook 'after-init-hook 'global-company-mode)
-
 (setq user-mail-address "bkc@botlab.trade")
 
 (provide 'setup-ui)
