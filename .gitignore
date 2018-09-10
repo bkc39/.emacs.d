@@ -18,5 +18,6 @@ flycheck_customize.el
 cider-history
 /jabber-avatar-cache/
 pyvenv.cfg
-
-
+.mc-lists.el
+ido.last
+opam-user-setup.el
