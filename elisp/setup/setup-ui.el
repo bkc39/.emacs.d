@@ -6,11 +6,26 @@
 ;;; Code:
 
 ;; Sets the default font
-(set-frame-font
- (cond
-  ((member "Anonymous Pro" (font-family-list)) "Anonymous Pro 10")
-  ((member "Monaco" (font-family-list)) "Monaco 10")
-  (t (message "Desired font not found -- using default"))))
+(if (member "Anonymous Pro" (font-family-list))
+    (progn
+      (add-to-list 'default-frame-alist '(font . "Anonymous Pro-10"))
+      (set-face-attribute 'default nil :font "Anonymous Pro-10")
+      (set-face-attribute 'default nil :height 100))
+  (progn
+    (let ((default-font
+            (if (and (null
+                      (string=
+                       ""
+                       (shell-command-to-string "which fc-list")))
+                     (null
+                      (string=
+                       ""
+                       (shell-command-to-string "fc-list 'Anonymous Pro'"))))
+                "Anonymous Pro 10"
+              "Monospace 10")))
+      (progn
+        (set-default-font default-font)
+        (add-to-list 'default-frame-alist `(font . ,default-font))))))
 
 ;; Enables line numbers
 (global-linum-mode 1)
@@ -90,6 +105,19 @@
 ;; globally enable company mode
 (add-hook 'after-init-hook 'global-company-mode)
 (setq user-mail-address "bkc@botlab.trade")
+
+;; always delete trailing whitespace on save
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+
+;; set fill column indicator to 80 char
+;; (add-hook
+;;  'prog-mode-hook
+;;  (lambda ()
+;;    (require 'fill-column-indicator)
+;;    (fci-mode 1)
+;;    (setq fci-rule-column 80)
+;;    (setq fci-rule-width 1)
+;;    (setq fci-rule-color "darkred")))
 
 (provide 'setup-ui)
 ;;; setup-ui.el ends here

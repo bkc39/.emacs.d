@@ -20,11 +20,6 @@
 
              (local-set-key (kbd "<backtab>")
                             'scala-indent:indent-with-reluctant-strategy)
-
-             (require 'whitespace)
-             (make-local-variable 'before-save-hook)
-             (add-hook 'before-save-hook 'whitespace-cleanup)
-
              (scala-mode:goto-start-of-code)))
 
 (provide 'setup-scala)

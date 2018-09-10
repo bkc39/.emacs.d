@@ -46,10 +46,6 @@
              ;; pressing "RETURN" also indents
              (local-set-key (kbd "RET") 'newline-and-indent)
 
-             ;; clean up whitespace at save
-             (make-local-variable 'before-save-hook)
-             (add-hook 'before-save-hook 'whitespace-cleanup)
-
 	     ;; fun is lambda
              (font-lock-add-keywords
               nil `(("(\\(fun\\>\\)"
