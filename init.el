@@ -17,8 +17,10 @@
           '(lambda ()
              (require 'pkg)
              (require 'setup)
-             (setup/setup-all)
-             (electric-indent-mode nil)))
+             (setup/setup-all)))
+(add-hook 'after-change-major-mode-hook
+          (lambda ()
+            (electric-indent-mode -1)))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -49,6 +51,7 @@
  '(flycheck-idle-change-delay 1000)
  '(haskell-process-auto-import-loaded-modules t)
  '(haskell-process-log t)
+ '(haskell-process-path-ghci "stack")
  '(haskell-process-suggest-hoogle-imports t)
  '(haskell-process-suggest-remove-import-lines t)
  '(haskell-process-type (quote stack-ghci))
@@ -56,7 +59,7 @@
  '(haskell-tags-on-save t)
  '(package-selected-packages
    (quote
-    (0xc merlin yaml-mode ess-R-data-view jedi phabricator php-mode php+-mode jsx-mode web-mode pydoc-info jabber jedi-core sr-speedbar rust-mode anaconda-mode autopair paredit pymacs geiser w3m swift-mode oauth2 oauth request-deferred request ido-ubiquitous color-theme-solarized zenburn-theme exec-path-from-shell color-theme-wombat markdown-mode auctex ess google-c-style flycheck-google-cpplint flycheck ac-nrepl ac-math ac-c-headers auto-complete-clang auto-complete-c-headers auto-complete-auctex auto-complete racket-mode scheme-complete ensime scala-mode2 javadoc-lookup java-snippets tuareg hi2 hindent haskell-mode clojure-test-mode clojure-cheatsheet clojure-snippets clojure-mode pretty-lambdada color-theme yasnippet magit)))
+    (dockerfile-mode tide multiple-cursors fill-column-indicator flycheck-haskell 0xc merlin yaml-mode ess-R-data-view jedi phabricator php-mode php+-mode jsx-mode web-mode pydoc-info jabber jedi-core sr-speedbar rust-mode anaconda-mode autopair paredit pymacs geiser w3m swift-mode oauth2 oauth request-deferred request ido-ubiquitous color-theme-solarized zenburn-theme exec-path-from-shell color-theme-wombat markdown-mode auctex ess google-c-style flycheck-google-cpplint flycheck ac-nrepl ac-math ac-c-headers auto-complete-clang auto-complete-c-headers auto-complete-auctex auto-complete racket-mode scheme-complete ensime scala-mode2 javadoc-lookup java-snippets tuareg hi2 hindent haskell-mode clojure-test-mode clojure-cheatsheet clojure-snippets clojure-mode pretty-lambdada color-theme yasnippet magit)))
  '(vc-annotate-background "#2B2B2B")
  '(vc-annotate-color-map
    (quote

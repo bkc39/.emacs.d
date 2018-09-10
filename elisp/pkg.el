@@ -70,7 +70,8 @@
     pydoc-info
     web-mode
     jsx-mode
-    dash)
+    dash
+    dockerfile-mode)
   "A list of packages to ensure are installed at launch.")
 
 ;; function to ensure that all of the above packages are installed.
