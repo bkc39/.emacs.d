@@ -19,6 +19,7 @@
 ;; (ac-config-default)
 ;; (global-auto-complete-mode t)
 ;; (autopair-global-mode 1)
+(global-set-key (kbd "C-c C-m C-c") 'mc/edit-lines)
 
 ;; Flycheck stuff
 (custom-set-variables
