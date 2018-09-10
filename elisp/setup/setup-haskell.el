@@ -26,14 +26,53 @@
               auto-mode-alist))
 
 (add-hook 'haskell-mode-hook 'haskell-hook)
+(add-hook 'haskell-mode-hook #'flycheck-haskell-setup)
 (add-hook 'haskell-cabal-mode-hook 'haskell-cabal-hook)
 (add-hook 'haskell-mode-hook 'interactive-haskell-mode)
+(add-hook 'haskell-mode-hook 'haskell-auto-insert-blrg-module-template)
+
+(defun haskell-auto-insert-blrg-module-template ()
+  "Insert the module template for a new BLRG module"
+  (interactive)
+  (when (and (= (point-min)
+                (point-max))
+             (buffer-file-name))
+    (let* ((current-module-name (haskell-guess-module-name))
+           (module-template-string (format
+                                    blrg-new-module-template-format-string
+                                    current-module-name
+                                    current-module-name)))
+     (progn
+       (insert module-template-string)
+       (goto-char (point-min))
+       (forward-line 9)
+       (forward-char 2)
+       (insert-char ?\s)))))
+
+(defvar blrg-new-module-template-format-string
+  "--------------------------------------------------------------------------------
+-- |
+-- Module      : %s
+-- Copyright   : (c) 2018 Bot Lab Research Group
+-- License     : All Rights Reserved
+-- Maintainer  : Ben Carriel <bkc@botlab.trade>
+-- Stability   : Experimental
+-- Portability : GHC
+--
+--
+--
+--------------------------------------------------------------------------------
+
+module %s where
+"
+  "Template for a file that is inserted in the BLRG repo.")
+
 
 ;; Haskell main editing mode key bindings.
 (defun haskell-hook ()
   ;; Keymaps for haskell interactive repl
   ;; ====================================
-  
+
   ;; Load the current file (and make a session if not already made).
   (define-key haskell-mode-map [?\C-c ?\C-l] 'haskell-process-load-file)
   (define-key haskell-mode-map [f5] 'haskell-process-load-file)
@@ -77,7 +116,8 @@
       (interactive)
       (haskell-move-nested -1)))
 
-  ;; Set the input method to Agda if it is installed. Otherwise use the default
+  ;; Set the input method to Agda if it is installed. Otherwise use
+  ;; the default
   (when (require 'agda-input nil :noerror)
     (set-input-method "Agda")
     (define-key haskell-mode-map (kbd "C-c r a")
@@ -85,24 +125,30 @@
         (interactive)
         (insert-char #x21D2))))
 
+  (setq
+   haskell-process-args-ghci
+   '("-ferror-spans" "-fshow-loaded-modules"))
+
+  (setq
+   haskell-process-args-cabal-repl
+   '("--ghc-options=-ferror-spans -fshow-loaded-modules"))
+
+  (setq
+   haskell-process-args-stack-ghci
+   '("--ghci-options=-ferror-spans -fshow-loaded-modules"
+     "--no-build" "--no-load"))
+
+  (setq
+   haskell-process-args-stack-cabal-new-repl
+   '("--ghc-options=-ferror-spans -fshow-loaded-modules"))
+
+  (with-eval-after-load 'company
+    (add-to-list 'company-backends 'company-ghc)
+    (custom-set-variables '(company-ghc-show-info t)))
+
   (when (require 'comment-sections nil :noerror)
     (define-key haskell-mode-map (kbd "M-n s")
-      #'comment-sections:insert-section))
-
-  (add-to-list 'company-backends 'company-ghc)
-  (custom-set-variables '(company-ghc-show-info t))
-
-  ;; (ghc-init)
-  ;; (hare-init)
-
-  ;; lambda text replacement 
-  ;; (font-lock-add-keywords
-  ;;  nil `((,(concat "\\(" (regexp-quote "\\") "\\)")
-  ;;         (0 (progn (compose-region (match-beginning 1) (match-end 1)
-  ;;                                   ,(make-char 'greek-iso8859-7 107))
-  ;;                   nil)))))
-  )
-
+      #'comment-sections:insert-section)))
 
 (custom-set-variables
  '(haskell-process-suggest-remove-import-lines t)
@@ -110,7 +156,9 @@
  '(haskell-process-log t)
  '(haskell-tags-on-save t)
  '(haskell-process-suggest-hoogle-imports t)
- '(haskell-process-type 'stack-ghci))
+ '(haskell-process-type 'stack-ghci)
+ '(haskell-process-path-ghci "stack"))
+
 
 ;; Useful to have these keybindings for .cabal files, too.
 (defun haskell-cabal-hook ()
