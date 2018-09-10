@@ -13,7 +13,7 @@
 Intended to be added to the AFTER-INIT-HOOK"
   (require 'setup-ui)
   (require 'setup-utils)
-  
+
   (require 'setup-haskell)
   (require 'setup-ocaml)
   (require 'setup-lisp)
@@ -27,7 +27,8 @@ Intended to be added to the AFTER-INIT-HOOK"
   (require 'setup-agda)
   (require 'setup-smalltalk)
   (require 'setup-C-family)
-  (require 'setup-web-family))
+  (require 'setup-web-family)
+  (require 'setup-typescript))
 
 (provide 'setup)
 ;;; setup.el ends here
