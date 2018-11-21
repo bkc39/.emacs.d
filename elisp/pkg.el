@@ -16,7 +16,6 @@
   '(magit
     yasnippet
     color-theme
-    pretty-lambdada
     clojure-mode
     clojure-snippets
     clojure-cheatsheet
@@ -26,30 +25,18 @@
     tuareg
     java-snippets
     javadoc-lookup
-    ;; scala-mode2
     ensime
     scheme-complete
     racket-mode
-    ;; auto-complete
-    ;; auto-complete-auctex
-    ;; auto-complete-c-headers
-    ;; auto-complete-clang
-    ;; ac-c-headers
-    ;; ac-math
-    ;; ac-nrepl
-    ;; ac-geiser
     flycheck
-    ;; flycheck-google-cpplint
     google-c-style
     ess
     auctex
     markdown-mode
-    ;; color-theme-wombat
     exec-path-from-shell
     whitespace
     zenburn-theme
     color-theme-solarized
-    ido-ubiquitous
     request
     request-deferred
     json
@@ -71,7 +58,8 @@
     web-mode
     jsx-mode
     dash
-    dockerfile-mode)
+    dockerfile-mode
+    multiple-cursors)
   "A list of packages to ensure are installed at launch.")
 
 ;; function to ensure that all of the above packages are installed.

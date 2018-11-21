@@ -53,9 +53,9 @@
   "--------------------------------------------------------------------------------
 -- |
 -- Module      : %s
--- Copyright   : (c) 2018 Bot Lab Research Group
+-- Copyright   : (c) 2018 Bot Lab, LP
 -- License     : All Rights Reserved
--- Maintainer  : Ben Carriel <bkc@botlab.trade>
+-- Maintainer  : Ben Carriel <bkc@botlablp.com>
 -- Stability   : Experimental
 -- Portability : GHC
 --
@@ -115,15 +115,6 @@ module %s where
     (lambda ()
       (interactive)
       (haskell-move-nested -1)))
-
-  ;; Set the input method to Agda if it is installed. Otherwise use
-  ;; the default
-  (when (require 'agda-input nil :noerror)
-    (set-input-method "Agda")
-    (define-key haskell-mode-map (kbd "C-c r a")
-      (lambda ()
-        (interactive)
-        (insert-char #x21D2))))
 
   (setq
    haskell-process-args-ghci

@@ -9,11 +9,24 @@ The automatic install requires an internet connection. Your first time
 starting emacs will take a while because it will install everything
 that first go. After that it'll be buttery, though.
 
+## Dependencies
+
+You need to get opam
+
+```
+$ sudo apt install opam -y
+$ opam init
+$ eval `opam config env`
+$ opam user-setup install
+$ opam install merlin
+```
+
 ## Usage
 
 Here's what you do
 ```bash
 $ git clone https://github.com/bkc39/.emacs.d.git $HOME/.emacs.d
+$ emacs --daemon
 $ emacs
 ```
 And thats it!

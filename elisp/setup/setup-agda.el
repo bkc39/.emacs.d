@@ -4,8 +4,11 @@
 
 ;;; Code:
 
-(load-file (let ((coding-system-for-read 'utf-8))
-             (shell-command-to-string "agda-mode locate")))
+(unless (string= "" (shell-command-to-string "which agda-mode"))
+  (load-file (let ((coding-system-for-read 'utf-8))
+	       (shell-command-to-string "agda-mode locate"))))
+
+             
 
 (add-hook 'agda2-mode-hook
          (lambda ()
