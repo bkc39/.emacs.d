@@ -107,17 +107,7 @@
 (setq user-mail-address "bkc@botlab.trade")
 
 ;; always delete trailing whitespace on save
-(add-hook 'before-save-hook 'delete-trailing-whitespace)
-
-;; set fill column indicator to 80 char
-;; (add-hook
-;;  'prog-mode-hook
-;;  (lambda ()
-;;    (require 'fill-column-indicator)
-;;    (fci-mode 1)
-;;    (setq fci-rule-column 80)
-;;    (setq fci-rule-width 1)
-;;    (setq fci-rule-color "darkred")))
+(add-hook 'before-save-hook 'whitespace-cleanup)
 
 (provide 'setup-ui)
 ;;; setup-ui.el ends here

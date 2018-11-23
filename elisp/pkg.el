@@ -45,7 +45,6 @@
     swift-mode
     w3m
     geiser
-    ;; pymacs
     paredit
     autopair
     cider
