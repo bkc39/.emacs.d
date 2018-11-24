@@ -18,11 +18,17 @@
             "-m site --user-site")))
   "Path to the system version of Python.")
 
+(defvar setup-python:jedi-emacs-pkg-dir
+  (car (directory-files "~/.emacs.d/elpa" t "jedi-core-*"))
+  "Directory where the jedi emacs package is installed
+
+Defaults to install location in ~/.emacs.d/elpa")
+
 (setq jedi:install-server--command
-      '("pip3"
+      `("pip3"
         "install"
         "--upgrade"
-        "/home/bkc/.emacs.d/elpa/jedi-core-20170121.610/"))
+        ,setup-python:jedi-emacs-pkg-dir))
 
 (setq jedi:server-args
       (list "--sys-path" setup-python:python-framework-directory))
