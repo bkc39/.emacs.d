@@ -102,6 +102,29 @@
     (quote committing)
     "--no-verify")))
 
+(add-hook
+ 'git-commit-mode-hook
+ (lambda ()
+   (interactive)
+   (let* ((current-branch (magit-get-current-branch))
+          (issue-number (infer-issue-number-from-branch-name current-branch)))
+     (unless (or (issue-prefix-is-there) (string= issue-number ""))
+       (goto-char (point-min))
+       (insert "[#" issue-number "] ")))))
+
+(defun infer-issue-number-from-branch-name (branch-name)
+  "Gets the implied issue number out of the current branch"
+  (if (string-match "\\([[:alpha:]]+\\)\\([[:digit:]]+\\).*" branch-name)
+      (match-string 2 branch-name)
+    (progn
+      (message "failed to infer branch name")
+      "")))
+
+(defun issue-prefix-is-there ()
+  "Check if the buffer is prefixed by the issue prefix [#ISSUE-NUMBER]"
+  (let ((buffer-prefix (car (split-string (buffer-string)))))
+    (string-match "\\[\\#[[:digit:]]+\\]" buffer-prefix)))
+
 ;; globally enable company mode
 (add-hook 'after-init-hook 'global-company-mode)
 (setq user-mail-address "bkc@botlab.trade")
