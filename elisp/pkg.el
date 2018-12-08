@@ -59,7 +59,12 @@
     dash
     dockerfile-mode
     multiple-cursors
-    tide)
+    tide
+    intero
+    yaml-mode
+    nix-mode
+    nix-sandbox
+    nixos-options)
   "A list of packages to ensure are installed at launch.")
 
 ;; function to ensure that all of the above packages are installed.
