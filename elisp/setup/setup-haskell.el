@@ -26,7 +26,6 @@
               auto-mode-alist))
 
 (add-hook 'haskell-mode-hook 'haskell-hook)
-(add-hook 'haskell-mode-hook #'flycheck-haskell-setup)
 (add-hook 'haskell-cabal-mode-hook 'haskell-cabal-hook)
 (add-hook 'haskell-mode-hook 'interactive-haskell-mode)
 (add-hook 'haskell-mode-hook 'haskell-auto-insert-blrg-module-template)
@@ -53,7 +52,7 @@
   "--------------------------------------------------------------------------------
 -- |
 -- Module      : %s
--- Copyright   : (c) 2018 Bot Lab, LP
+-- Copyright   : (c) 2018-2019 Bot Lab, LP
 -- License     : All Rights Reserved
 -- Maintainer  : Ben Carriel <bkc@botlablp.com>
 -- Stability   : Experimental
