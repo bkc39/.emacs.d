@@ -52,8 +52,8 @@
 (menu-bar-mode -1)
 
 ;; Color theme
-(color-theme-initialize)
-(load-theme 'zenburn t)
+(load-theme 'zenburn t t)
+(enable-theme 'zenburn)
 
 ;; Spaces for tabs
 (setq-default indent-tabs-mode nil)

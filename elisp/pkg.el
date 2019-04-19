@@ -15,10 +15,9 @@
 (defvar required-packages
   '(magit
     yasnippet
-    color-theme
+    color-theme-modern
     clojure-mode
     clojure-snippets
-    clojure-cheatsheet
     haskell-mode
     hindent
     hi2
