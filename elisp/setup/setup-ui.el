@@ -37,7 +37,8 @@
 (add-to-list 'default-frame-alist '(width . 81))
 
 ;; Turn off the scroll bar.
-(scroll-bar-mode -1)
+(when (boundp 'scroll-bar-mode)
+  (scroll-bar-mode -1))
 
 ;; Turn off the damn bell
 (setq ring-bell-function 'ignore)

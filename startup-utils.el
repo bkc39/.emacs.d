@@ -41,7 +41,7 @@ If DEBUG is non-nil then the added directories are logged in the
   (eq system-type 'darwin))
 
 (defun system-is-linux ()
-  "Determines if the system type is a mac."
+  "Determines if the system type is linux."
   (eq system-type 'gnu/linux))
 
 (defun startup-utils:byte-compile-all ()

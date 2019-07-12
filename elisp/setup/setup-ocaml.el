@@ -18,27 +18,28 @@
 ;; Merlin setup
 ;; Add opam emacs directory to the load-path
 (defvar opam-share nil)
-(setq opam-share
-      (substring
-       (shell-command-to-string "opam config var share 2> /dev/null")
-       0 -1))
 
-(add-to-list 'load-path (concat opam-share "/emacs/site-lisp"))
+(when (executable-find "opam")
+  (setq opam-share
+        (substring
+         (shell-command-to-string "opam config var share 2> /dev/null")
+         0 -1))
+  (setq opam-setup-file
+      (concat opam-share "/emacs/site-lisp"))
+  (when (file-exists-p opam-setup-file)
+    (add-to-list 'load-path opam-setup-file)))
 
 ;; Load merlin-mode
-(require 'merlin)
+(when opam-share
+  (require 'merlin)
+  ;; Start merlin on ocaml files
+  (add-hook 'tuareg-mode-hook 'merlin-mode t)
+  (add-hook 'caml-mode-hook 'merlin-mode t)
+  ;; Enable auto-complete
+  (setq merlin-use-auto-complete-mode 'easy)
 
-;; Start merlin on ocaml files
-(add-hook 'tuareg-mode-hook 'merlin-mode t)
-(add-hook 'caml-mode-hook 'merlin-mode t)
-
-;; Enable auto-complete
-(setq merlin-use-auto-complete-mode 'easy)
-
-;; Use opam switch to lookup ocamlmerlin binary
-(setq merlin-command 'opam)
-
-(add-to-list 'load-path (concat opam-share "/emacs/site-lisp"))
+  ;; Use opam switch to lookup ocamlmerlin binary
+  (setq merlin-command 'opam))
 
 ;; Custom OCaml stuff
 (add-hook 'tuareg-mode-hook
@@ -46,7 +47,7 @@
              ;; pressing "RETURN" also indents
              (local-set-key (kbd "RET") 'newline-and-indent)
 
-	     ;; fun is lambda
+             ;; fun is lambda
              (font-lock-add-keywords
               nil `(("(\\(fun\\>\\)"
                      (0 (progn
