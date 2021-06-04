@@ -10,21 +10,24 @@
 (defun bllp:platform-layout ()
   "Sets the default window layout for bllp-platform dev work."
   (interactive)
-  (delete-other-windows)
-  (split-window-right)
-  (split-window-right)
-  (split-window-below)
-  (other-window 2)
-  (split-window-below)
-  (other-window 2)
-  (split-window-below)
-  (balance-windows)
-  (other-window 2)
+
+  (bllp:layout-standard-six-windows)
 
   (bllp:layout-buffer-with-name
    "magit: platform"
    #'(lambda ()
        (magit-status bllp:bllp-platform-dir)))
+  (other-window 1)
+
+  (bllp:layout-buffer-with-name
+   "magit-log: platform"
+   #'(lambda ()
+       (magit-status bllp:bllp-platform-dir)
+       (magit-log-head)))
+  (other-window 1)
+
+  (bllp:layout-file-in-current-buffer (concat bllp:bllp-platform-dir
+                                              "src/BotLab"))
   (other-window 1)
 
   (let ((plaform-shell-buffer-name "*platform: shell*"))
@@ -34,7 +37,21 @@
          (bllp:open-shell-in-dir-with-name
           bllp:bllp-platform-dir
           plaform-shell-buffer-name))))
-  (other-window-1))
+  (other-window 1))
+
+(defun bllp:layout-standard-six-windows ()
+  "Splits the current frame into six windows laid out in a 2x3
+  grid. Puts the cursor in the top left window."
+  (delete-other-windows)
+  (split-window-right)
+  (split-window-right)
+  (split-window-below)
+  (other-window 2)
+  (split-window-below)
+  (other-window 2)
+  (split-window-below)
+  (balance-windows)
+  (other-window 2))
 
 (defun bllp:layout-file-in-current-buffer (filename)
   "Opens the file file in the current buffer."
@@ -59,5 +76,28 @@
   name SHELL-NAME."
   (let ((default-directory dir))
     (shell shell-name)))
+
+(defun bllp:is-visiting-haskell-file-p (buffer)
+  "Predicate that it non-nil it BUFFER is visiting a Haskell file
+  and nil otherwise."
+  t)
+
+(defun bllp:layout-last-visited-haskell-files ()
+  "Returns the last two buffers visiting Haskell files, if
+  available. If there are no active buffers visiting a haskell
+  file then BLLP:BLLP-PLATFORM-DIR/src/BotLab/Prelude.hs will be
+  opened."
+  (let* ((buffers-visiting-haskell-files
+          (seq-filter #'bllp:is-visiting-haskell-file-p
+                      (buffer-list)))
+         (num-haskell-files-visited
+          (length buffers-visiting-haskell-files)))
+    (cond
+     ((= 0 num-haskell-files-visited)
+      (message "todo"))
+     ((= 1 num-haskell-files-visited)
+      (message "todo"))
+     (t
+      (message "todo")))))
 
 (provide 'layout)
