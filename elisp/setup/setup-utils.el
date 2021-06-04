@@ -8,12 +8,17 @@
 ;;;     - the jabber shell path
 
 ;;; Code:
+(require 'undo-fu)
 
 ;; Sets the PATH environment variable
 (when (memq window-system '(mac ns x))
   (exec-path-from-shell-initialize))
 
 (global-set-key (kbd "C-c C-m C-c") 'mc/edit-lines)
+
+;; (global-unset-key (kbd "C--"))
+;; (global-set-key (kbd "C--") 'undo-fu-only-undo)
+;; (global-set-key (kbd "C-S--") 'undo-fu-only-redo)
 
 ;; Flycheck stuff
 (custom-set-variables

@@ -25,10 +25,7 @@
                 ("\\.lhs$" . haskell-mode))
               auto-mode-alist))
 
-(add-hook 'haskell-mode-hook 'haskell-hook)
-(add-hook 'haskell-cabal-mode-hook 'haskell-cabal-hook)
-(add-hook 'haskell-mode-hook 'interactive-haskell-mode)
-(add-hook 'haskell-mode-hook 'haskell-auto-insert-blrg-module-template)
+
 
 (defun haskell-auto-insert-blrg-module-template ()
   "Insert the module template for a new BLRG module"
@@ -52,7 +49,7 @@
   "--------------------------------------------------------------------------------
 -- |
 -- Module      : %s
--- Copyright   : (c) 2018-2019 Bot Lab, LP
+-- Copyright   : (c) 2018-2021 Bot Lab, LP
 -- License     : All Rights Reserved
 -- Maintainer  : Ben Carriel <bkc@botlablp.com>
 -- Stability   : Experimental
@@ -81,6 +78,14 @@ module %s where
   ;; “Bring” the REPL, hiding all other windows apart from the source
   ;; and the REPL.
   (define-key haskell-mode-map (kbd "C-`") 'haskell-interactive-bring)
+
+  ;; fix up the imports
+  (define-key haskell-mode-map (kbd "C-c ,")
+    (lambda ()
+      (interactive)
+      (save-excursion
+        (haskell-navigate-imports)
+        (haskell-mode-format-imports))))
 
   ;; Build the Cabal project.
   (define-key haskell-mode-map (kbd "C-c C-c") 'haskell-process-cabal-build)
@@ -119,18 +124,18 @@ module %s where
    haskell-process-args-ghci
    '("-ferror-spans" "-fshow-loaded-modules"))
 
-  (setq
-   haskell-process-args-cabal-repl
-   '("--ghc-options=-ferror-spans -fshow-loaded-modules"))
+  ;; (setq
+  ;;  haskell-process-args-cabal-repl
+  ;;  '("--ghc-options=-ferror-spans -fshow-loaded-modules"))
 
-  (setq
-   haskell-process-args-stack-ghci
-   '("--ghci-options=-ferror-spans -fshow-loaded-modules"
-     "--no-build" "--no-load"))
+  ;; (setq
+  ;;  haskell-process-args-stack-ghci
+  ;;  '("--ghci-options=-ferror-spans -fshow-loaded-modules"
+  ;;    "--no-build" "--no-load"))
 
-  (setq
-   haskell-process-args-stack-cabal-new-repl
-   '("--ghc-options=-ferror-spans -fshow-loaded-modules"))
+  ;; (setq
+  ;;  haskell-process-args-stack-cabal-new-repl
+  ;;  '("--ghc-options=-ferror-spans -fshow-loaded-modules"))
 
   (with-eval-after-load 'company
     (add-to-list 'company-backends 'company-ghc)
@@ -146,8 +151,9 @@ module %s where
  '(haskell-process-log t)
  '(haskell-tags-on-save t)
  '(haskell-process-suggest-hoogle-imports t)
- '(haskell-process-type 'stack-ghci)
- '(haskell-process-path-ghci "stack"))
+ '(haskell-process-type 'cabal-new-repl)
+ ;; '(haskell-process-path-ghci "stack")
+ )
 
 
 ;; Useful to have these keybindings for .cabal files, too.
@@ -157,7 +163,28 @@ module %s where
   (define-key haskell-cabal-mode-map (kbd "C-`") 'haskell-interactive-bring)
   (define-key haskell-cabal-mode-map [?\C-c ?\C-z] 'haskell-interactive-switch))
 
+(setq haskell-process-wrapper-function
+      (lambda (argv) (append (list "nix-shell" "-I" "." "--command")
+                             (list (mapconcat #'identity
+                                              (list "runghc"
+                                                    "Setup.hs"
+                                                    "configure"
+                                                    "&&"
+                                                    "runghc"
+                                                    "Setup.hs"
+                                                    "repl"
+                                                    "bllp-platform")
+                                              " ")))))
+
+
+
+
 (message "done setting up haskell")
+
+(add-hook 'haskell-mode-hook 'haskell-hook)
+(add-hook 'haskell-cabal-mode-hook 'haskell-cabal-hook)
+(add-hook 'haskell-mode-hook 'interactive-haskell-mode)
+(add-hook 'haskell-mode-hook 'haskell-auto-insert-blrg-module-template)
 
 (provide 'setup-haskell)
 ;;; setup-haskell.el ends here

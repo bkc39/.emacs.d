@@ -8,8 +8,8 @@
 ;; Sets the default font
 (if (member "Anonymous Pro" (font-family-list))
     (progn
-      (add-to-list 'default-frame-alist '(font . "Anonymous Pro-10"))
-      (set-face-attribute 'default nil :font "Anonymous Pro-10")
+      (add-to-list 'default-frame-alist '(font . "Anonymous Pro-9"))
+      (set-face-attribute 'default nil :font "Anonymous Pro-9")
       (set-face-attribute 'default nil :height 100))
   (progn
     (let ((default-font
@@ -21,8 +21,8 @@
                       (string=
                        ""
                        (shell-command-to-string "fc-list 'Anonymous Pro'"))))
-                "Anonymous Pro 10"
-              "Monospace 10")))
+                "Anonymous Pro 9"
+              "Monospace 9")))
       (progn
         (set-default-font default-font)
         (add-to-list 'default-frame-alist `(font . ,default-font))))))
