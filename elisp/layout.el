@@ -4,6 +4,17 @@
 ;;; Code:
 
 (defun bllp:platform-layout ()
-  (message "this is just"))
+  "Sets the default window layout for bllp-platform dev work."
+  (interactive)
+  (delete-other-windows)
+  (split-window-right)
+  (split-window-right)
+  (split-window-below)
+  (other-window 2)
+  (split-window-below)
+  (other-window 2)
+  (split-window-below)
+  (balance-windows)
+  (other-window 2))
 
 (provide 'layout)
