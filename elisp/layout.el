@@ -26,6 +26,8 @@
        (magit-log-head)))
   (other-window 1)
 
+  (bllp:layout-last-visited-haskell-files)
+
   (bllp:layout-file-in-current-buffer (concat bllp:bllp-platform-dir
                                               "src/BotLab"))
   (other-window 1)
@@ -80,7 +82,11 @@
 (defun bllp:is-visiting-haskell-file-p (buffer)
   "Predicate that it non-nil it BUFFER is visiting a Haskell file
   and nil otherwise."
-  t)
+  (let ((file-visited (buffer-file-name buffer)))
+    (if file-visited
+        (string= "hs"
+                 (file-name-extension file-visited))
+      nil)))
 
 (defun bllp:layout-last-visited-haskell-files ()
   "Returns the last two buffers visiting Haskell files, if
@@ -94,10 +100,25 @@
           (length buffers-visiting-haskell-files)))
     (cond
      ((= 0 num-haskell-files-visited)
-      (message "todo"))
+      ;; no haskell files were open. Open Prelude.hs and delete a
+      ;; window
+      (delete-window)
+      (bllp:layout-file-in-current-buffer
+       (concat bllp:bllp-platform-dir
+               "src/BotLab/Prelude.hs"))
+      (other-window 1))
      ((= 1 num-haskell-files-visited)
-      (message "todo"))
+      ;; one haskell file was open. Open it and delete one window
+      (delete-window)
+      (switch-to-buffer (car buffers-visiting-haskell-files))
+      (other-window 1))
      (t
-      (message "todo")))))
+      ;; at least two files were open. Open them in the next two buffers
+      (let ((first-buffer (car buffers-visiting-haskell-files))
+            (second-buffer (cadr buffers-visiting-haskell-files)))
+        (switch-to-buffer first-buffer)
+        (other-window 1)
+        (switch-to-buffer second-buffer)
+        (other-window 1))))))
 
 (provide 'layout)
