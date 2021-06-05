@@ -33,7 +33,7 @@
   (other-window 1)
 
   (bllp:layout-buffer-with-name "*platform-shell*")
-  (other-window 1))
+  (other-window 3))
 
 (defun bllp:layout-standard-six-windows ()
   "Splits the current frame into six windows laid out in a 2x3
