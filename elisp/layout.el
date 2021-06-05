@@ -13,13 +13,10 @@
 
   (magit-status bllp:bllp-platform-dir)
   (magit-log-head)
-  (delete-window)
-
   (let ((plaform-shell-buffer-name "*platform-shell*"))
     (bllp:open-shell-in-dir-with-name
      bllp:bllp-platform-dir
      plaform-shell-buffer-name))
-  (delete-window)
 
   (bllp:layout-standard-six-windows)
 
@@ -37,8 +34,6 @@
 
   (bllp:layout-buffer-with-name "*platform-shell*")
   (other-window 1))
-
-
 
 (defun bllp:layout-standard-six-windows ()
   "Splits the current frame into six windows laid out in a 2x3
@@ -109,6 +104,7 @@
       (other-window 1))
      ((= 1 num-haskell-files-visited)
       ;; one haskell file was open. Open it and delete one window
+      (other-window 1)
       (delete-window)
       (switch-to-buffer (car buffers-visiting-haskell-files))
       (other-window 1))
