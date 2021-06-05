@@ -7,6 +7,10 @@
   "/home/bkc/botlab/platform/"
   "Directory where the bllp-platform repository is located")
 
+(defvar bllp:bllp-ludus-dir
+  "/home/bkc/botlab/ludus/"
+  "Directory where the BotLab ludus repository is located")
+
 (defun bllp:platform-layout ()
   "Sets the default window layout for bllp-platform dev work."
   (interactive)
