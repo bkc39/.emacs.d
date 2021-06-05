@@ -28,7 +28,8 @@ Intended to be added to the AFTER-INIT-HOOK"
   (require 'setup-smalltalk)
   (require 'setup-C-family)
   (require 'setup-web-family)
-  (require 'setup-typescript))
+  (require 'setup-typescript)
+  (require 'bllp-layout "layout.el"))
 
 (provide 'setup)
 ;;; setup.el ends here
