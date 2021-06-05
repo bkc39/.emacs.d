@@ -11,35 +11,34 @@
   "Sets the default window layout for bllp-platform dev work."
   (interactive)
 
+  (magit-status bllp:bllp-platform-dir)
+  (magit-log-head)
+  (delete-window)
+
+  (let ((plaform-shell-buffer-name "*platform-shell*"))
+    (bllp:open-shell-in-dir-with-name
+     bllp:bllp-platform-dir
+     plaform-shell-buffer-name))
+  (delete-window)
+
   (bllp:layout-standard-six-windows)
 
-  (bllp:layout-buffer-with-name
-   "magit: platform"
-   #'(lambda ()
-       (magit-status bllp:bllp-platform-dir)))
+  (bllp:layout-buffer-with-name "magit: platform")
   (other-window 1)
 
-  (bllp:layout-buffer-with-name
-   "magit-log: platform"
-   #'(lambda ()
-       (magit-status bllp:bllp-platform-dir)
-       (magit-log-head)))
+  (bllp:layout-buffer-with-name "magit-log: platform")
   (other-window 1)
 
   (bllp:layout-last-visited-haskell-files)
 
-  (bllp:layout-file-in-current-buffer (concat bllp:bllp-platform-dir
-                                              "src/BotLab"))
+  (bllp:layout-file-in-current-buffer
+   (concat bllp:bllp-platform-dir "src/BotLab"))
   (other-window 1)
 
-  (let ((plaform-shell-buffer-name "*platform: shell*"))
-    (bllp:layout-buffer-with-name
-     plaform-shell-buffer-name
-     #'(lambda ()
-         (bllp:open-shell-in-dir-with-name
-          bllp:bllp-platform-dir
-          plaform-shell-buffer-name))))
+  (bllp:layout-buffer-with-name "*platform-shell*")
   (other-window 1))
+
+
 
 (defun bllp:layout-standard-six-windows ()
   "Splits the current frame into six windows laid out in a 2x3
@@ -69,7 +68,7 @@
    (let ((buffer-to-open (get-buffer buffer-name)))
      (cond
       (buffer-to-open buffer-to-open)
-      (open-buffer-thunk (open-buffer-thunk))
+      (open-buffer-thunk (funcall open-buffer-thunk))
       (t
        (other-buffer))))))
 
@@ -102,6 +101,7 @@
      ((= 0 num-haskell-files-visited)
       ;; no haskell files were open. Open Prelude.hs and delete a
       ;; window
+      (other-window 1)
       (delete-window)
       (bllp:layout-file-in-current-buffer
        (concat bllp:bllp-platform-dir
@@ -121,4 +121,4 @@
         (switch-to-buffer second-buffer)
         (other-window 1))))))
 
-(provide 'layout)
+(provide 'bllp-layout)
