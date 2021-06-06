@@ -17,10 +17,10 @@
 
   (magit-status bllp:bllp-platform-dir)
   (magit-log-head)
-  (let ((plaform-shell-buffer-name "*platform-shell*"))
+  (let ((platform-shell-buffer-name "*platform-shell*"))
     (bllp:open-shell-in-dir-with-name
      bllp:bllp-platform-dir
-     plaform-shell-buffer-name))
+     platform-shell-buffer-name))
 
   (bllp:layout-standard-six-windows)
 
@@ -38,6 +38,49 @@
 
   (bllp:layout-buffer-with-name "*platform-shell*")
   (other-window 3))
+
+(defun bllp:trading-layout ()
+  "Sets the default window layout for trading in the Bot Lab
+  ludus repository."
+  (interactive)
+
+  (magit-status bllp:bllp-ludus-dir)
+  (magit-log-head)
+  (let ((ludus-shell-buffer-name "*ludus-shell*"))
+    (bllp:open-shell-in-dir-with-name
+     bllp:bllp-ludus-dir
+     ludus-shell-buffer-name))
+
+  ;; check if R has a shell open in ludus already and opens one if
+  ;; not.
+  (unless (get-buffer "*R:ludus*")
+    (bllp:start-R-in-ludus))
+
+  (bllp:layout-standard-six-windows)
+
+  (bllp:layout-buffer-with-name "*R:ludus*")
+  (other-window 1)
+
+  (bllp:layout-buffer-with-name "*ludus-shell*")
+  (other-window 1)
+
+  (bllp:layout-file-in-current-buffer
+   (concat bllp:bllp-ludus-dir
+           "bkc/pcdata.R"))
+  (other-window 1)
+
+  (bllp:layout-file-in-current-buffer
+   (concat bllp:bllp-ludus-dir
+           "bkc/mosekffi/integer_markowitz.py"))
+  (other-window 1)
+
+  (bllp:layout-file-in-current-buffer
+   (concat bllp:bllp-ludus-dir
+           "bkc/mosekffi/sim.R"))
+  (other-window 1)
+
+  (bllp:layout-buffer-with-name "magit: ludus")
+  (other-window 1))
 
 (defun bllp:layout-standard-six-windows ()
   "Splits the current frame into six windows laid out in a 2x3
@@ -120,5 +163,22 @@
         (other-window 1)
         (switch-to-buffer second-buffer)
         (other-window 1))))))
+
+(defun bllp:start-R-in-ludus ()
+  "Start an ESS R process in BLLP:BLLP-LUDUS-DIR. This will be in
+a buffer with BUFFER-NAME set to *R:ludus*."
+  (unwind-protect
+      (progn
+        (setq ess-ask-for-ess-directory nil)
+        (setq ess-directory bllp:bllp-ludus-dir)
+        (setq ess-gen-proc-buffer-name-function
+              #'(lambda (proc-name)
+                  (concat "*"
+                          proc-name
+                          ":ludus*")))
+        (run-ess-r))
+    (setq ess-ask-for-ess-directory t)
+    (setq ess-directory nil)
+    (setq ess-gen-proc-buffer-name 'ess-gen-proc-buffer-name:project-or-simple)))
 
 (provide 'bllp-layout)
