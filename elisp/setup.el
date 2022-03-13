@@ -12,8 +12,10 @@
 
 Intended to be added to the AFTER-INIT-HOOK"
   (require 'setup-ui)
+  (message "here")
   (require 'setup-utils)
 
+  (require 'setup-lean)
   (require 'setup-haskell)
   (require 'setup-ocaml)
   (require 'setup-lisp)

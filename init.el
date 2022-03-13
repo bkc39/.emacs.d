@@ -31,11 +31,9 @@
    ["#3F3F3F" "#CC9393" "#7F9F7F" "#F0DFAF" "#8CD0D3" "#DC8CC3" "#93E0E3" "#DCDCCC"])
  '(company-ghc-show-info t)
  '(custom-safe-themes
-   (quote
-    ("c2cfe2f1440d9ef4bfd3ef4cf15bfe35ff40e6d431264b1e24af64f145cffb11" default)))
+   '("c2cfe2f1440d9ef4bfd3ef4cf15bfe35ff40e6d431264b1e24af64f145cffb11" default))
  '(ess-R-font-lock-keywords
-   (quote
-    ((ess-R-fl-keyword:modifiers . t)
+   '((ess-R-fl-keyword:modifiers . t)
      (ess-R-fl-keyword:fun-defs . t)
      (ess-R-fl-keyword:keywords . t)
      (ess-R-fl-keyword:assign-ops . t)
@@ -45,25 +43,23 @@
      (ess-fl-keyword:operators . t)
      (ess-fl-keyword:delimiters . t)
      (ess-fl-keyword:=)
-     (ess-R-fl-keyword:F&T))))
+     (ess-R-fl-keyword:F&T)))
  '(fci-rule-color "#383838")
- '(flycheck-check-syntax-automatically (quote (mode-enabled)))
+ '(flycheck-check-syntax-automatically '(mode-enabled))
  '(flycheck-idle-change-delay 1000)
  '(haskell-process-auto-import-loaded-modules t)
  '(haskell-process-log t)
  '(haskell-process-path-ghci "stack")
  '(haskell-process-suggest-hoogle-imports t)
  '(haskell-process-suggest-remove-import-lines t)
- '(haskell-process-type (quote stack-ghci))
+ '(haskell-process-type 'stack-ghci)
  '(haskell-stylish-on-save t)
  '(haskell-tags-on-save t)
  '(package-selected-packages
-   (quote
-    (color-theme-modern cider nixos-options nix-mode nix-sandbox intero dockerfile-mode tide multiple-cursors fill-column-indicator flycheck-haskell 0xc merlin yaml-mode ess-R-data-view jedi phabricator php-mode php+-mode jsx-mode web-mode pydoc-info jabber jedi-core sr-speedbar rust-mode anaconda-mode autopair paredit pymacs geiser w3m swift-mode oauth2 oauth request-deferred request ido-ubiquitous color-theme-solarized zenburn-theme exec-path-from-shell color-theme-wombat markdown-mode auctex ess google-c-style flycheck-google-cpplint flycheck ac-nrepl ac-math ac-c-headers auto-complete-clang auto-complete-c-headers auto-complete-auctex auto-complete racket-mode scheme-complete ensime scala-mode2 javadoc-lookup java-snippets tuareg hi2 hindent haskell-mode clojure-test-mode clojure-cheatsheet clojure-snippets clojure-mode pretty-lambdada yasnippet magit)))
+   '(helm-lean company-lean lean-mode color-theme-modern cider nixos-options nix-mode nix-sandbox intero dockerfile-mode tide multiple-cursors fill-column-indicator flycheck-haskell 0xc merlin yaml-mode ess-R-data-view jedi phabricator php-mode php+-mode jsx-mode web-mode pydoc-info jabber jedi-core sr-speedbar rust-mode anaconda-mode autopair paredit pymacs geiser w3m swift-mode oauth2 oauth request-deferred request ido-ubiquitous color-theme-solarized zenburn-theme exec-path-from-shell color-theme-wombat markdown-mode auctex ess google-c-style flycheck-google-cpplint flycheck ac-nrepl ac-math ac-c-headers auto-complete-clang auto-complete-c-headers auto-complete-auctex auto-complete racket-mode scheme-complete ensime scala-mode2 javadoc-lookup java-snippets tuareg hi2 hindent haskell-mode clojure-test-mode clojure-cheatsheet clojure-snippets clojure-mode pretty-lambdada yasnippet magit))
  '(vc-annotate-background "#2B2B2B")
  '(vc-annotate-color-map
-   (quote
-    ((20 . "#BC8383")
+   '((20 . "#BC8383")
      (40 . "#CC9393")
      (60 . "#DFAF8F")
      (80 . "#D0BF8F")
@@ -80,7 +76,7 @@
      (300 . "#7CB8BB")
      (320 . "#8CD0D3")
      (340 . "#94BFF3")
-     (360 . "#DC8CC3"))))
+     (360 . "#DC8CC3")))
  '(vc-annotate-very-old-color "#DC8CC3"))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
