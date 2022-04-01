@@ -19,6 +19,12 @@
     (load-theme 'zenburn t t)
     (enable-theme 'zenburn)))
 
+(use-package exec-path-from-shell
+  :if (memq window-system '(mac ns))
+  :ensure t
+  :config
+  (exec-path-from-shell-initialize))
+
 (use-package haskell-mode
   :mode "\\.hs$"
   :init
@@ -44,4 +50,16 @@
                                    (haskell-move-nested 1)))
               ("C-c C-<left>" . (lambda ()
                                   (interactive)
-                                  (haskell-mode-nested -1)))))
+                                  (haskell-mode-nested -1))))
+  :config
+  (progn
+    (with-eval-after-load 'company
+      (add-to-list 'company-backends 'company-ghc)))
+  :custom
+  (company-ghc-show-info t)
+  (haskell-process-auto-import-loaded-modules t)
+  (haskell-process-log t)
+  (haskell-tags-on-save t)
+  (haskell-process-suggest-hoogle-imports t)
+  (haskell-process-type 'stack-ghci)
+  (haskell-process-path-ghci "stack"))
