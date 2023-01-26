@@ -21,6 +21,9 @@
 (add-hook 'after-change-major-mode-hook
           (lambda ()
             (electric-indent-mode -1)))
+(load (expand-file-name "~/quicklisp/slime-helper.el"))
+;; Replace "sbcl" with the path to your implementation
+(setq inferior-lisp-program "sbcl")
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -56,7 +59,7 @@
  '(haskell-stylish-on-save t)
  '(haskell-tags-on-save t)
  '(package-selected-packages
-   '(color-theme-modern cider nixos-options nix-mode nix-sandbox intero dockerfile-mode tide multiple-cursors fill-column-indicator flycheck-haskell 0xc merlin yaml-mode ess-R-data-view jedi phabricator php-mode php+-mode jsx-mode web-mode pydoc-info jabber jedi-core sr-speedbar rust-mode anaconda-mode autopair paredit pymacs geiser w3m swift-mode oauth2 oauth request-deferred request ido-ubiquitous color-theme-solarized zenburn-theme exec-path-from-shell color-theme-wombat markdown-mode auctex ess google-c-style flycheck-google-cpplint flycheck ac-nrepl ac-math ac-c-headers auto-complete-clang auto-complete-c-headers auto-complete-auctex auto-complete racket-mode scheme-complete ensime scala-mode2 javadoc-lookup java-snippets tuareg hi2 hindent haskell-mode clojure-test-mode clojure-cheatsheet clojure-snippets clojure-mode pretty-lambdada yasnippet magit))
+   '(company-sourcekit slime-company color-theme-modern cider nixos-options nix-mode nix-sandbox intero dockerfile-mode tide multiple-cursors fill-column-indicator flycheck-haskell 0xc merlin yaml-mode ess-R-data-view jedi phabricator php-mode php+-mode jsx-mode web-mode pydoc-info jabber jedi-core sr-speedbar rust-mode anaconda-mode autopair paredit pymacs geiser w3m swift-mode oauth2 oauth request-deferred request ido-ubiquitous color-theme-solarized zenburn-theme exec-path-from-shell color-theme-wombat markdown-mode auctex ess google-c-style flycheck-google-cpplint flycheck ac-nrepl ac-math ac-c-headers auto-complete-clang auto-complete-c-headers auto-complete-auctex auto-complete racket-mode scheme-complete ensime scala-mode2 javadoc-lookup java-snippets tuareg hi2 hindent haskell-mode clojure-test-mode clojure-cheatsheet clojure-snippets clojure-mode pretty-lambdada yasnippet magit))
  '(vc-annotate-background "#2B2B2B")
  '(vc-annotate-color-map
    '((20 . "#BC8383")

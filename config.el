@@ -63,3 +63,35 @@
   (haskell-process-suggest-hoogle-imports t)
   (haskell-process-type 'stack-ghci)
   (haskell-process-path-ghci "stack"))
+
+(eval-and-compile
+  (defun ess-site-load-path ()
+    (shell-command "find ~ -path ess/lisp")))
+
+(use-package ess-site
+  :load-path (lambda () (list (ess-site-load-path)))
+  :commands R)
+
+(use-package ess
+  :mode ("\\.R\\'" . R-mode)
+  :init
+  (progn
+    (autoload 'R-mode "ess-site.el" "" t)
+    (setq ess-indent-level 2))
+  :config
+  (progn
+    (local-unset-key "_")
+    (ess-toggle-underscore nil))
+  :custom
+  (ess-R-font-lock-keywords
+   '((ess-R-fl-keyword:modifiers  . t)
+     (ess-R-fl-keyword:fun-defs   . t)
+     (ess-R-fl-keyword:keywords   . t)
+     (ess-R-fl-keyword:assign-ops . t)
+     (ess-R-fl-keyword:constants  . t)
+     (ess-fl-keyword:fun-calls    . t)
+     (ess-fl-keyword:numbers      . t)
+     (ess-fl-keyword:operators    . t)
+     (ess-fl-keyword:delimiters   . t)
+     (ess-fl-keyword:=)
+     (ess-R-fl-keyword:F&T))))
