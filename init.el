@@ -9,7 +9,6 @@
      ,@body))
 
 (defmacro on-macos (&rest body)
-
   `(on-system 'darwin ,@body))
 
 (defmacro on-linux (&rest body)
