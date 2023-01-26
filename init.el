@@ -106,8 +106,9 @@
   :ensure t
   :hook (coq-mode . prettify-symbols-mode)
   :custom
-  (coq-prog-args '("-R" "/Users/bkc/dev/coq/cpdt/src" "Cpdt")
-                 "Add the Cpdt libraries"))
+  (coq-prog-args
+   '("-R" "/Users/bkc/dev/coq/cpdt/src" "Cpdt")
+   "Add the Cpdt libraries"))
 
 (use-package racket-mode
   :ensure t
