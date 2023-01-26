@@ -1,98 +1,147 @@
-;;; init.el --- emacs initialization file.
-;;; Commentary:
-;;;   loaded on start.
+(require 'package)
 
-;;; Code:
-
-;; Added by Package.el.  This must come before configurations of
-;; installed packages.  Don't delete this line.  If you don't want it,
-;; just comment it out by adding a semicolon to the start of the line.
-;; You may delete these explanatory comments.
+(add-to-list 'package-archives
+             '("melpa" . "http://melpa.org/packages/"))
 (package-initialize)
 
-(load "~/.emacs.d/startup-utils")
-(recursively-add-directory-to-load-path "~/.emacs.d/elisp")
-(setq server-socket-dir (format "/tmp/emacs%d" (user-uid)))
-(add-hook 'after-init-hook
-          '(lambda ()
-             (require 'pkg)
-             (require 'setup)
-             (setup/setup-all)))
-(add-hook 'after-change-major-mode-hook
-          (lambda ()
-            (electric-indent-mode -1)))
-(load (expand-file-name "~/quicklisp/slime-helper.el"))
-;; Replace "sbcl" with the path to your implementation
-(setq inferior-lisp-program "sbcl")
+(defmacro on-system (system &rest body)
+  `(when (eq system-type ',system)
+     ,@body))
 
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(ansi-color-names-vector
-   ["#3F3F3F" "#CC9393" "#7F9F7F" "#F0DFAF" "#8CD0D3" "#DC8CC3" "#93E0E3" "#DCDCCC"])
- '(company-ghc-show-info t)
- '(custom-safe-themes
-   '("a455366c5cdacebd8adaa99d50e37430b0170326e7640a688e9d9ad406e2edfd" "c2cfe2f1440d9ef4bfd3ef4cf15bfe35ff40e6d431264b1e24af64f145cffb11" default))
- '(ess-R-font-lock-keywords
-   '((ess-R-fl-keyword:modifiers . t)
-     (ess-R-fl-keyword:fun-defs . t)
-     (ess-R-fl-keyword:keywords . t)
-     (ess-R-fl-keyword:assign-ops . t)
-     (ess-R-fl-keyword:constants . t)
-     (ess-fl-keyword:fun-calls . t)
-     (ess-fl-keyword:numbers . t)
-     (ess-fl-keyword:operators . t)
-     (ess-fl-keyword:delimiters . t)
-     (ess-fl-keyword:=)
-     (ess-R-fl-keyword:F&T)))
- '(fci-rule-color "#383838")
- '(flycheck-check-syntax-automatically '(mode-enabled))
- '(flycheck-idle-change-delay 1000)
- '(haskell-process-auto-import-loaded-modules t)
- '(haskell-process-log t)
- '(haskell-process-path-ghci "stack")
- '(haskell-process-suggest-hoogle-imports t)
- '(haskell-process-suggest-remove-import-lines t)
- '(haskell-process-type 'stack-ghci)
- '(haskell-stylish-on-save t)
- '(haskell-tags-on-save t)
- '(package-selected-packages
-   '(company-sourcekit slime-company color-theme-modern cider nixos-options nix-mode nix-sandbox intero dockerfile-mode tide multiple-cursors fill-column-indicator flycheck-haskell 0xc merlin yaml-mode ess-R-data-view jedi phabricator php-mode php+-mode jsx-mode web-mode pydoc-info jabber jedi-core sr-speedbar rust-mode anaconda-mode autopair paredit pymacs geiser w3m swift-mode oauth2 oauth request-deferred request ido-ubiquitous color-theme-solarized zenburn-theme exec-path-from-shell color-theme-wombat markdown-mode auctex ess google-c-style flycheck-google-cpplint flycheck ac-nrepl ac-math ac-c-headers auto-complete-clang auto-complete-c-headers auto-complete-auctex auto-complete racket-mode scheme-complete ensime scala-mode2 javadoc-lookup java-snippets tuareg hi2 hindent haskell-mode clojure-test-mode clojure-cheatsheet clojure-snippets clojure-mode pretty-lambdada yasnippet magit))
- '(vc-annotate-background "#2B2B2B")
- '(vc-annotate-color-map
-   '((20 . "#BC8383")
-     (40 . "#CC9393")
-     (60 . "#DFAF8F")
-     (80 . "#D0BF8F")
-     (100 . "#E0CF9F")
-     (120 . "#F0DFAF")
-     (140 . "#5F7F5F")
-     (160 . "#7F9F7F")
-     (180 . "#8FB28F")
-     (200 . "#9FC59F")
-     (220 . "#AFD8AF")
-     (240 . "#BFEBBF")
-     (260 . "#93E0E3")
-     (280 . "#6CA0A3")
-     (300 . "#7CB8BB")
-     (320 . "#8CD0D3")
-     (340 . "#94BFF3")
-     (360 . "#DC8CC3")))
- '(vc-annotate-very-old-color "#DC8CC3"))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+(defmacro on-macos (&rest body)
+  `(on-system 'darwin ,@body))
 
-;; ## added by OPAM user-setup for emacs / base ## 56ab50dc8996d2bb95e7856a6eddb17b ## you can edit, but keep this line
-(setq opam-user-setup-file "~/.emacs.d/opam-user-setup.el")
-(when (file-exists-p opam-user-setup-file)
-  (require 'opam-user-setup opam-user-setup-file))
-;; ## end of OPAM user-setup addition for emacs / base ## keep this line
+(defmacro on-linux (&rest body)
+  `(on-system 'gnu/linux ,@body))
 
-(provide 'init)
-;;; init.el ends here
+(unless (package-installed-p 'use-package)
+  (message "%s" "Refreshing package set")
+  (package-refresh-contents)
+  (message "%s" "installing use-package")
+  (package-install 'use-package)
+  (message "%s" "done!"))
+
+(unless (package-installed-p 'dash)
+  (package-refresh-contents)
+  (package-install 'dash))
+
+(eval-when-compile
+  (require 'use-package))
+
+(use-package company-coq
+  :ensure t
+  :after (proof-general)
+  :hook (coq-mode . company-coq-mode)
+  :init (setq company-coq-live-on-the-edge t))
+
+(use-package exec-path-from-shell
+  :if (memq window-system '(mac ns))
+  :ensure t
+  :config
+  (exec-path-from-shell-initialize))
+
+(use-package ess
+  :ensure t
+  :mode ("\\.R\\'" . R-mode))
+
+(use-package lsp-mode
+  :ensure t
+  :init
+  (setq lsp-keymap-prefix "C-c l")
+  :commands lsp)
+
+(use-package lsp-pyright
+  :ensure t
+  :hook (python-mode . (lambda ()
+                         (require 'lsp-pyright)
+                         (lsp)))
+  :config
+  (progn
+    (setq lsp-pyright-use-library-code-for-types t)
+    (let* ((pyright-stubs-root-dir
+            (getenv "PYRIGHT_TYPE_STUBS_ROOT"))
+           (pyright-stubs-dir
+            (concat pyright-stubs-root-dir
+                    "/python-type-stubs")))
+      (when (and pyright-stubs-root-dir
+                 pyright-stubs-dir)
+        (setq lsp-pyright-stubs-path
+              pyright-stubs-dir)))))
+
+(use-package lsp-sourcekit
+  :ensure t
+  :after lsp-mode
+  :config
+  (on-macos
+   (message "I did this")
+   (setq lsp-sourcekit-executable
+         (string-trim
+          (shell-command-to-string
+           "xcrun --find sourcekit-lsp")))))
+
+(use-package magit
+  :ensure t
+  :bind (("C-c m" . magit-status)))
+
+(use-package multiple-cursors
+  :ensure t
+  :bind (("C-c C-m C-c" . mc/edit-lines)))
+
+(use-package paredit
+  :ensure t
+  :init
+  (progn
+    (add-hook 'emacs-lisp-mode-hook #'enable-paredit-mode)
+    (add-hook 'lisp-mode-hook #'enable-paredit-mode)
+    (add-hook 'scheme-mode-hook #'enable-paredit-mode)
+    (add-hook 'racket-mode-hook #'enable-paredit-mode))
+  :bind
+  (:map paredit-mode-map
+        ("{"     . paredit-open-curly)
+        ("}"     . paredit-close-curly)
+        ("C-M-[" . paredit-forward-slurp-sexp)
+        ("C-M-]" . paredit-forward-barf-sexp)))
+
+(use-package proof-general
+  :ensure t
+  :hook (coq-mode . prettify-symbols-mode)
+  :custom
+  (coq-prog-args '("-R" "/Users/bkc/dev/coq/cpdt/src" "Cpdt")
+                 "Add the Cpdt libraries"))
+
+(use-package racket-mode
+  :ensure t
+  :mode ("\\.rkt\\'" . racket-mode)
+  :config
+  (setq racket-command-port 9091))
+
+(use-package swift-mode
+  :ensure t
+  :hook (swift-mode . (lambda () (lsp))))
+
+(use-package whitespace
+  :ensure t
+  :init
+  (add-hook 'before-save-hook
+            'whitespace-cleanup))
+
+(use-package zenburn-theme
+  :ensure t
+  :config
+  (progn
+    (load-theme 'zenburn t t)
+    (enable-theme 'zenburn)))
+
+(global-linum-mode 1)
+(setq column-number-mode t)
+(when (boundp 'scroll-bar-mode)
+  (scroll-bar-mode -1))
+(setq ring-bell-function 'ignore)
+(tool-bar-mode -1)
+(menu-bar-mode -1)
+(setq-default indent-tabs-mode nil)
+(setq-default truncate-lines t)
+(global-set-key (kbd "C-x p")
+                (lambda ()
+                  (interactive)
+                  (other-window -1)))
