@@ -107,8 +107,12 @@
   :hook (coq-mode . prettify-symbols-mode)
   :custom
   (coq-prog-args
-   '("-R" "/Users/bkc/dev/coq/cpdt/src" "Cpdt")
-   "Add the Cpdt libraries"))
+   (list
+    "-emacs"
+    "-R"
+    (or (getenv "CPDT_SRC_DIR")
+        "/Users/bkc/dev/coq/cpdt/src")
+    "Cpdt")))
 
 (use-package racket-mode
   :ensure t
