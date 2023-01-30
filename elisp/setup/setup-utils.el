@@ -35,6 +35,8 @@
                   '(:connection-type . ssl))
             jabber-account-list))
 
+(xclip-mode 1)
+
 (message "end of setup-utils")
 
 (provide 'setup-utils)

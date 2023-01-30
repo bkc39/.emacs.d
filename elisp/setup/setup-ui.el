@@ -120,6 +120,7 @@
       (message "failed to infer branch name")
       "")))
 
+
 (defun issue-prefix-is-there ()
   "Check if the buffer is prefixed by the issue prefix [#ISSUE-NUMBER]"
   (let ((buffer-prefix (car (split-string (buffer-string)))))
