@@ -14,19 +14,22 @@
 (defmacro on-linux (&rest body)
   `(on-system 'gnu/linux ,@body))
 
-(unless (package-installed-p 'use-package)
-  (message "%s" "Refreshing package set")
-  (package-refresh-contents)
-  (message "%s" "installing use-package")
-  (package-install 'use-package)
-  (message "%s" "done!"))
-
-(unless (package-installed-p 'dash)
-  (package-refresh-contents)
-  (package-install 'dash))
-
-(eval-when-compile
-  (require 'use-package))
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name
+        "straight/repos/straight.el/bootstrap.el"
+        user-emacs-directory))
+      (bootstrap-version 6))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         (concat
+          "https://raw.githubusercontent.com"
+          "/radian-software/straight.el/develop/install.el")
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
 
 (use-package company-coq
   :ensure t
