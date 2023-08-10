@@ -1,9 +1,3 @@
-(require 'package)
-
-(add-to-list 'package-archives
-             '("melpa" . "http://melpa.org/packages/"))
-(package-initialize)
-
 (defmacro on-system (system &rest body)
   `(when (eq system-type ',system)
      ,@body))
@@ -14,9 +8,12 @@
 (defmacro on-linux (&rest body)
   `(on-system 'gnu/linux ,@body))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Straigth.el config
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;; configure straight.el
 (setq straight-repository-branch "develop")
-
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name
@@ -36,6 +33,10 @@
 
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Package configs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package company-coq
   :after (proof-general)
@@ -57,7 +58,6 @@
 
 (use-package flycheck)
 
-
 (use-package chatgpt
   :straight (:host github
                    :repo "joshcho/ChatGPT.el"
@@ -77,8 +77,10 @@
                  (insert-file-contents openai-config-file)
                  (buffer-string))))
           (setenv "OPENAI_API_KEY" config-file-sk))
-      (message "openai config file does not exist. Exiting..."))))
-
+      (message "openai config file does not exist. Exiting...")))
+  :config
+  (setq chatgpt-cli-file-path
+        (executable-find "lwe")))
 
 (use-package lsp-mode
   :init
@@ -87,7 +89,6 @@
   :hook (js-mode . (lambda ()
                      (electric-indent-mode -1)
                      (lsp))))
-
 
 (use-package lsp-pyright
   :hook (python-mode . (lambda ()
