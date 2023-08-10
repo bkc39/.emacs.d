@@ -9,7 +9,7 @@
   `(on-system 'gnu/linux ,@body))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Straigth.el config
+;; Straight.el config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; configure straight.el
@@ -88,7 +88,9 @@
   :commands lsp
   :hook (js-mode . (lambda ()
                      (electric-indent-mode -1)
-                     (lsp))))
+                     (lsp)))
+  :hook (rust-mode . #'lsp-deferred)
+)
 
 (use-package lsp-pyright
   :hook (python-mode . (lambda ()
@@ -154,6 +156,13 @@
   (setq racket-command-port 9091)
   (racket-unicode-input-method-enable))
 
+(use-package rust-mode
+  :config
+  (setq rust-format-on-save t)
+
+
+  )
+
 (use-package react-snippets)
 
 (use-package swift-mode
@@ -194,13 +203,17 @@
   :hook (prog-mode . whitespace-mode))
 
 (use-package yasnippet
-  :hook (js-mode . yas-minor-mode-on))
+  :hook (js-mode . yas-minor-mode)
+  :hook (lsp-mode . yas-minor-mode))
 
 (use-package zenburn-theme
   :config
   (progn
     (load-theme 'zenburn t t)
     (enable-theme 'zenburn)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Other configs
 
 (global-linum-mode 1)
 (setq column-number-mode t)
@@ -211,6 +224,8 @@
 (menu-bar-mode -1)
 (setq-default indent-tabs-mode nil)
 (setq-default truncate-lines t)
+(setq js-indent-level 2)
+
 (global-set-key (kbd "C-x p")
                 (lambda ()
                   (interactive)
@@ -219,8 +234,20 @@
                 (lambda ()
                   (interactive)
                   (other-window -1)))
-(add-hook
- 'after-change-major-mode-hook
+
+(defmacro add-hookq (hook-name fn)
+  "Like add-hook, but automatically quotes the hook-name"
+  `(add-hook ',hook-name ,fn))
+
+(add-hookq
+ after-change-major-mode-hook
  #'(lambda ()
      (electric-indent-mode -1)))
-(setq js-indent-level 2)
+
+(defun set-initial-directory-for-emacsclients ()
+  "Set the initial directory to the users home directory"
+  (setq default-directory (expand-file-name "~")))
+
+(add-hookq server-visit-hook #'set-initial-directory-for-emacsclients)
+
+
