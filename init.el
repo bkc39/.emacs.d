@@ -14,6 +14,9 @@
 (defmacro on-linux (&rest body)
   `(on-system 'gnu/linux ,@body))
 
+;; configure straight.el
+(setq straight-repository-branch "develop")
+
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name
@@ -31,31 +34,29 @@
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 
+(straight-use-package 'use-package)
+(setq straight-use-package-by-default t)
+
 (use-package company-coq
-  :ensure t
   :after (proof-general)
   :hook (coq-mode . company-coq-mode)
   :init (setq company-coq-live-on-the-edge t))
 
-(use-package cmake-mode
-  :ensure t)
+(use-package cmake-mode)
 
-(use-package ein
-  :ensure t)
+(use-package ein)
 
 (use-package ess
-  :ensure t
   :mode ("\\.R\\'" . R-mode))
 
 (use-package exec-path-from-shell
   :if (or (memq window-system '(mac ns))
           (eq system-type 'darwin))
-  :ensure t
   :config
   (exec-path-from-shell-initialize))
 
-(use-package flycheck
-  :ensure t)
+(use-package flycheck)
+
 
 (use-package chatgpt
   :straight (:host github
@@ -63,7 +64,7 @@
                    :files ("dist" "*.el"))
 
   :bind ("C-c q" . chatgpt-query)
-  :config
+  :init
   ;; default to the environment variable
   (unless (getenv "OPENAI_API_KEY")
     ;; otherwise read the api key in from the config file
@@ -73,14 +74,13 @@
     (if (file-exists-p openai-config-file)
         (let ((config-file-sk
                (with-temp-buffer
-                 (insert-file-contents file-path)
+                 (insert-file-contents openai-config-file)
                  (buffer-string))))
           (setenv "OPENAI_API_KEY" config-file-sk))
       (message "openai config file does not exist. Exiting..."))))
 
 
 (use-package lsp-mode
-  :ensure t
   :init
   (setq lsp-keymap-prefix "C-c l")
   :commands lsp
@@ -90,7 +90,6 @@
 
 
 (use-package lsp-pyright
-  :ensure t
   :hook (python-mode . (lambda ()
                          (require 'lsp-pyright)
                          (lsp)))
@@ -108,7 +107,6 @@
               pyright-stubs-dir)))))
 
 (use-package lsp-sourcekit
-  :ensure t
   :after lsp-mode
   :config
   (on-macos
@@ -119,15 +117,12 @@
            "xcrun --find sourcekit-lsp")))))
 
 (use-package magit
-  :ensure t
   :bind (("C-c m" . magit-status)))
 
 (use-package multiple-cursors
-  :ensure t
   :bind (("C-c C-m C-c" . mc/edit-lines)))
 
 (use-package paredit
-  :ensure t
   :init
   (progn
     (add-hook 'emacs-lisp-mode-hook #'enable-paredit-mode)
@@ -142,7 +137,6 @@
         ("C-M-]" . paredit-forward-barf-sexp)))
 
 (use-package proof-general
-  :ensure t
   :hook (coq-mode . prettify-symbols-mode)
   :custom
   (coq-prog-args
@@ -154,27 +148,22 @@
     "Cpdt")))
 
 (use-package racket-mode
-  :ensure t
   :mode ("\\.rkt\\'" . racket-mode)
   :config
   (setq racket-command-port 9091)
   (racket-unicode-input-method-enable))
 
-(use-package react-snippets
-  :ensure t)
+(use-package react-snippets)
 
 (use-package swift-mode
-  :ensure t
   :hook (swift-mode . (lambda () (lsp))))
 
-(use-package solidity-mode
-  :ensure t)
+(use-package solidity-mode)
 
-(use-package tree-sitter
-  :ensure t)
+(use-package tree-sitter)
 
-(use-package tree-sitter-langs
-  :ensure t)
+(use-package tree-sitter-langs)
+
 
 (defun setup-tide-mode ()
   "hook to setup tide"
@@ -185,37 +174,7 @@
   (tide-hl-identifier-mode +1)
   (company-mode +1))
 
-;; (use-package typescript-mode
-;;   :ensure t)
-
-;; (use-package tide
-;;   :ensure t
-;;   :after (typescript-mode company flycheck)
-;;   :init
-;;   (progn
-;;     (setq company-tooltip-align-annotations t)
-;;     (setq flycheck-check-syntax-automatically '(save mode-enabled)))
-;;   :hook ((typescript-mode . tide-setup)
-;;          (typescript-mode . tide-hl-identifier-mode)
-;;          (before-save . tide-format-before-save)))
-
-;; (use-package web-mode
-;;   :ensure t
-;;   :mode ("\\.tsx\\'" . web-mode)
-;;   :config
-;;   (flycheck-add-mode 'typescript-tslint 'web-mode)
-;;   :hook (web-mode . (lambda ()
-;;                       (when (string-equal
-;;                              "tsx"
-;;                              (file-name-extension buffer-file-name))
-;;                         (setup-tide-mode))))
-;;   :custom
-;;   (web-mode-markup-indent-offset 2)
-;;   (web-mode-css-indent-offset 2)
-;;   (web-mode-code-indent-offset 2))
-
 (use-package web-mode
-  :ensure t
   :mode ("\\.tsx\\'" . web-mode)
   :config
   (flycheck-add-mode 'typescript-tslint 'web-mode)
@@ -225,17 +184,14 @@
   (web-mode-code-indent-offset 2))
 
 (use-package whitespace
-  :ensure t
   :init
   (add-hook 'before-save-hook
             'whitespace-cleanup))
 
 (use-package yasnippet
-  :ensure t
   :hook (js-mode . yas-minor-mode-on))
 
 (use-package zenburn-theme
-  :ensure t
   :config
   (progn
     (load-theme 'zenburn t t)
