@@ -187,7 +187,11 @@
 (use-package whitespace
   :init
   (add-hook 'before-save-hook
-            'whitespace-cleanup))
+            'whitespace-cleanup)
+  :config
+  (setq whitespace-line-column 80)
+  (setq whitespace-style '(face lines))
+  :hook (prog-mode . whitespace-mode))
 
 (use-package yasnippet
   :hook (js-mode . yas-minor-mode-on))
