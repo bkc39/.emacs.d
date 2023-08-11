@@ -64,28 +64,6 @@
                    :files ("dist" "*.el"))
   :bind ("C-c q" . shellgpt:quick-ask))
 
-;; (use-package chatgpt
-;;   :straight (:host github
-;;                    :repo "joshcho/ChatGPT.el"
-;;                    :files ("dist" "*.el"))
-;;   :init
-;;   ;; default to the environment variable
-;;   (unless (getenv "OPENAI_API_KEY")
-;;     ;; otherwise read the api key in from the config file
-;;     (setq openai-config-file "~/.openai")
-;;     (message "OPENAI_API_KEY not defined. Attempting to read from file: %s"
-;;              openai-config-file)
-;;     (if (file-exists-p openai-config-file)
-;;         (let ((config-file-sk
-;;                (with-temp-buffer
-;;                  (insert-file-contents openai-config-file)
-;;                  (buffer-string))))
-;;           (setenv "OPENAI_API_KEY" config-file-sk))
-;;       (message "openai config file does not exist. Exiting...")))
-;;   :config
-;;   (setq chatgpt-cli-file-path
-;;         (executable-find "lwe")))
-
 (use-package lsp-mode
   :init
   (setq lsp-keymap-prefix "C-c l")
