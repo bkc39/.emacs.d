@@ -62,8 +62,6 @@
   :straight (:host github
                    :repo "joshcho/ChatGPT.el"
                    :files ("dist" "*.el"))
-
-  :bind ("C-c q" . chatgpt-query)
   :init
   ;; default to the environment variable
   (unless (getenv "OPENAI_API_KEY")
@@ -80,7 +78,7 @@
       (message "openai config file does not exist. Exiting...")))
   :config
   (setq chatgpt-cli-file-path
-        (executable-find "sgpt")))
+        (executable-find "lwe")))
 
 (use-package lsp-mode
   :init
@@ -90,7 +88,7 @@
                      (electric-indent-mode -1)
                      (lsp)))
   :hook (rust-mode . #'lsp-deferred)
-)
+  )
 
 (use-package lsp-pyright
   :hook (python-mode . (lambda ()
@@ -113,7 +111,6 @@
   :after lsp-mode
   :config
   (on-macos
-   (message "I did this")
    (setq lsp-sourcekit-executable
          (string-trim
           (shell-command-to-string
@@ -255,13 +252,6 @@
       (progn
         (server-force-delete)
         (server-start))
-    (message "Not in a server. Exiting...")
+    (message "Not in a client. Exiting...")
     'ok))
-
-;; (defun set-initial-directory-for-emacsclients ()
-;;   "Set the initial directory to the users home directory"
-;;   ((setq default-directory (expand-file-name "~/"))))
-
-;; (add-hookq server-visit-hook #'set-initial-directory-for-emacsclients)
-
 
