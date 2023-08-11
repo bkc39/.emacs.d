@@ -80,7 +80,7 @@
       (message "openai config file does not exist. Exiting...")))
   :config
   (setq chatgpt-cli-file-path
-        (executable-find "lwe")))
+        (executable-find "sgpt")))
 
 (use-package lsp-mode
   :init
@@ -157,11 +157,10 @@
   (racket-unicode-input-method-enable))
 
 (use-package rust-mode
+  :hook (rust-mode . (lambda ()
+                       (electric-pair-mode 1)))
   :config
-  (setq rust-format-on-save t)
-
-
-  )
+  (setq rust-format-on-save t))
 
 (use-package react-snippets)
 
@@ -173,7 +172,6 @@
 (use-package tree-sitter)
 
 (use-package tree-sitter-langs)
-
 
 (defun setup-tide-mode ()
   "hook to setup tide"
@@ -244,10 +242,26 @@
  #'(lambda ()
      (electric-indent-mode -1)))
 
-(defun set-initial-directory-for-emacsclients ()
-  "Set the initial directory to the users home directory"
-  (setq default-directory (expand-file-name "~")))
+;; open up the init file in the background on startup
+(add-hookq
+ emacs-startup-hook
+ (lambda ()
+   (find-file-noselect user-init-file)))
 
-(add-hookq server-visit-hook #'set-initial-directory-for-emacsclients)
+(defun restart-server ()
+  "Restart the emacs server and close all clients"
+  (interactive)
+  (if server-process
+      (progn
+        (server-force-delete)
+        (server-start))
+    (message "Not in a server. Exiting...")
+    'ok))
+
+;; (defun set-initial-directory-for-emacsclients ()
+;;   "Set the initial directory to the users home directory"
+;;   ((setq default-directory (expand-file-name "~/"))))
+
+;; (add-hookq server-visit-hook #'set-initial-directory-for-emacsclients)
 
 
