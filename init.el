@@ -71,8 +71,7 @@
   :hook (js-mode . (lambda ()
                      (electric-indent-mode -1)
                      (lsp)))
-  :hook (rust-mode . #'lsp-deferred)
-  )
+  :hook (rust-mode . #'lsp-deferred))
 
 (use-package lsp-pyright
   :hook (python-mode . (lambda ()
@@ -141,7 +140,8 @@
   :hook (rust-mode . (lambda ()
                        (electric-pair-mode 1)))
   :config
-  (setq rust-format-on-save t))
+  (setq rust-format-on-save t)
+  :bind ("C-c C-c m l" . #'lsp-rust-analyzer-open-cargo-toml))
 
 (use-package react-snippets)
 
