@@ -194,7 +194,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Other configs
 
-(global-linum-mode 1)
+(if (>= 29 (car (version-to-list emacs-version)))
+    (global-display-line-numbers-mode 1)
+  (global-linum-mode 1))
 (setq column-number-mode t)
 (when (boundp 'scroll-bar-mode)
   (scroll-bar-mode -1))
