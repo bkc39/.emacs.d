@@ -38,6 +38,8 @@
 ;; Package configs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(use-package ag)
+
 (use-package company-coq
   :after (proof-general)
   :hook (coq-mode . company-coq-mode)
