@@ -207,8 +207,14 @@
 (menu-bar-mode -1)
 (setq-default indent-tabs-mode nil)
 (setq-default truncate-lines t)
-(setq js-indent-level 2)
 
+;; set the font to anonymous pro when in GUI if its installed 
+(when (and (display-graphic-p)
+           (x-list-fonts "Anonymous Pro"))
+  (add-to-list 'default-frame-alist
+               '(font . "Anonymous Pro-12")))
+
+(setq js-indent-level 2)
 (global-set-key (kbd "C-x p")
                 (lambda ()
                   (interactive)
@@ -242,4 +248,3 @@
         (server-start))
     (message "Not in a client. Exiting...")
     'ok))
-
