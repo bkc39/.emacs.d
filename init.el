@@ -8,6 +8,8 @@
 (defmacro on-linux (&rest body)
   `(on-system 'gnu/linux ,@body))
 
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Straight.el config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -64,7 +66,14 @@
   :straight (:host github
                    :repo "bkc39/shellgpt.el"
                    :files ("dist" "*.el"))
-  :bind ("C-c q" . shellgpt:quick-ask))
+  :bind ("C-c q" . shellgpt:quick-ask)
+  :config
+  (setq shellgpt:repl-chat-name
+        (concat "emacs-"
+                (format-time-string "%Y%m%d"
+                                    (current-time))))
+  (setq shellgpt:command-line-args
+        (list "--repl" shellgpt:repl-chat-name)))
 
 (use-package lsp-mode
   :init
