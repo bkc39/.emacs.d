@@ -66,7 +66,6 @@
                    :files ("dist" "*.el"))
   :bind ("C-c q" . shellgpt:quick-ask)
   :custom
-  (shellgpt:openai-config-file "~/.openai")
   (shellgpt:repl-chat-name
    (concat "emacs-"
            (format-time-string "%Y%m%d"
