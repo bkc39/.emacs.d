@@ -65,13 +65,12 @@
                    :repo "bkc39/shellgpt.el"
                    :files ("dist" "*.el"))
   :bind ("C-c q" . shellgpt:quick-ask)
-  :config
-  (setq shellgpt:repl-chat-name
-        (concat "emacs-"
-                (format-time-string "%Y%m%d"
-                                    (current-time))))
-  (setq shellgpt:command-line-args
-        (list "--repl" shellgpt:repl-chat-name)))
+  :custom
+  (shellgpt:openai-config-file "~/.openai")
+  (shellgpt:repl-chat-name
+   (concat "emacs-"
+           (format-time-string "%Y%m%d"
+                               (current-time)))))
 
 (use-package lsp-mode
   :init
