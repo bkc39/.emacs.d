@@ -8,6 +8,10 @@
 (defmacro on-linux (&rest body)
   `(on-system 'gnu/linux ,@body))
 
+(defmacro add-hookq (hook-name fn)
+  "Like add-hook, but automatically quotes the hook-name"
+  `(add-hook ',hook-name ,fn))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Straight.el config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -70,6 +74,16 @@
    (concat "emacs-"
            (format-time-string "%Y%m%d"
                                (current-time)))))
+
+(use-package go-mode
+  :after lsp-mode
+  :config
+  (if (executable-find "gopls")
+      (progn
+        (add-hookq go-mode-hook #'lsp-deferred)
+        (add-hookq before-save-hook #'lsp-format-buffer)
+        (add-hookq before-save-hook #'lsp-organize-imports))
+    (message "go-mode LSP plugin gopls is not installed!")))
 
 (use-package lsp-mode
   :init
@@ -229,9 +243,7 @@
                   (interactive)
                   (other-window -1)))
 
-(defmacro add-hookq (hook-name fn)
-  "Like add-hook, but automatically quotes the hook-name"
-  `(add-hook ',hook-name ,fn))
+
 
 (add-hookq
  after-change-major-mode-hook
