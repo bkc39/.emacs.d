@@ -213,7 +213,7 @@
 (setq-default indent-tabs-mode nil)
 (setq-default truncate-lines t)
 
-;; set the font to anonymous pro when in GUI if its installed 
+;; set the font to anonymous pro when in GUI if its installed
 (when (and (display-graphic-p)
            (x-list-fonts "Anonymous Pro"))
   (add-to-list 'default-frame-alist
@@ -224,6 +224,7 @@
                 (lambda ()
                   (interactive)
                   (other-window -1)))
+
 (global-set-key (kbd "C-x p")
                 (lambda ()
                   (interactive)
