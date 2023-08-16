@@ -64,16 +64,16 @@
 
 (use-package flycheck)
 
-(use-package shellgpt
-  :straight (:host github
-                   :repo "bkc39/shellgpt.el"
-                   :files ("dist" "*.el"))
-  :bind ("C-c q" . shellgpt:quick-ask)
-  :custom
-  (shellgpt:repl-chat-name
-   (concat "emacs-"
-           (format-time-string "%Y%m%d"
-                               (current-time)))))
+;; (use-package shellgpt
+;;   :straight (:host github
+;;              :repo "bkc39/shellgpt.el"
+;;              :files ("dist" "*.el"))
+;;   :bind ("C-c q" . shellgpt:quick-ask)
+;;   :custom
+;;   (shellgpt:repl-chat-name
+;;    (concat "emacs-"
+;;            (format-time-string "%Y%m%d"
+;;                                (current-time)))))
 
 (use-package go-mode
   :after lsp-mode
