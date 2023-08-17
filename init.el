@@ -64,16 +64,16 @@
 
 (use-package flycheck)
 
-(use-package shellgpt
-  :straight (:host github
-                   :repo "bkc39/shellgpt.el"
-                   :files ("dist" "*.el"))
-  :bind ("C-c q" . shellgpt:quick-ask)
-  :custom
-  (shellgpt:repl-chat-name
-   (concat "emacs-"
-           (format-time-string "%Y%m%d"
-                               (current-time)))))
+;; (use-package shellgpt
+;;   :straight (:host github
+;;              :repo "bkc39/shellgpt.el"
+;;              :files ("dist" "*.el"))
+;;   :bind ("C-c q" . shellgpt:quick-ask)
+;;   :custom
+;;   (shellgpt:repl-chat-name
+;;    (concat "emacs-"
+;;            (format-time-string "%Y%m%d"
+;;                                (current-time)))))
 
 (use-package go-mode
   :after lsp-mode
@@ -225,7 +225,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Other configs
 
-(if (>= 29 (car (version-to-list emacs-version)))
+(if (<= 29 (car (version-to-list emacs-version)))
     (global-display-line-numbers-mode 1)
   (global-linum-mode 1))
 (setq column-number-mode t)
@@ -237,7 +237,7 @@
 (setq-default indent-tabs-mode nil)
 (setq-default truncate-lines t)
 
-;; set the font to anonymous pro when in GUI if its installed 
+;; set the font to anonymous pro when in GUI if its installed
 (when (and (display-graphic-p)
            (x-list-fonts "Anonymous Pro"))
   (add-to-list 'default-frame-alist
@@ -248,6 +248,7 @@
                 (lambda ()
                   (interactive)
                   (other-window -1)))
+
 (global-set-key (kbd "C-x p")
                 (lambda ()
                   (interactive)
