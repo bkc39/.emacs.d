@@ -77,6 +77,8 @@
 
 (use-package go-mode
   :after lsp-mode
+  :hook (go-mode . (lambda ()
+                     (electric-pair-mode 1)))
   :config
   (if (executable-find "gopls")
       (progn
@@ -84,6 +86,7 @@
         (add-hookq before-save-hook #'lsp-format-buffer)
         (add-hookq before-save-hook #'lsp-organize-imports))
     (message "go-mode LSP plugin gopls is not installed!")))
+
 
 (use-package lsp-mode
   :init
@@ -153,9 +156,16 @@
 
 (use-package racket-mode
   :mode ("\\.rkt\\'" . racket-mode)
+  :hook (racket-mode . (lambda ()
+                         (racket-xp-mode t)))
   :config
   (setq racket-command-port 9091)
-  (racket-unicode-input-method-enable))
+  (racket-unicode-input-method-enable)
+  (add-hookq racket-xp-mode-hook
+             (lambda ()
+               (remove-hook 'pre-redisplay-functions
+                            #'racket-xp-pre-redisplay
+                            t))))
 
 (use-package rust-mode
   :hook (rust-mode . (lambda ()
