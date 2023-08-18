@@ -254,8 +254,6 @@
                   (interactive)
                   (other-window -1)))
 
-
-
 (add-hookq
  after-change-major-mode-hook
  #'(lambda ()
