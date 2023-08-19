@@ -57,8 +57,9 @@
 
 (use-package aweshell
   :straight (:host github
-             :repo "manateelazycat/aweshell"
-             :files ("*.el" "dist")))
+                   :repo "manateelazycat/aweshell"
+                   :files ("*.el" "dist"))
+  :bind ("C-c x" . #'aweshell-dedicated-toggle))
 
 (use-package company-coq
   :after (proof-general)
