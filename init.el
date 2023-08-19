@@ -70,6 +70,10 @@
 
 (use-package ein)
 
+(use-package eshell-prompt-extras
+  :config
+  (setq eshell-prompt-function 'epe-theme-lambda))
+
 (use-package ess
   :mode ("\\.R\\'" . R-mode))
 
