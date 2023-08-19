@@ -12,6 +12,17 @@
   "Like add-hook, but automatically quotes the hook-name"
   `(add-hook ',hook-name ,fn))
 
+(defmacro package-install-if-not-there* (&rest packages)
+  "Use package-install-to install the given packages if not there"
+  (let ((pkg (gensym))
+        (to-install (gensym)))
+    `(let ((,to-install
+            (cl-remove-if #'package-installed-p '(,@packages))))
+       (unless (null ,to-install)
+         (package-refresh-contents))
+       (dolist (,pkg ,to-install)
+         (package-install ,pkg)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Straight.el config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -43,6 +54,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package ag)
+
+(use-package aweshell
+  :straight (:host github
+             :repo "manateelazycat/aweshell"
+             :files ("*.el" "dist")))
 
 (use-package company-coq
   :after (proof-general)
