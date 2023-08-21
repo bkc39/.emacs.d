@@ -180,7 +180,6 @@
   :hook (racket-mode . (lambda ()
                          (racket-xp-mode t)))
   :config
-  (setq racket-command-port 9091)
   (racket-unicode-input-method-enable)
   (add-hookq racket-xp-mode-hook
              (lambda ()
