@@ -108,20 +108,19 @@
         (add-hookq before-save-hook #'lsp-organize-imports))
     (message "go-mode LSP plugin gopls is not installed!")))
 
-
 (use-package lsp-mode
   :init
   (setq lsp-keymap-prefix "C-c l")
   :commands lsp
   :hook (js-mode . (lambda ()
                      (electric-indent-mode -1)
-                     (lsp)))
+                     (lsp-deferred)))
   :hook (rust-mode . #'lsp-deferred))
 
 (use-package lsp-pyright
   :hook (python-mode . (lambda ()
                          (require 'lsp-pyright)
-                         (lsp)))
+                         (lsp-deferred)))
   :config
   (progn
     (setq lsp-pyright-use-library-code-for-types t)
@@ -197,7 +196,7 @@
 (use-package react-snippets)
 
 (use-package swift-mode
-  :hook (swift-mode . (lambda () (lsp))))
+  :hook (swift-mode . #'lsp-deferred))
 
 (use-package solidity-mode)
 (use-package tree-sitter)
