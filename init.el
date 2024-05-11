@@ -250,13 +250,11 @@
   (web-mode-code-indent-offset 2))
 
 (use-package whitespace
-  :init
-  (add-hook 'before-save-hook
-            'whitespace-cleanup)
   :config
   (setq whitespace-line-column 80)
-  (setq whitespace-style '(face lines))
-  :hook (prog-mode . whitespace-mode))
+  (setq whitespace-style '(face lines trailing empty))
+  :hook (prog-mode . whitespace-mode)
+  :hook (before-save . whitespace-cleanup))
 
 (use-package yasnippet
   :hook (js-mode . yas-minor-mode)
@@ -326,5 +324,3 @@
         (server-start))
     (message "Not in a client. Exiting...")
     'ok))
-
-
