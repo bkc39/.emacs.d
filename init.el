@@ -61,6 +61,12 @@
                    :files ("*.el" "dist"))
   :bind ("C-c x" . #'aweshell-dedicated-toggle))
 
+(use-package company
+  :ensure t
+  :hook (prog-mode . company-mode)
+  :config
+  (setq company-idle-delay 0.3))
+
 (use-package company-coq
   :after (proof-general)
   :hook (coq-mode . company-coq-mode)
@@ -139,12 +145,12 @@
   :config
   (pyvenv-mode t)
   (setenv "WORKON_HOME"
-          (expand-file-name "~/dev/python-virtual-envs"))
+          (expand-file-name "~/.python-virtual-envs"))
   (setq pyvenv-post-activate-hooks
         (list
          (lambda ()
            (setq python-shell-interpreter
-                 (concat pyvenv-virtual-env "bin/python3")))))
+                 (concat pyvenv-virtual-env "/bin/python3")))))
   (setq pyvenv-post-deactivate-hooks
         (list
          (lambda ()
@@ -228,8 +234,8 @@
   :hook (swift-mode . #'lsp-deferred))
 
 (use-package solidity-mode)
-(use-package tree-sitter)
-(use-package tree-sitter-langs)
+;; (use-package tree-sitter)
+;; (use-package tree-sitter-langs)
 
 (defun setup-tide-mode ()
   "hook to setup tide"
