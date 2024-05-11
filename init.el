@@ -79,7 +79,7 @@
 
 (use-package exec-path-from-shell
   :if (or (memq window-system '(mac ns))
-          (eq system-type 'darwin))
+          (memq system-type '(darwin gnu/linux)))
   :config
   (exec-path-from-shell-initialize))
 
@@ -134,6 +134,23 @@
         (setq lsp-pyright-stubs-path
               pyright-stubs-dir)))))
 
+(use-package pyvenv
+  :ensure t
+  :config
+  (pyvenv-mode t)
+  (setenv "WORKON_HOME"
+          (expand-file-name "~/dev/python-virtual-envs"))
+  (setq pyvenv-post-activate-hooks
+        (list
+         (lambda ()
+           (setq python-shell-interpreter
+                 (concat pyvenv-virtual-env "bin/python3")))))
+  (setq pyvenv-post-deactivate-hooks
+        (list
+         (lambda ()
+           (setq python-shell-interpreter "python3")))))
+
+
 (use-package lsp-sourcekit
   :after lsp-mode
   :config
@@ -186,12 +203,24 @@
                             #'racket-xp-pre-redisplay
                             t))))
 
+
+(defun rust-run-with-args ()
+  "Run with cargo run and additional command line arguments"
+  (interactive)
+  (let ((args
+         (read-string "Command line args: ")))
+    (rust--compile
+     "%s run -- %s"
+     rust-cargo-bin
+     args)))
+
 (use-package rust-mode
   :hook (rust-mode . (lambda ()
                        (electric-pair-mode 1)))
   :custom
   (rust-format-on-save t)
-  :bind ("C-c C-c m l" . #'lsp-rust-analyzer-open-cargo-toml))
+  :bind (("C-c C-c m l" . #'lsp-rust-analyzer-open-cargo-toml)
+         ("C-c C-c C-n" . #'rust-run-with-args)))
 
 (use-package react-snippets)
 
@@ -255,11 +284,14 @@
 (setq-default truncate-lines t)
 
 ;; set the font to anonymous pro when in GUI if its installed
-(when (and (display-graphic-p)
-           (x-list-fonts "Anonymous Pro"))
-  (add-to-list 'default-frame-alist
-               '(font . "Anonymous Pro-12")))
+(defun set-frame-font-to-anonymous-pro ()
+  "set frame font to anonymous pro if GUI is there"
+  (when (and (display-graphic-p)
+             (x-list-fonts "Anonymous Pro"))
+    (add-to-list 'default-frame-alist
+                 '(font . "Anonymous Pro-12"))))
 
+(set-frame-font-to-anonymous-pro)
 (setq js-indent-level 2)
 (global-set-key (kbd "C-x p")
                 (lambda ()
@@ -282,6 +314,9 @@
  (lambda ()
    (find-file-noselect user-init-file)))
 
+;; (add-hookq after-make-frame-functions
+;;            #'set-frame-font-to-anonymous-pro)
+
 (defun restart-server ()
   "Restart the emacs server and close all clients"
   (interactive)
@@ -291,3 +326,5 @@
         (server-start))
     (message "Not in a client. Exiting...")
     'ok))
+
+
