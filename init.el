@@ -124,9 +124,7 @@
   :hook (rust-mode . #'lsp-deferred))
 
 (use-package lsp-pyright
-  :hook (python-mode . (lambda ()
-                         (require 'lsp-pyright)
-                         (lsp-deferred)))
+  :hook (python-mode . lsp-deferred)
   :hook (before-save . lsp-pyright-organize-imports)
   :config
   (progn
