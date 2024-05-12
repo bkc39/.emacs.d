@@ -127,6 +127,7 @@
   :hook (python-mode . (lambda ()
                          (require 'lsp-pyright)
                          (lsp-deferred)))
+  :hook (before-save . lsp-pyright-organize-imports)
   :config
   (progn
     (setq lsp-pyright-use-library-code-for-types t)
