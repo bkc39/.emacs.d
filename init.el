@@ -61,6 +61,12 @@
                    :files ("*.el" "dist"))
   :bind ("C-c x" . #'aweshell-dedicated-toggle))
 
+(use-package company
+  :ensure t
+  :hook (prog-mode . company-mode)
+  :config
+  (setq company-idle-delay 0.3))
+
 (use-package company-coq
   :after (proof-general)
   :hook (coq-mode . company-coq-mode)
@@ -79,7 +85,7 @@
 
 (use-package exec-path-from-shell
   :if (or (memq window-system '(mac ns))
-          (eq system-type 'darwin))
+          (memq system-type '(darwin gnu/linux)))
   :config
   (exec-path-from-shell-initialize))
 
@@ -118,9 +124,8 @@
   :hook (rust-mode . #'lsp-deferred))
 
 (use-package lsp-pyright
-  :hook (python-mode . (lambda ()
-                         (require 'lsp-pyright)
-                         (lsp-deferred)))
+  :hook (python-mode . lsp-deferred)
+  :hook (before-save . lsp-pyright-organize-imports)
   :config
   (progn
     (setq lsp-pyright-use-library-code-for-types t)
@@ -133,6 +138,23 @@
                  pyright-stubs-dir)
         (setq lsp-pyright-stubs-path
               pyright-stubs-dir)))))
+
+(use-package pyvenv
+  :ensure t
+  :config
+  (pyvenv-mode t)
+  (setenv "WORKON_HOME"
+          (expand-file-name "~/.python-virtual-envs"))
+  (setq pyvenv-post-activate-hooks
+        (list
+         (lambda ()
+           (setq python-shell-interpreter
+                 (concat pyvenv-virtual-env "/bin/python3")))))
+  (setq pyvenv-post-deactivate-hooks
+        (list
+         (lambda ()
+           (setq python-shell-interpreter "python3")))))
+
 
 (use-package lsp-sourcekit
   :after lsp-mode
@@ -186,12 +208,24 @@
                             #'racket-xp-pre-redisplay
                             t))))
 
+
+(defun rust-run-with-args ()
+  "Run with cargo run and additional command line arguments"
+  (interactive)
+  (let ((args
+         (read-string "Command line args: ")))
+    (rust--compile
+     "%s run -- %s"
+     rust-cargo-bin
+     args)))
+
 (use-package rust-mode
   :hook (rust-mode . (lambda ()
                        (electric-pair-mode 1)))
   :custom
   (rust-format-on-save t)
-  :bind ("C-c C-c m l" . #'lsp-rust-analyzer-open-cargo-toml))
+  :bind (("C-c C-c m l" . #'lsp-rust-analyzer-open-cargo-toml)
+         ("C-c C-c C-n" . #'rust-run-with-args)))
 
 (use-package react-snippets)
 
@@ -199,8 +233,8 @@
   :hook (swift-mode . #'lsp-deferred))
 
 (use-package solidity-mode)
-(use-package tree-sitter)
-(use-package tree-sitter-langs)
+;; (use-package tree-sitter)
+;; (use-package tree-sitter-langs)
 
 (defun setup-tide-mode ()
   "hook to setup tide"
@@ -221,13 +255,11 @@
   (web-mode-code-indent-offset 2))
 
 (use-package whitespace
-  :init
-  (add-hook 'before-save-hook
-            'whitespace-cleanup)
   :config
   (setq whitespace-line-column 80)
-  (setq whitespace-style '(face lines))
-  :hook (prog-mode . whitespace-mode))
+  (setq whitespace-style '(face lines trailing empty))
+  :hook (prog-mode . whitespace-mode)
+  :hook (before-save . whitespace-cleanup))
 
 (use-package yasnippet
   :hook (js-mode . yas-minor-mode)
@@ -255,11 +287,14 @@
 (setq-default truncate-lines t)
 
 ;; set the font to anonymous pro when in GUI if its installed
-(when (and (display-graphic-p)
-           (x-list-fonts "Anonymous Pro"))
-  (add-to-list 'default-frame-alist
-               '(font . "Anonymous Pro-12")))
+(defun set-frame-font-to-anonymous-pro ()
+  "set frame font to anonymous pro if GUI is there"
+  (when (and (display-graphic-p)
+             (x-list-fonts "Anonymous Pro"))
+    (add-to-list 'default-frame-alist
+                 '(font . "Anonymous Pro-12"))))
 
+(set-frame-font-to-anonymous-pro)
 (setq js-indent-level 2)
 
 (defun copy-to-clipboard (beg end)
@@ -303,6 +338,9 @@
  emacs-startup-hook
  (lambda ()
    (find-file-noselect user-init-file)))
+
+;; (add-hookq after-make-frame-functions
+;;            #'set-frame-font-to-anonymous-pro)
 
 (defun restart-server ()
   "Restart the emacs server and close all clients"
