@@ -261,6 +261,26 @@
                '(font . "Anonymous Pro-12")))
 
 (setq js-indent-level 2)
+
+(defun copy-to-clipboard (beg end)
+  (interactive "r")
+  (let ((command
+         (cond
+           ((eq system-type 'darwin)
+            "pbcopy")
+           ((eq system-type 'gnu/linux)
+            "xclip -selection clipboard"))))
+    (shell-command-on-region beg end command)
+    (deactivate-mark)))
+
+(defun clipboard+kill-ring-save (beg end)
+  "Copies selection to x-clipboard."
+  (interactive "r")
+  (copy-to-clipboard beg end)
+  (kill-ring-save beg end))
+
+(global-set-key (kbd "M-w") 'clipboard+kill-ring-save)
+
 (global-set-key (kbd "C-x p")
                 (lambda ()
                   (interactive)
@@ -270,6 +290,8 @@
                 (lambda ()
                   (interactive)
                   (other-window -1)))
+
+
 
 (add-hookq
  after-change-major-mode-hook
