@@ -303,9 +303,13 @@
          (cond
            ((eq system-type 'darwin)
             "pbcopy")
-           ((eq system-type 'gnu/linux)
+           ((and (eq system-type 'gnu/linux)
+                 ;; xclip needs the display or it will fail with null
+                 ;; device
+                 (getenv "DISPLAY"))
             "xclip -selection clipboard"))))
-    (shell-command-on-region beg end command)
+    (when command
+      (shell-command-on-region beg end command))
     (deactivate-mark)))
 
 (defun clipboard+kill-ring-save (beg end)
