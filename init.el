@@ -185,6 +185,14 @@
         ("C-M-[" . paredit-forward-slurp-sexp)
         ("C-M-]" . paredit-forward-barf-sexp)))
 
+(use-package pdf-tools
+  :ensure t
+  :config
+  (pdf-tools-install)
+  :mode ("\\.pdf\\'" . pdf-view-mode)
+  :hook (pdf-view-mode . (lambda ()
+                           (display-line-numbers-mode -1))))
+
 (use-package proof-general
   :hook (coq-mode . prettify-symbols-mode)
   :custom
@@ -325,8 +333,6 @@
                 (lambda ()
                   (interactive)
                   (other-window -1)))
-
-
 
 (add-hookq
  after-change-major-mode-hook
