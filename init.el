@@ -123,6 +123,20 @@
                      (lsp-deferred)))
   :hook (rust-mode . #'lsp-deferred))
 
+(defun check-for-python-executable-in-dir (dir bin-name)
+  (let ((executable (concat dir "/" bin-name)))
+    (and (file-exists-p executable) executable)))
+
+(defun search-venv-for-python-executable ()
+  "Search for the right python command in the current virual environment"
+  (let ((venv-bin
+         (concat (lsp-pyright--locate-venv) "/bin")))
+    (or (check-for-python-executable-in-dir venv-bin "ipython")
+        (check-for-python-executable-in-dir venv-bin "python3")
+        (check-for-python-executable-in-dir venv-bin "python")
+        "python")))
+
+
 (use-package lsp-pyright
   :hook (python-mode . lsp-deferred)
   :hook (before-save . lsp-pyright-organize-imports)
@@ -137,7 +151,13 @@
       (when (and pyright-stubs-root-dir
                  pyright-stubs-dir)
         (setq lsp-pyright-stubs-path
-              pyright-stubs-dir)))))
+              pyright-stubs-dir)))
+    (bind-key
+     "C-c C-p"
+     (lambda ()
+       (interactive)
+       (run-python (search-venv-for-python-executable)))
+     python-mode-map)))
 
 (use-package pyvenv
   :ensure t
