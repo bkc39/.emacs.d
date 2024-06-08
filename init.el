@@ -131,10 +131,11 @@
   "Search for the right python command in the current virual environment"
   (let ((venv-bin
          (concat (lsp-pyright--locate-venv) "/bin")))
-    (or (check-for-python-executable-in-dir venv-bin "ipython")
-        (check-for-python-executable-in-dir venv-bin "python3")
-        (check-for-python-executable-in-dir venv-bin "python")
-        "python")))
+    (or
+     (check-for-python-executable-in-dir venv-bin "python3")
+     (check-for-python-executable-in-dir venv-bin "ipython")
+     (check-for-python-executable-in-dir venv-bin "python")
+     "python")))
 
 
 (use-package lsp-pyright
@@ -142,6 +143,8 @@
   :hook (before-save . lsp-pyright-organize-imports)
   :config
   (progn
+    (setq python-shell-interpreter
+          (concat (lsp-pyright--locate-venv) "/bin/python3"))
     (setq lsp-pyright-use-library-code-for-types t)
     (let* ((pyright-stubs-root-dir
             (getenv "PYRIGHT_TYPE_STUBS_ROOT"))
@@ -151,13 +154,7 @@
       (when (and pyright-stubs-root-dir
                  pyright-stubs-dir)
         (setq lsp-pyright-stubs-path
-              pyright-stubs-dir)))
-    (bind-key
-     "C-c C-p"
-     (lambda ()
-       (interactive)
-       (run-python (search-venv-for-python-executable)))
-     python-mode-map)))
+              pyright-stubs-dir)))))
 
 (use-package pyvenv
   :ensure t
