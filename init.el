@@ -132,11 +132,10 @@
   (let ((venv-bin
          (concat (lsp-pyright--locate-venv) "/bin")))
     (or
-     (check-for-python-executable-in-dir venv-bin "python3")
      (check-for-python-executable-in-dir venv-bin "ipython")
+     (check-for-python-executable-in-dir venv-bin "python3")
      (check-for-python-executable-in-dir venv-bin "python")
      "python")))
-
 
 (use-package lsp-pyright
   :hook (python-mode . lsp-deferred)
@@ -144,7 +143,7 @@
   :config
   (progn
     (setq python-shell-interpreter
-          (concat (lsp-pyright--locate-venv) "/bin/python3"))
+          (search-venv-for-python-executable))
     (setq lsp-pyright-use-library-code-for-types t)
     (let* ((pyright-stubs-root-dir
             (getenv "PYRIGHT_TYPE_STUBS_ROOT"))
