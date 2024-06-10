@@ -105,7 +105,8 @@
   :ensure t
   :config
   (setq gptel-model "gpt-4o"
-        gptel-api-key (get-openai-api-key)))
+        gptel-api-key (get-openai-api-key))
+  :bind (("C-c RET" . gptel-send)))
 
 (use-package lsp-mode
   :init
