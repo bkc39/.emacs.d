@@ -406,7 +406,7 @@ If the environment variable is not defined, load the key from the
     (start-process-shell-command
      "pytest-watch"
      buffer
-     (concat ptw-exec "/bin/ptw" " --onfail clear")))
+     (concat ptw-exec "/bin/ptw" " --clear")))
   (with-current-buffer "*pytest-watch*"
     (read-only-mode 1)
     (display-buffer (current-buffer))))
