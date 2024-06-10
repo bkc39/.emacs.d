@@ -101,6 +101,12 @@
         (add-hookq before-save-hook #'lsp-organize-imports))
     (message "go-mode LSP plugin gopls is not installed!")))
 
+(use-package gptel
+  :ensure t
+  :config
+  (setq gptel-model "gpt-4o"
+        gptel-api-key (get-openai-api-key)))
+
 (use-package lsp-mode
   :init
   (setq lsp-keymap-prefix "C-c l")
@@ -364,3 +370,25 @@
         (server-start))
     (message "Not in a client. Exiting...")
     'ok))
+
+(defun load-openai-api-key ()
+  "Read the OpenAI API key from the ~/.openai file and store it in the
+environment variable OPENAI_API_KEY."
+  (let ((api-key-file (expand-file-name "~/.openai")))
+    (if (file-readable-p api-key-file)
+        (with-temp-buffer
+          (insert-file-contents api-key-file)
+          (let ((api-key (string-trim (buffer-string))))
+            (setenv "OPENAI_API_KEY" api-key)
+            (message "OpenAI API key loaded successfully.")))
+      (message "Error: ~/.openai file not found or is not readable."))))
+
+(defun get-openai-api-key ()
+  "Get the OpenAI API key from the environment variable OPENAI_API_KEY.
+If the environment variable is not defined, load the key from the
+~/.openai file.  Return the API key as a string."
+  (let ((api-key (getenv "OPENAI_API_KEY")))
+    (unless api-key
+      (load-openai-api-key)
+      (setq api-key (getenv "OPENAI_API_KEY")))
+    api-key))
