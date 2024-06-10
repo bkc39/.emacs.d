@@ -393,3 +393,20 @@ If the environment variable is not defined, load the key from the
       (load-openai-api-key)
       (setq api-key (getenv "OPENAI_API_KEY")))
     api-key))
+
+(defun pytest-watch ()
+  "Run pytest in watch mode and display the output in a buffer."
+  (interactive)
+  (let ((ptw-exec
+         (lsp-pyright--locate-venv))
+        (buffer (get-buffer-create "*pytest-watch*")))
+    (with-current-buffer buffer
+      (read-only-mode -1)
+      (erase-buffer))
+    (start-process-shell-command
+     "pytest-watch"
+     buffer
+     (concat ptw-exec "/bin/ptw" " --onfail clear")))
+  (with-current-buffer "*pytest-watch*"
+    (read-only-mode 1)
+    (display-buffer (current-buffer))))
