@@ -125,6 +125,8 @@
   (let ((executable (concat dir "/" bin-name)))
     (and (file-exists-p executable) executable)))
 
+
+
 (defun search-venv-for-python-executable ()
   "Search for the right python command in the current virual environment"
   (let ((venv-bin
@@ -437,3 +439,28 @@ If the environment variable is not defined, load the key from the
       (erase-buffer))
     (start-process-shell-command "pyright" buffer cmd)
     (display-buffer buffer)))
+
+(defmacro make-search-venv-executable-function (name executables fallback)
+  "Create a function NAME to search for the right executable in the current
+virtual environment.
+
+EXECUTABLES is a list of executable names to search for.
+FALLBACK is the fallback executable if none of the EXECUTABLES are found."
+  `(defun ,name ()
+     "Search for the right executable in the current virtual environment."
+     (let ((venv-bin (concat (lsp-pyright--locate-venv) "/bin")))
+       (or ,@(mapcar (lambda (exe)
+                       `(check-for-python-executable-in-dir venv-bin ,exe))
+                     executables)
+           ,fallback))))
+
+;; Usage
+(make-search-venv-executable-function
+ search-venv-for-python-executable
+ ("ipython" "python3" "python")
+ "python")
+
+(make-search-venv-executable-function
+ search-venv-for-black-executable
+ ("black")
+ "black")
