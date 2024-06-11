@@ -410,3 +410,16 @@ If the environment variable is not defined, load the key from the
   (with-current-buffer "*pytest-watch*"
     (read-only-mode 1)
     (display-buffer (current-buffer))))
+
+(defun pyright-watch ()
+  "Run pyright and display the output in a buffer."
+  (interactive)
+  (let ((buffer (get-buffer-create "*pyright*"))
+        (venv-dir (lsp-pyright--locate-venv))
+        (pyright-path (executable-find "pyright"))
+        (cmd (concat pyright-path " --venvpath " venv-dir " --watch")))
+    (with-current-buffer buffer
+      (read-only-mode -1)
+      (erase-buffer))
+    (start-process-shell-command "pyright" buffer cmd)
+    (display-buffer buffer)))
