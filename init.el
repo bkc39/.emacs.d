@@ -63,6 +63,8 @@
 
 (use-package blacken
   :ensure t
+  :config
+  (setq blacken-line-length 80)
   :hook (python-mode . blacken-mode))
 
 (use-package company
@@ -99,10 +101,7 @@
                      (electric-pair-mode 1)))
   :config
   (if (executable-find "gopls")
-      (progn
-        (add-hookq go-mode-hook #'lsp-deferred)
-        (add-hookq before-save-hook #'lsp-format-buffer)
-        (add-hookq before-save-hook #'lsp-organize-imports))
+      (add-hookq go-mode-hook #'lsp-deferred)
     (message "go-mode LSP plugin gopls is not installed!")))
 
 (use-package gptel
@@ -124,26 +123,6 @@
 (defun check-for-python-executable-in-dir (dir bin-name)
   (let ((executable (concat dir "/" bin-name)))
     (and (file-exists-p executable) executable)))
-
-
-
-(defun search-venv-for-python-executable ()
-  "Search for the right python command in the current virual environment"
-  (let ((venv-bin
-         (concat (lsp-pyright--locate-venv) "/bin")))
-    (or
-     (check-for-python-executable-in-dir venv-bin "ipython")
-     (check-for-python-executable-in-dir venv-bin "python3")
-     (check-for-python-executable-in-dir venv-bin "python")
-     "python")))
-
-(defun search-venv-for-black-executable ()
-  "Search for the right 'black' command in the current virtual environment."
-  (let ((venv-bin
-         (concat (lsp-pyright--locate-venv) "/bin")))
-    (or
-     (check-for-python-executable-in-dir venv-bin "black")
-     "black")))
 
 (use-package lsp-pyright
   :hook (python-mode . lsp-deferred)
@@ -433,7 +412,7 @@ If the environment variable is not defined, load the key from the
          (venv-dir (or (lsp-pyright--locate-venv)
                        "venv"))
          (pyright-path (executable-find "pyright"))
-         (cmd (concat pyright-path " --venvpath " venv-dir " --watch")))
+         (cmd (concat pyright-path " --watch")))
     (with-current-buffer buffer
       (read-only-mode -1)
       (erase-buffer))
