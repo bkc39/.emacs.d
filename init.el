@@ -61,6 +61,10 @@
                    :files ("*.el" "dist"))
   :bind ("C-c x" . #'aweshell-dedicated-toggle))
 
+(use-package blacken
+  :ensure t
+  :hook (python-mode . blacken-mode))
+
 (use-package company
   :ensure t
   :hook (prog-mode . company-mode)
@@ -131,13 +135,22 @@
      (check-for-python-executable-in-dir venv-bin "python")
      "python")))
 
+(defun search-venv-for-black-executable ()
+  "Search for the right 'black' command in the current virtual environment."
+  (let ((venv-bin
+         (concat (lsp-pyright--locate-venv) "/bin")))
+    (or
+     (check-for-python-executable-in-dir venv-bin "black")
+     "black")))
+
 (use-package lsp-pyright
   :hook (python-mode . lsp-deferred)
   :hook (before-save . lsp-pyright-organize-imports)
   :config
   (progn
-    (setq python-shell-interpreter
-          (search-venv-for-python-executable))
+    (setq
+     python-shell-interpreter (search-venv-for-python-executable)
+     blacken-executable (search-venv-for-black-executable))
     (setq lsp-pyright-use-library-code-for-types t)
     (let* ((pyright-stubs-root-dir
             (getenv "PYRIGHT_TYPE_STUBS_ROOT"))
