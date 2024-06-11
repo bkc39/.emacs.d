@@ -6,26 +6,26 @@
 ;;; Code:
 
 ;; Sets the default font
-(if (member "Anonymous Pro" (font-family-list))
-    (progn
-      (add-to-list 'default-frame-alist '(font . "Anonymous Pro-10"))
-      (set-face-attribute 'default nil :font "Anonymous Pro-10")
-      (set-face-attribute 'default nil :height 100))
-  (progn
-    (let ((default-font
-            (if (and (null
-                      (string=
-                       ""
-                       (shell-command-to-string "which fc-list")))
-                     (null
-                      (string=
-                       ""
-                       (shell-command-to-string "fc-list 'Anonymous Pro'"))))
-                "Anonymous Pro 10"
-              "Monospace 10")))
-      (progn
-        (set-default-font default-font)
-        (add-to-list 'default-frame-alist `(font . ,default-font))))))
+;; (if (member "Anonymous Pro" (font-family-list))
+;;     (progn
+;;       (add-to-list 'default-frame-alist '(font . "Anonymous Pro-10"))
+;;       (set-face-attribute 'default nil :font "Anonymous Pro-10")
+;;       (set-face-attribute 'default nil :height 100))
+;;   (progn
+;;     (let ((default-font
+;;             (if (and (null
+;;                       (string=
+;;                        ""
+;;                        (shell-command-to-string "which fc-list")))
+;;                      (null
+;;                       (string=
+;;                        ""
+;;                        (shell-command-to-string "fc-list 'Anonymous Pro'"))))
+;;                 "Anonymous Pro 10"
+;;               "Monospace 10")))
+;;       (progn
+;;         (set-default-font default-font)
+;;         (add-to-list 'default-frame-alist `(font . ,default-font))))))
 
 ;; Enables line numbers
 (global-linum-mode 1)
