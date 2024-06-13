@@ -95,6 +95,10 @@
   :config
   (exec-path-from-shell-initialize))
 
+(use-package flycheck
+  :ensure t
+  :hook (emacs-lisp-mode . flycheck-mode))
+
 (use-package go-mode
   :after lsp-mode
   :hook (go-mode . (lambda ()
@@ -108,8 +112,15 @@
   :ensure t
   :config
   (setq gptel-model "gpt-4o"
-        gptel-api-key (get-openai-api-key))
-  :bind (("C-c RET" . gptel-send)))
+        gptel-api-key (get-openai-api-key)
+        gptel-directives (or (read-prompt-md-files "~/.llm-prompts")
+                             gptel-directives))
+  (setq-default
+   gptel--system-message
+   (alist-get 'default gptel-directives "You are a helpful assistant."))
+  :bind (("C-c RET" . gptel-send)
+         ("C-c q" . gptel-quick)
+         ("C-c M-d" . gptel-diff)))
 
 (use-package lsp-mode
   :init
@@ -445,3 +456,82 @@ FALLBACK is the fallback executable if none of the EXECUTABLES are found."
  search-venv-for-black-executable
  ("black")
  "black")
+
+(defun slurp-file (file)
+  (with-temp-buffer
+    (insert-file-contents file)
+    (read (buffer-string))))
+
+(defun read-prompt-md-files (directory)
+  "Read files in DIRECTORY of the form PROMPT.md and return an
+alist (PROMPT . CONTENTS-OF-FILE)."
+  (let ((files (directory-files directory t "\\`[^.].*\\.md\\'"))
+        result)
+    (dolist (file files)
+      (when (string-match "\\(.*\\)\\.md\\'" (file-name-nondirectory file))
+        (let ((prompt (match-string 1 (file-name-nondirectory file)))
+              (contents (with-temp-buffer
+                          (insert-file-contents file)
+                          (buffer-string))))
+          (push (cons (intern prompt) contents) result))))
+    result))
+
+(defvar gptel-quick--history nil
+  "History list for `gptel-quick' prompts.")
+
+(defun gptel-quick (prompt)
+  "Send PROMPT to ChatGPT and display the response in a special buffer.
+If the PROMPT is empty, signals a user error."
+  (interactive (list (read-string "Ask ChatGPT: " nil gptel-quick--history)))
+  (when (string= prompt "") (user-error "A prompt is required."))
+  (unless (fboundp 'gptel-request)
+    (require 'gptel))
+  (gptel-request
+      prompt
+    :system (alist-get 'default gptel-directives "You are a helpful assistant.")
+    :callback
+    (lambda (response info)
+      (if (not response)
+          (message "gptel-quick failed with message: %s" (plist-get info
+                                                                    :status))
+        (with-current-buffer (get-buffer-create "*gptel-quick*")
+          (let ((inhibit-read-only t))
+            (erase-buffer)
+            (insert response))
+          (special-mode)
+          (display-buffer (current-buffer)))))))
+
+(defun gptel-diff ()
+  (interactive)
+  (let* ((diff-buffer
+          (with-temp-buffer
+            (magit-diff-staged)
+            (buffer-name)))
+         (diff-str
+          (with-current-buffer diff-buffer
+            (buffer-substring-no-properties (point-min) (point-max)))))
+    (gptel-request
+        diff-str
+      :system
+      (alist-get
+       'commiter
+       gptel-directives
+       "Write a git commit message for this diff. Include ONLY the message.
+Be terse. Provide messages whose lines are at most 80 characters")
+      :callback
+      (lambda (response info)
+        (if (not response)
+            (message
+             "gptel-diff failed with message: %s"
+             (plist-get info :status))
+
+          (kill-new response)
+          (with-current-buffer (get-buffer-create "*gptel-diff*")
+            (let ((inhibit-read-only t))
+              (erase-buffer)
+              (insert response))
+            (special-mode)
+            (display-buffer (current-buffer)))
+          (when (get-buffer "COMMIT_EDITMSG")
+            (message "commit message in kill ring")
+            (pop-to-buffer "COMMIT_EDITMSG")))))))
