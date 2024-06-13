@@ -114,7 +114,8 @@
   (setq-default
    gptel--system-message
    (alist-get 'default gptel-directives "You are a helpful assistant."))
-  :bind (("C-c RET" . gptel-send)))
+  :bind (("C-c RET" . gptel-send)
+         ("C-c q" . gptel-quick)))
 
 (use-package lsp-mode
   :init
@@ -469,3 +470,28 @@ alist (PROMPT . CONTENTS-OF-FILE)."
                           (buffer-string))))
           (push (cons (intern prompt) contents) result))))
     result))
+
+(defvar gptel-quick--history nil
+  "History list for `gptel-quick' prompts.")
+
+
+(defun gptel-quick (prompt)
+  "Send PROMPT to ChatGPT and display the response in a special buffer.
+If the PROMPT is empty, signals a user error."
+  (interactive (list (read-string "Ask ChatGPT: " nil gptel-quick--history)))
+  (when (string= prompt "") (user-error "A prompt is required."))
+  (unless (fboundp 'gptel-request)
+    (require 'gptel))
+  (gptel-request
+      prompt
+    :callback
+    (lambda (response info)
+      (if (not response)
+          (message "gptel-quick failed with message: %s" (plist-get info
+                                                                    :status))
+        (with-current-buffer (get-buffer-create "*gptel-quick*")
+          (let ((inhibit-read-only t))
+            (erase-buffer)
+            (insert response))
+          (special-mode)
+          (display-buffer (current-buffer)))))))
