@@ -108,7 +108,12 @@
   :ensure t
   :config
   (setq gptel-model "gpt-4o"
-        gptel-api-key (get-openai-api-key))
+        gptel-api-key (get-openai-api-key)
+        gptel-directives (or (read-prompt-md-files "~/.llm-prompts")
+                             gptel-directives))
+  (setq-default
+   gptel--system-message
+   (alist-get 'default gptel-directives "You are a helpful assistant."))
   :bind (("C-c RET" . gptel-send)))
 
 (use-package lsp-mode
@@ -445,3 +450,22 @@ FALLBACK is the fallback executable if none of the EXECUTABLES are found."
  search-venv-for-black-executable
  ("black")
  "black")
+
+(defun slurp-file (file)
+  (with-temp-buffer
+    (insert-file-contents file)
+    (read (buffer-string))))
+
+(defun read-prompt-md-files (directory)
+  "Read files in DIRECTORY of the form PROMPT.md and return an
+alist (PROMPT . CONTENTS-OF-FILE)."
+  (let ((files (directory-files directory t "\\`[^.].*\\.md\\'"))
+        result)
+    (dolist (file files)
+      (when (string-match "\\(.*\\)\\.md\\'" (file-name-nondirectory file))
+        (let ((prompt (match-string 1 (file-name-nondirectory file)))
+              (contents (with-temp-buffer
+                          (insert-file-contents file)
+                          (buffer-string))))
+          (push (cons (intern prompt) contents) result))))
+    result))
