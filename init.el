@@ -95,6 +95,10 @@
   :config
   (exec-path-from-shell-initialize))
 
+(use-package flycheck
+  :ensure t
+  :hook (emacs-lisp-mode . flycheck-mode))
+
 (use-package go-mode
   :after lsp-mode
   :hook (go-mode . (lambda ()
@@ -115,7 +119,8 @@
    gptel--system-message
    (alist-get 'default gptel-directives "You are a helpful assistant."))
   :bind (("C-c RET" . gptel-send)
-         ("C-c q" . gptel-quick)))
+         ("C-c q" . gptel-quick)
+         ("C-c M-d" . gptel-diff)))
 
 (use-package lsp-mode
   :init
