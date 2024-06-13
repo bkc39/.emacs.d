@@ -173,7 +173,7 @@
   :bind (("C-c m" . magit-status)))
 
 (use-package multiple-cursors
-  :bind (("C-c C-m C-c" . mc/edit-lines)))
+  :bind (("C-c M-c" . mc/edit-lines)))
 
 (use-package paredit
   :init
@@ -412,7 +412,9 @@ If the environment variable is not defined, load the key from the
          (venv-dir (or (lsp-pyright--locate-venv)
                        "venv"))
          (pyright-path (executable-find "pyright"))
-         (cmd (concat pyright-path " --watch")))
+         (cmd (concat pyright-path
+                      " --pythonpath " python-shell-interpreter " --watch")))
+    (message cmd)
     (with-current-buffer buffer
       (read-only-mode -1)
       (erase-buffer))
