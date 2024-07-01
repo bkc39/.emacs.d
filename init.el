@@ -1,19 +1,36 @@
+;;; init.el --- emacs init file -*- lexical-binding: t; -*-
+
+;; URL: https://github.com/bkc39/my-package
+;; Version: 0.1.0
+;; Package-Requires: ((emacs "24.3"))
+
+;; This file is not part of GNU Emacs.
+
+;;; Commentary:
+
+;; Init file using straight.el and use-package.
+
+;;; Code:
+
 (defmacro on-system (system &rest body)
+  "Execute BODY only if SYSTEM matches the current system type."
   `(when (eq system-type ',system)
      ,@body))
 
 (defmacro on-macos (&rest body)
+  "Execute BODY if the current system is macOS."
   `(on-system 'darwin ,@body))
 
 (defmacro on-linux (&rest body)
+  "Execute BODY if the current system is Linux."
   `(on-system 'gnu/linux ,@body))
 
 (defmacro add-hookq (hook-name fn)
-  "Like add-hook, but automatically quotes the hook-name"
+  "Add FN to the list of functions to be run by HOOK-NAME."
   `(add-hook ',hook-name ,fn))
 
 (defmacro package-install-if-not-there* (&rest packages)
-  "Use package-install-to install the given packages if not there"
+  "Install PACKAGES if they are not already installed."
   (let ((pkg (gensym))
         (to-install (gensym)))
     `(let ((,to-install
@@ -502,6 +519,16 @@ If the PROMPT is empty, signals a user error."
           (display-buffer (current-buffer)))))))
 
 (defun gptel-diff ()
+  "Generate a git commit message.
+
+This function uses `magit-diff-staged` to obtain the current staged diffs
+in a temporary buffer.  It then constructs a request string from these diffs
+and sends it to the `gptel-request` function, which interacts with the GPT
+model to generate a commit message.  Upon receiving the response, it places
+the generated message in a special buffer named *gptel-diff* and copies it
+to the kill ring.  If a buffer named 'COMMIT_EDITMSG' is also present, it
+will switch to that buffer and notify the user that the commit message is
+in the kill ring."
   (interactive)
   (let* ((diff-buffer
           (with-temp-buffer
@@ -535,3 +562,6 @@ Be terse. Provide messages whose lines are at most 80 characters")
           (when (get-buffer "COMMIT_EDITMSG")
             (message "commit message in kill ring")
             (pop-to-buffer "COMMIT_EDITMSG")))))))
+
+(provide 'init)
+;;; init.el ends here
