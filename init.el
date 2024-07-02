@@ -493,6 +493,18 @@ alist (PROMPT . CONTENTS-OF-FILE)."
           (push (cons (intern prompt) contents) result))))
     result))
 
+(defun gptel-request/require (&rest args)
+  "Ensure gptel-request is bound, require 'gptel if not, then call
+gptel-request with ARGS."
+  (unless (fboundp 'gptel-request)
+    (require 'gptel))
+  (apply #'gptel-request args))
+
+(defun ensure-gptel-directives-loaded ()
+  "Ensure that `gptel-directives` is defined."
+  (unless (boundp 'gptel-directives)
+    (setq gptel-directives (or (read-prompt-md-files "~/.llm-prompts") '()))))
+
 (defvar gptel-quick--history nil
   "History list for `gptel-quick' prompts.")
 
@@ -501,22 +513,21 @@ alist (PROMPT . CONTENTS-OF-FILE)."
 If the PROMPT is empty, signals a user error."
   (interactive (list (read-string "Ask ChatGPT: " nil gptel-quick--history)))
   (when (string= prompt "") (user-error "A prompt is required"))
-  (unless (fboundp 'gptel-request)
-    (require 'gptel))
-  (gptel-request
-      prompt
-    :system (alist-get 'default gptel-directives "You are a helpful assistant.")
-    :callback
-    (lambda (response info)
-      (if (not response)
-          (message "gptel-quick failed with message: %s" (plist-get info
-                                                                    :status))
-        (with-current-buffer (get-buffer-create "*gptel-quick*")
-          (let ((inhibit-read-only t))
-            (erase-buffer)
-            (insert response))
-          (special-mode)
-          (display-buffer (current-buffer)))))))
+  (ensure-gptel-directives-loaded)
+  (gptel-request/require
+   prompt
+   :system (alist-get 'default gptel-directives "You are a helpful assistant.")
+   :callback
+   (lambda (response info)
+     (if (not response)
+         (message "gptel-quick failed with message: %s" (plist-get info
+                                                                   :status))
+       (with-current-buffer (get-buffer-create "*gptel-quick*")
+         (let ((inhibit-read-only t))
+           (erase-buffer)
+           (insert response))
+         (special-mode)
+         (display-buffer (current-buffer)))))))
 
 (defun gptel-diff ()
   "Generate a git commit message.
@@ -537,7 +548,8 @@ in the kill ring."
          (diff-str
           (with-current-buffer diff-buffer
             (buffer-substring-no-properties (point-min) (point-max)))))
-    (gptel-request
+    (ensure-gptel-directives-loaded)
+    (gptel-request/require
         diff-str
       :system
       (alist-get
@@ -564,28 +576,27 @@ Be terse. Provide messages whose lines are at most 80 characters")
             (pop-to-buffer "COMMIT_EDITMSG")))))))
 
 
-
-(defun gptel-query-with (query regexp)
-  "Send QUERY to GPT with optional filtering using REGEXP and display the response."
-  (interactive "sEnter your query: \nsEnter a regexp: ")
-  (let* (
-         (actual-query
-          query))
-    (gptel-request actual-query
-      :callback
-      (lambda (response info)
-        (if (not response)
-            (message "gptel-query-with failed with message: %s" (plist-get info :status))
-          (let ((filtered-response (if (string-empty-p regexp)
-                                       response
-                                     (replace-regexp-in-string regexp "" response))))
-            (with-current-buffer (get-buffer-create "*gptel-with*")
-              (let ((inhibit-read-only t))
-                (erase-buffer)
-                (insert filtered-response))
-              (special-mode)
-              (display-buffer (current-buffer)))))))))
+;; (defun gptel-query-with (query regexp)
+;;   "Send QUERY to GPT with optional filtering using REGEXP and display the response."
+;;   (interactive "sEnter your query: \nsEnter a regexp: ")
+;;   (let* (
+;;          (actual-query
+;;           query))
+;;     (gptel-request actual-query
+;;       :callback
+;;       (lambda (response info)
+;;         (if (not response)
+;;             (message "gptel-query-with failed with message: %s" (plist-get info :status))
+;;           (let ((filtered-response (if (string-empty-p regexp)
+;;                                        response
+;;                                      (replace-regexp-in-string regexp "" response))))
+;;             (with-current-buffer (get-buffer-create "*gptel-with*")
+;;               (let ((inhibit-read-only t))
+;;                 (erase-buffer)
+;;                 (insert filtered-response))
+;;               (special-mode)
+;;               (display-buffer (current-buffer)))))))))
 
 
 (provide 'init)
-;;; init.el ends here
+;;; init.el endq here
