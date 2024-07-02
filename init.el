@@ -500,7 +500,7 @@ alist (PROMPT . CONTENTS-OF-FILE)."
   "Send PROMPT to ChatGPT and display the response in a special buffer.
 If the PROMPT is empty, signals a user error."
   (interactive (list (read-string "Ask ChatGPT: " nil gptel-quick--history)))
-  (when (string= prompt "") (user-error "A prompt is required."))
+  (when (string= prompt "") (user-error "A prompt is required"))
   (unless (fboundp 'gptel-request)
     (require 'gptel))
   (gptel-request
@@ -562,6 +562,30 @@ Be terse. Provide messages whose lines are at most 80 characters")
           (when (get-buffer "COMMIT_EDITMSG")
             (message "commit message in kill ring")
             (pop-to-buffer "COMMIT_EDITMSG")))))))
+
+
+
+(defun gptel-query-with (query regexp)
+  "Send QUERY to GPT with optional filtering using REGEXP and display the response."
+  (interactive "sEnter your query: \nsEnter a regexp: ")
+  (let* (
+         (actual-query
+          query))
+    (gptel-request actual-query
+      :callback
+      (lambda (response info)
+        (if (not response)
+            (message "gptel-query-with failed with message: %s" (plist-get info :status))
+          (let ((filtered-response (if (string-empty-p regexp)
+                                       response
+                                     (replace-regexp-in-string regexp "" response))))
+            (with-current-buffer (get-buffer-create "*gptel-with*")
+              (let ((inhibit-read-only t))
+                (erase-buffer)
+                (insert filtered-response))
+              (special-mode)
+              (display-buffer (current-buffer)))))))))
+
 
 (provide 'init)
 ;;; init.el ends here
