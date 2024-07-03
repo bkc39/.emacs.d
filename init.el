@@ -1,6 +1,6 @@
 ;;; init.el --- emacs init file -*- lexical-binding: t; -*-
 
-;; URL: https://github.com/bkc39/my-package
+;; URL: https://github.com/bkc39/.emacs.d
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24.3"))
 
@@ -138,7 +138,7 @@
   (gptel-make-ollama
       "Ollama"
     :host "localhost:11434"
-    :models '("llama3:8b" "codellama:latest" "codellama:13b")
+    :models '("llama3:8b" "codellama:latest" "codellama:13b" "gemma2:9b")
     :stream t)
   :bind (("C-c RET" . gptel-send)
          ("C-c q" . gptel-quick)
@@ -581,28 +581,5 @@ Be terse. Provide messages whose lines are at most 80 characters")
             (message "commit message in kill ring")
             (pop-to-buffer "COMMIT_EDITMSG")))))))
 
-
-;; (defun gptel-query-with (query regexp)
-;;   "Send QUERY to GPT with optional filtering using REGEXP and display the response."
-;;   (interactive "sEnter your query: \nsEnter a regexp: ")
-;;   (let* (
-;;          (actual-query
-;;           query))
-;;     (gptel-request actual-query
-;;       :callback
-;;       (lambda (response info)
-;;         (if (not response)
-;;             (message "gptel-query-with failed with message: %s" (plist-get info :status))
-;;           (let ((filtered-response (if (string-empty-p regexp)
-;;                                        response
-;;                                      (replace-regexp-in-string regexp "" response))))
-;;             (with-current-buffer (get-buffer-create "*gptel-with*")
-;;               (let ((inhibit-read-only t))
-;;                 (erase-buffer)
-;;                 (insert filtered-response))
-;;               (special-mode)
-;;               (display-buffer (current-buffer)))))))))
-
-
 (provide 'init)
-;;; init.el endq here
+;;; init.el ends here
