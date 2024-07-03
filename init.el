@@ -135,9 +135,15 @@
   (setq-default
    gptel--system-message
    (alist-get 'default gptel-directives "You are a helpful assistant."))
+  (gptel-make-ollama
+      "Ollama"
+    :host "localhost:11434"
+    :models '("llama3:8b" "codellama:latest" "codellama:13b")
+    :stream t)
   :bind (("C-c RET" . gptel-send)
          ("C-c q" . gptel-quick)
          ("C-c M-d" . gptel-diff)))
+
 
 (use-package lsp-mode
   :init
