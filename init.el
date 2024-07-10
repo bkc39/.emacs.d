@@ -210,7 +210,8 @@
            "xcrun --find sourcekit-lsp")))))
 
 (use-package magit
-  :bind (("C-c m" . magit-status)))
+  :bind (("C-c m" . magit-status))
+  :hook ((git-commit-mode . insert-issue-prefix)))
 
 (use-package multiple-cursors
   :bind (("C-c M-c" . mc/edit-lines)))
@@ -312,6 +313,10 @@
   (setq whitespace-style '(face lines trailing empty))
   :hook (prog-mode . whitespace-mode)
   :hook (before-save . whitespace-cleanup))
+
+(use-package yaml-mode
+  :ensure t
+  :mode ("\\.yml\\'" "\\.yaml\\'"))
 
 (use-package yasnippet
   :hook (js-mode . yas-minor-mode)
@@ -582,6 +587,32 @@ Be terse. Provide messages whose lines are at most 80 characters")
           (when (get-buffer "COMMIT_EDITMSG")
             (message "commit message in kill ring")
             (pop-to-buffer "COMMIT_EDITMSG")))))))
+
+(defun insert-issue-prefix ()
+  (interactive)
+  (unless (fboundp 'magit-get-current-branch)
+    (require 'magit))
+  (let* ((current-branch
+          (magit-get-current-branch))
+         (issue-number
+          (infer-issue-number-from-branch-name current-branch)))
+    (unless (or (issue-prefix-is-there)
+                (string= issue-number ""))
+      (goto-char (point-min))
+      (insert (format "[#%s] " issue-number)))))
+
+(defun infer-issue-number-from-branch-name (branch-name)
+  "Gets the implied issue number out of the current branch"
+  (if (string-match "\\([[:alpha:]]+\\)\\([[:digit:]]+\\).*" branch-name)
+      (match-string 2 branch-name)
+    (progn
+      (message "failed to infer branch name")
+      "")))
+
+(defun issue-prefix-is-there ()
+  "Check if the buffer is prefixed by the issue prefix [#ISSUE-NUMBER]"
+  (let ((buffer-prefix (car (split-string (buffer-string)))))
+    (string-match "\\[\\#[[:digit:]]+\\]" buffer-prefix)))
 
 (provide 'init)
 ;;; init.el ends here
