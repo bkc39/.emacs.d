@@ -1,6 +1,6 @@
 ;;; init.el --- emacs init file -*- lexical-binding: t; -*-
 
-;; URL: https://github.com/bkc39/my-package
+;; URL: https://github.com/bkc39/.emacs.d
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24.3"))
 
@@ -19,7 +19,7 @@
 
 (defmacro on-macos (&rest body)
   "Execute BODY if the current system is macOS."
-  `(on-system 'darwin ,@body))
+  `(on-system darwin ,@body))
 
 (defmacro on-linux (&rest body)
   "Execute BODY if the current system is Linux."
@@ -138,7 +138,7 @@
   (gptel-make-ollama
       "Ollama"
     :host "localhost:11434"
-    :models '("llama3:8b" "codellama:latest" "codellama:13b")
+    :models '("llama3:8b" "codellama:latest" "codellama:13b" "gemma2:9b")
     :stream t)
   :bind (("C-c RET" . gptel-send)
          ("C-c q" . gptel-quick)
@@ -158,9 +158,15 @@
   (let ((executable (concat dir "/" bin-name)))
     (and (file-exists-p executable) executable)))
 
+(defun organize-python-imports ()
+  "Organize Python imports using lsp-pyright-organize-imports."
+  (interactive)
+  (when (and (eq major-mode 'python-mode) (bound-and-true-p lsp-mode))
+    (lsp-pyright-organize-imports)))
+
 (use-package lsp-pyright
   :hook (python-mode . lsp-deferred)
-  :hook (before-save . lsp-pyright-organize-imports)
+  :hook (before-save . organize-python-imports)
   :config
   (progn
     (setq
@@ -343,25 +349,16 @@
 (set-frame-font-to-anonymous-pro)
 (setq js-indent-level 2)
 
-(defun copy-to-clipboard (beg end)
+(defun copy-to-clipboard/macos (beg end)
   (interactive "r")
-  (let ((command
-         (cond
-           ((eq system-type 'darwin)
-            "pbcopy")
-           ((and (eq system-type 'gnu/linux)
-                 ;; xclip needs the display or it will fail with null
-                 ;; device
-                 (getenv "DISPLAY"))
-            "xclip -selection clipboard"))))
-    (when command
-      (shell-command-on-region beg end command))
-    (deactivate-mark)))
+  (when (eq system-type 'darwin)
+   (shell-command-on-region beg end "pbcopy"))
+  (deactivate-mark))
 
 (defun clipboard+kill-ring-save (beg end)
   "Copies selection to x-clipboard."
   (interactive "r")
-  (copy-to-clipboard beg end)
+  (copy-to-clipboard/macos beg end)
   (kill-ring-save beg end))
 
 (global-set-key (kbd "M-w") 'clipboard+kill-ring-save)
@@ -434,7 +431,7 @@ If the environment variable is not defined, load the key from the
     (start-process-shell-command
      "pytest-watch"
      buffer
-     (concat ptw-exec "/bin/ptw" " --clear")))
+     (concat (search-venv-for-pytest-watch-executable) " --clear")))
   (with-current-buffer "*pytest-watch*"
     (read-only-mode 1)
     (display-buffer (current-buffer))))
@@ -447,7 +444,7 @@ If the environment variable is not defined, load the key from the
                        "venv"))
          (pyright-path (executable-find "pyright"))
          (cmd (concat pyright-path
-                      " --pythonpath " python-shell-interpreter " --watch")))
+                      " --pythonpath " (search-venv-for-python-executable) " --watch")))
     (message cmd)
     (with-current-buffer buffer
       (read-only-mode -1)
@@ -474,6 +471,11 @@ FALLBACK is the fallback executable if none of the EXECUTABLES are found."
  search-venv-for-python-executable
  ("ipython" "python3" "python")
  "python")
+
+(make-search-venv-executable-function
+ search-venv-for-pytest-watch-executable
+ ("pytest-watch" "ptw")
+ "ptw")
 
 (make-search-venv-executable-function
  search-venv-for-black-executable
@@ -581,28 +583,5 @@ Be terse. Provide messages whose lines are at most 80 characters")
             (message "commit message in kill ring")
             (pop-to-buffer "COMMIT_EDITMSG")))))))
 
-
-;; (defun gptel-query-with (query regexp)
-;;   "Send QUERY to GPT with optional filtering using REGEXP and display the response."
-;;   (interactive "sEnter your query: \nsEnter a regexp: ")
-;;   (let* (
-;;          (actual-query
-;;           query))
-;;     (gptel-request actual-query
-;;       :callback
-;;       (lambda (response info)
-;;         (if (not response)
-;;             (message "gptel-query-with failed with message: %s" (plist-get info :status))
-;;           (let ((filtered-response (if (string-empty-p regexp)
-;;                                        response
-;;                                      (replace-regexp-in-string regexp "" response))))
-;;             (with-current-buffer (get-buffer-create "*gptel-with*")
-;;               (let ((inhibit-read-only t))
-;;                 (erase-buffer)
-;;                 (insert filtered-response))
-;;               (special-mode)
-;;               (display-buffer (current-buffer)))))))))
-
-
 (provide 'init)
-;;; init.el endq here
+;;; init.el ends here
