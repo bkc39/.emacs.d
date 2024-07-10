@@ -19,7 +19,7 @@
 
 (defmacro on-macos (&rest body)
   "Execute BODY if the current system is macOS."
-  `(on-system 'darwin ,@body))
+  `(on-system darwin ,@body))
 
 (defmacro on-linux (&rest body)
   "Execute BODY if the current system is Linux."
@@ -158,9 +158,15 @@
   (let ((executable (concat dir "/" bin-name)))
     (and (file-exists-p executable) executable)))
 
+(defun organize-python-imports ()
+  "Organize Python imports using lsp-pyright-organize-imports."
+  (interactive)
+  (when (and (eq major-mode 'python-mode) (bound-and-true-p lsp-mode))
+    (lsp-pyright-organize-imports)))
+
 (use-package lsp-pyright
   :hook (python-mode . lsp-deferred)
-  :hook (before-save . lsp-pyright-organize-imports)
+  :hook (before-save . organize-python-imports)
   :config
   (progn
     (setq
@@ -204,7 +210,8 @@
            "xcrun --find sourcekit-lsp")))))
 
 (use-package magit
-  :bind (("C-c m" . magit-status)))
+  :bind (("C-c m" . magit-status))
+  :hook ((git-commit-mode . insert-issue-prefix)))
 
 (use-package multiple-cursors
   :bind (("C-c M-c" . mc/edit-lines)))
@@ -307,6 +314,10 @@
   :hook (prog-mode . whitespace-mode)
   :hook (before-save . whitespace-cleanup))
 
+(use-package yaml-mode
+  :ensure t
+  :mode ("\\.yml\\'" "\\.yaml\\'"))
+
 (use-package yasnippet
   :hook (js-mode . yas-minor-mode)
   :hook (lsp-mode . yas-minor-mode))
@@ -343,25 +354,16 @@
 (set-frame-font-to-anonymous-pro)
 (setq js-indent-level 2)
 
-(defun copy-to-clipboard (beg end)
+(defun copy-to-clipboard/macos (beg end)
   (interactive "r")
-  (let ((command
-         (cond
-           ((eq system-type 'darwin)
-            "pbcopy")
-           ((and (eq system-type 'gnu/linux)
-                 ;; xclip needs the display or it will fail with null
-                 ;; device
-                 (getenv "DISPLAY"))
-            "xclip -selection clipboard"))))
-    (when command
-      (shell-command-on-region beg end command))
-    (deactivate-mark)))
+  (when (eq system-type 'darwin)
+   (shell-command-on-region beg end "pbcopy"))
+  (deactivate-mark))
 
 (defun clipboard+kill-ring-save (beg end)
   "Copies selection to x-clipboard."
   (interactive "r")
-  (copy-to-clipboard beg end)
+  (copy-to-clipboard/macos beg end)
   (kill-ring-save beg end))
 
 (global-set-key (kbd "M-w") 'clipboard+kill-ring-save)
@@ -434,7 +436,7 @@ If the environment variable is not defined, load the key from the
     (start-process-shell-command
      "pytest-watch"
      buffer
-     (concat ptw-exec "/bin/ptw" " --clear")))
+     (concat (search-venv-for-pytest-watch-executable) " --clear")))
   (with-current-buffer "*pytest-watch*"
     (read-only-mode 1)
     (display-buffer (current-buffer))))
@@ -447,7 +449,7 @@ If the environment variable is not defined, load the key from the
                        "venv"))
          (pyright-path (executable-find "pyright"))
          (cmd (concat pyright-path
-                      " --pythonpath " python-shell-interpreter " --watch")))
+                      " --pythonpath " (search-venv-for-python-executable) " --watch")))
     (message cmd)
     (with-current-buffer buffer
       (read-only-mode -1)
@@ -474,6 +476,11 @@ FALLBACK is the fallback executable if none of the EXECUTABLES are found."
  search-venv-for-python-executable
  ("ipython" "python3" "python")
  "python")
+
+(make-search-venv-executable-function
+ search-venv-for-pytest-watch-executable
+ ("pytest-watch" "ptw")
+ "ptw")
 
 (make-search-venv-executable-function
  search-venv-for-black-executable
@@ -580,6 +587,32 @@ Be terse. Provide messages whose lines are at most 80 characters")
           (when (get-buffer "COMMIT_EDITMSG")
             (message "commit message in kill ring")
             (pop-to-buffer "COMMIT_EDITMSG")))))))
+
+(defun insert-issue-prefix ()
+  (interactive)
+  (unless (fboundp 'magit-get-current-branch)
+    (require 'magit))
+  (let* ((current-branch
+          (magit-get-current-branch))
+         (issue-number
+          (infer-issue-number-from-branch-name current-branch)))
+    (unless (or (issue-prefix-is-there)
+                (string= issue-number ""))
+      (goto-char (point-min))
+      (insert (format "[#%s] " issue-number)))))
+
+(defun infer-issue-number-from-branch-name (branch-name)
+  "Gets the implied issue number out of the current branch"
+  (if (string-match "\\([[:alpha:]]+\\)\\([[:digit:]]+\\).*" branch-name)
+      (match-string 2 branch-name)
+    (progn
+      (message "failed to infer branch name")
+      "")))
+
+(defun issue-prefix-is-there ()
+  "Check if the buffer is prefixed by the issue prefix [#ISSUE-NUMBER]"
+  (let ((buffer-prefix (car (split-string (buffer-string)))))
+    (string-match "\\[\\#[[:digit:]]+\\]" buffer-prefix)))
 
 (provide 'init)
 ;;; init.el ends here
