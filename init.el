@@ -19,7 +19,7 @@
 
 (defmacro on-macos (&rest body)
   "Execute BODY if the current system is macOS."
-  `(on-system 'darwin ,@body))
+  `(on-system darwin ,@body))
 
 (defmacro on-linux (&rest body)
   "Execute BODY if the current system is Linux."
@@ -158,9 +158,15 @@
   (let ((executable (concat dir "/" bin-name)))
     (and (file-exists-p executable) executable)))
 
+(defun organize-python-imports ()
+  "Organize Python imports using lsp-pyright-organize-imports."
+  (interactive)
+  (when (and (eq major-mode 'python-mode) (bound-and-true-p lsp-mode))
+    (lsp-pyright-organize-imports)))
+
 (use-package lsp-pyright
   :hook (python-mode . lsp-deferred)
-  :hook (before-save . lsp-pyright-organize-imports)
+  :hook (before-save . organize-python-imports)
   :config
   (progn
     (setq
@@ -345,7 +351,7 @@
 
 (defun copy-to-clipboard/macos (beg end)
   (interactive "r")
-  (on-macos
+  (when (eq system-type 'darwin)
    (shell-command-on-region beg end "pbcopy"))
   (deactivate-mark))
 
