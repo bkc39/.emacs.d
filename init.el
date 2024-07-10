@@ -343,25 +343,16 @@
 (set-frame-font-to-anonymous-pro)
 (setq js-indent-level 2)
 
-(defun copy-to-clipboard (beg end)
+(defun copy-to-clipboard/macos (beg end)
   (interactive "r")
-  (let ((command
-         (cond
-           ((eq system-type 'darwin)
-            "pbcopy")
-           ((and (eq system-type 'gnu/linux)
-                 ;; xclip needs the display or it will fail with null
-                 ;; device
-                 (getenv "DISPLAY"))
-            "xclip -selection clipboard"))))
-    (when command
-      (shell-command-on-region beg end command))
-    (deactivate-mark)))
+  (on-macos
+   (shell-command-on-region beg end "pbcopy"))
+  (deactivate-mark))
 
 (defun clipboard+kill-ring-save (beg end)
   "Copies selection to x-clipboard."
   (interactive "r")
-  (copy-to-clipboard beg end)
+  (copy-to-clipboard/macos beg end)
   (kill-ring-save beg end))
 
 (global-set-key (kbd "M-w") 'clipboard+kill-ring-save)
@@ -434,7 +425,7 @@ If the environment variable is not defined, load the key from the
     (start-process-shell-command
      "pytest-watch"
      buffer
-     (concat ptw-exec "/bin/ptw" " --clear")))
+     (concat (search-venv-for-pytest-watch-executable) " --clear")))
   (with-current-buffer "*pytest-watch*"
     (read-only-mode 1)
     (display-buffer (current-buffer))))
@@ -447,7 +438,7 @@ If the environment variable is not defined, load the key from the
                        "venv"))
          (pyright-path (executable-find "pyright"))
          (cmd (concat pyright-path
-                      " --pythonpath " python-shell-interpreter " --watch")))
+                      " --pythonpath " (search-venv-for-python-executable) " --watch")))
     (message cmd)
     (with-current-buffer buffer
       (read-only-mode -1)
@@ -474,6 +465,11 @@ FALLBACK is the fallback executable if none of the EXECUTABLES are found."
  search-venv-for-python-executable
  ("ipython" "python3" "python")
  "python")
+
+(make-search-venv-executable-function
+ search-venv-for-pytest-watch-executable
+ ("pytest-watch" "ptw")
+ "ptw")
 
 (make-search-venv-executable-function
  search-venv-for-black-executable
