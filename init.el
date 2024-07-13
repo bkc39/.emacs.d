@@ -441,23 +441,26 @@ undefined symbol."
                  symbols))
          ,@body))))
 
+
+(defvar tmp "TEMP")
+
 (defun pytest-watch ()
   "Run pytest in watch mode and display the output in a buffer."
   (interactive)
   (with-defined-functions
    (lsp-pyright--locate-venv lsp-workspace-root)
    (let ((buffer (get-buffer-create "*pytest-watch*"))
-          (project-root (lsp-workspace-root)))
-      (with-current-buffer buffer
-        (read-only-mode -1)
-        (erase-buffer))
-      (start-process-shell-command
-       "pytest-watch"
-       buffer
-       (concat
-        "cd " project-root " && "
-        (lsp-pyright--locate-venv)
-        "/bin/pytest-watch --clear")))
+         (project-root (lsp-workspace-root)))
+     (with-current-buffer buffer
+       (read-only-mode -1)
+       (erase-buffer))
+     (start-process-shell-command
+      "pytest-watch"
+      buffer
+      (concat
+       "cd " project-root " && "
+       (lsp-pyright--locate-venv)
+       "/bin/pytest-watch --clear")))
    (with-current-buffer "*pytest-watch*"
      (read-only-mode 1)
      (display-buffer (current-buffer)))))
