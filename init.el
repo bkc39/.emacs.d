@@ -442,7 +442,7 @@ undefined symbol."
          ,@body))))
 
 
-(defvar tmp "TEMP")
+(defvar tmp "TEMP2")
 
 (defun pytest-watch ()
   "Run pytest in watch mode and display the output in a buffer."
