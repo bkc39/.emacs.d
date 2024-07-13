@@ -424,32 +424,53 @@ If the environment variable is not defined, load the key from the
       (setq api-key (getenv "OPENAI_API_KEY")))
     api-key))
 
+(defmacro with-defined-functions (symbols &rest body)
+  "Execute BODY only if all SYMBOLS are bound as functions.
+
+If any are not then display an error message with the first
+undefined symbol."
+  (let ((cc (gensym)))
+    `(catch ',cc
+       (when (and
+              ,@(mapcar
+                 (lambda (sym)
+                   `(or (fboundp ',sym)
+                        (throw
+                         ',cc
+                         (format "%s is not bound as a function!" ',sym))))
+                 symbols))
+         ,@body))))
+
 (defun pytest-watch ()
   "Run pytest in watch mode and display the output in a buffer."
   (interactive)
-  (let ((ptw-exec
-         (lsp-pyright--locate-venv))
-        (buffer (get-buffer-create "*pytest-watch*")))
-    (with-current-buffer buffer
-      (read-only-mode -1)
-      (erase-buffer))
-    (start-process-shell-command
-     "pytest-watch"
-     buffer
-     (concat (search-venv-for-pytest-watch-executable) " --clear")))
-  (with-current-buffer "*pytest-watch*"
-    (read-only-mode 1)
-    (display-buffer (current-buffer))))
+  (with-defined-functions
+   (lsp-pyright--locate-venv lsp-workspace-root)
+   (let ((buffer (get-buffer-create "*pytest-watch*"))
+          (project-root (lsp-workspace-root)))
+      (with-current-buffer buffer
+        (read-only-mode -1)
+        (erase-buffer))
+      (start-process-shell-command
+       "pytest-watch"
+       buffer
+       (concat
+        "cd " project-root " && "
+        (lsp-pyright--locate-venv)
+        "/bin/pytest-watch --clear")))
+   (with-current-buffer "*pytest-watch*"
+     (read-only-mode 1)
+     (display-buffer (current-buffer)))))
 
 (defun pyright-watch ()
   "Run pyright and display the output in a buffer."
   (interactive)
   (let* ((buffer (get-buffer-create "*pyright*"))
-         (venv-dir (or (lsp-pyright--locate-venv)
-                       "venv"))
          (pyright-path (executable-find "pyright"))
          (cmd (concat pyright-path
-                      " --pythonpath " (search-venv-for-python-executable) " --watch")))
+                      " --pythonpath "
+                      (search-venv-for-python-executable)
+                      " --watch")))
     (message cmd)
     (with-current-buffer buffer
       (read-only-mode -1)
