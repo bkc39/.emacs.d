@@ -427,8 +427,9 @@ If the environment variable is not defined, load the key from the
 (defun pytest-watch ()
   "Run pytest in watch mode and display the output in a buffer."
   (interactive)
-  (if (not (fboundp 'lsp-pyright--locate-venv))
-      (message "pytest-watch: not in lsp-mode for Python")
+  (cond
+   ((and (fboundp 'lsp-pyright--locate-venv)
+         (fboundp 'lsp-workspace-root))
     (let ((buffer (get-buffer-create "*pytest-watch*"))
           (project-root (lsp-workspace-root)))
       (with-current-buffer buffer
@@ -443,7 +444,13 @@ If the environment variable is not defined, load the key from the
         "/bin/pytest-watch --clear")))
     (with-current-buffer "*pytest-watch*"
       (read-only-mode 1)
-      (display-buffer (current-buffer)))))
+      (display-buffer (current-buffer))))
+   ((not (fboundp 'lsp-workspace-root))
+    (message
+     "pytest-watch: cannot locate lsp project root. are you in lsp-mode?"))
+   ((not (fboundp 'lsp-pyright--locate-venv))
+    (message
+     "pytest-watch: cannot call lsp-pyright function. Is lsp-pyright active?"))))
 
 (defun pyright-watch ()
   "Run pyright and display the output in a buffer."
