@@ -424,13 +424,29 @@ If the environment variable is not defined, load the key from the
       (setq api-key (getenv "OPENAI_API_KEY")))
     api-key))
 
+(defmacro with-defined-functions (symbols &rest body)
+  "Execute BODY only if all SYMBOLS are bound as functions.
+
+If any are not then display an error message with the first
+undefined symbol."
+  (let ((cc (gensym)))
+    `(catch ',cc
+       (when (and
+              ,@(mapcar
+                 (lambda (sym)
+                   `(or (fboundp ',sym)
+                        (throw
+                         ',cc
+                         (format "%s is not bound as a function!" ',sym))))
+                 symbols))
+         ,@body))))
+
 (defun pytest-watch ()
   "Run pytest in watch mode and display the output in a buffer."
   (interactive)
-  (cond
-   ((and (fboundp 'lsp-pyright--locate-venv)
-         (fboundp 'lsp-workspace-root))
-    (let ((buffer (get-buffer-create "*pytest-watch*"))
+  (with-defined-functions
+   (lsp-pyright--locate-venv lsp-workspace-root)
+   (let ((buffer (get-buffer-create "*pytest-watch*"))
           (project-root (lsp-workspace-root)))
       (with-current-buffer buffer
         (read-only-mode -1)
@@ -442,22 +458,14 @@ If the environment variable is not defined, load the key from the
         "cd " project-root " && "
         (lsp-pyright--locate-venv)
         "/bin/pytest-watch --clear")))
-    (with-current-buffer "*pytest-watch*"
-      (read-only-mode 1)
-      (display-buffer (current-buffer))))
-   ((not (fboundp 'lsp-workspace-root))
-    (message
-     "pytest-watch: cannot locate lsp project root. are you in lsp-mode?"))
-   ((not (fboundp 'lsp-pyright--locate-venv))
-    (message
-     "pytest-watch: cannot call lsp-pyright function. Is lsp-pyright active?"))))
+   (with-current-buffer "*pytest-watch*"
+     (read-only-mode 1)
+     (display-buffer (current-buffer)))))
 
 (defun pyright-watch ()
   "Run pyright and display the output in a buffer."
   (interactive)
   (let* ((buffer (get-buffer-create "*pyright*"))
-         (venv-dir (or (lsp-pyright--locate-venv)
-                       "venv"))
          (pyright-path (executable-find "pyright"))
          (cmd (concat pyright-path
                       " --pythonpath "
