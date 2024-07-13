@@ -427,19 +427,23 @@ If the environment variable is not defined, load the key from the
 (defun pytest-watch ()
   "Run pytest in watch mode and display the output in a buffer."
   (interactive)
-  (let ((ptw-exec
-         (lsp-pyright--locate-venv))
-        (buffer (get-buffer-create "*pytest-watch*")))
-    (with-current-buffer buffer
-      (read-only-mode -1)
-      (erase-buffer))
-    (start-process-shell-command
-     "pytest-watch"
-     buffer
-     (concat (search-venv-for-pytest-watch-executable) " --clear")))
-  (with-current-buffer "*pytest-watch*"
-    (read-only-mode 1)
-    (display-buffer (current-buffer))))
+  (if (not (fboundp 'lsp-pyright--locate-venv))
+      (message "pytest-watch: not in lsp-mode for Python")
+    (let ((buffer (get-buffer-create "*pytest-watch*"))
+          (project-root (lsp-workspace-root)))
+      (with-current-buffer buffer
+        (read-only-mode -1)
+        (erase-buffer))
+      (start-process-shell-command
+       "pytest-watch"
+       buffer
+       (concat
+        "cd " project-root " && "
+        (lsp-pyright--locate-venv)
+        "/bin/pytest-watch --clear")))
+    (with-current-buffer "*pytest-watch*"
+      (read-only-mode 1)
+      (display-buffer (current-buffer)))))
 
 (defun pyright-watch ()
   "Run pyright and display the output in a buffer."
@@ -449,7 +453,9 @@ If the environment variable is not defined, load the key from the
                        "venv"))
          (pyright-path (executable-find "pyright"))
          (cmd (concat pyright-path
-                      " --pythonpath " (search-venv-for-python-executable) " --watch")))
+                      " --pythonpath "
+                      (search-venv-for-python-executable)
+                      " --watch")))
     (message cmd)
     (with-current-buffer buffer
       (read-only-mode -1)
