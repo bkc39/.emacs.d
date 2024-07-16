@@ -170,7 +170,7 @@
   :config
   (progn
     (setq
-     python-shell-interpreter (search-venv-for-python-executable)
+     ;; python-shell-interpreter (search-venv-for-python-executable)
      blacken-executable (search-venv-for-black-executable))
     (setq lsp-pyright-use-library-code-for-types t)
     (let* ((pyright-stubs-root-dir
