@@ -40,6 +40,8 @@
        (dolist (,pkg ,to-install)
          (package-install ,pkg)))))
 
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Straight.el config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -145,6 +147,7 @@
          ("C-c M-d" . gptel-diff)))
 
 
+
 (use-package lsp-mode
   :init
   (setq lsp-keymap-prefix "C-c l")
@@ -153,6 +156,7 @@
                      (electric-indent-mode -1)
                      (lsp-deferred)))
   :hook (rust-mode . #'lsp-deferred))
+
 
 (defun check-for-python-executable-in-dir (dir bin-name)
   (let ((executable (concat dir "/" bin-name)))
@@ -164,11 +168,56 @@
   (when (and (eq major-mode 'python-mode) (bound-and-true-p lsp-mode))
     (lsp-pyright-organize-imports)))
 
+(defun reset-lsp-python-workspace (folder)
+  "Reset LSP Python workspace.
+
+User can provide a FOLDER, defaulting to the result of
+`locate-dominating-file` which looks for the nearest 'venv' or '.git'
+directory."
+  (interactive
+   (let ((inferred-project-root
+          (or (locate-dominating-file default-directory "venv")
+              (locate-dominating-file default-directory ".git"))))
+     (list (read-directory-name
+            "Select new folder: "
+            inferred-project-root))))
+  (lsp-workspace-folders-remove (lsp-workspace-root))
+  (lsp-workspace-folders-add folder)
+  (lsp-restart-workspace))
+
+(defun run-python-with-extra-pythonpaths (paths)
+  "Run Python with additional PYTHONPATHS.
+Optionally prompt for user-specified PATHS if prefix argument is supplied."
+  (interactive
+   (let ((default-path (lsp-workspace-root)))
+     (if current-prefix-arg
+         (list (read-directory-name
+                "Specify additional PYTHONPATH: " default-path))
+       (list default-path))))
+  (unless (and (boundp 'pyvenv-virtual-env) pyvenv-virtual-env)
+    (message "WARNING (%s): No virtual environment activated"
+             'run-python-with-extra-pythonpaths))
+  (setq python-shell-extra-pythonpaths
+        (append (if (listp paths) paths (list paths))
+                python-shell-extra-pythonpaths))
+  (run-python))
+
+(defun rebind-run-python-hotkey ()
+  "Rebind the the run python hotkey.
+
+`run-python` ==> `run-python-with-extra-pythonpaths`."
+  (define-key python-mode-map
+              (kbd "C-c C-p")
+              'run-python-with-extra-pythonpaths))
+
 (use-package lsp-pyright
   :hook (python-mode . lsp-deferred)
   :hook (before-save . organize-python-imports)
+  :hook (python-mode . rebind-run-python-hotkey)
   :config
   (progn
+    (when (>= emacs-major-version 30)
+      (python-shell-calculate-command))
     (setq
      ;; python-shell-interpreter (search-venv-for-python-executable)
      blacken-executable (search-venv-for-black-executable))
