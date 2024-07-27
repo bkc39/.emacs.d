@@ -701,30 +701,61 @@ in the kill ring."
             (buffer-substring-no-properties (point-min) (point-max)))))
     (ensure-gptel-directives-loaded)
     (gptel-request/require
-        diff-str
-      :system
-      (alist-get
-       'commiter
-       gptel-directives
-       "Write a git commit message for this diff. Include ONLY the message.
+     diff-str
+     :system
+     (alist-get
+      'commiter
+      gptel-directives
+      "Write a git commit message for this diff. Include ONLY the message.
 Be terse. Provide messages whose lines are at most 80 characters")
-      :callback
-      (lambda (response info)
-        (if (not response)
-            (message
-             "gptel-diff failed with message: %s"
-             (plist-get info :status))
+     :callback
+     (lambda (response info)
+       (if (not response)
+           (message
+            "gptel-diff failed with message: %s"
+            (plist-get info :status))
 
-          (kill-new response)
-          (with-current-buffer (get-buffer-create "*gptel-diff*")
-            (let ((inhibit-read-only t))
-              (erase-buffer)
-              (insert response))
-            (special-mode)
-            (display-buffer (current-buffer)))
-          (when (get-buffer "COMMIT_EDITMSG")
-            (message "commit message in kill ring")
-            (pop-to-buffer "COMMIT_EDITMSG")))))))
+         (kill-new response)
+         (with-current-buffer (get-buffer-create "*gptel-diff*")
+           (let ((inhibit-read-only t))
+             (erase-buffer)
+             (insert response))
+           (special-mode)
+           (display-buffer (current-buffer)))
+         (when (get-buffer "COMMIT_EDITMSG")
+           (message "commit message in kill ring")
+           (pop-to-buffer "COMMIT_EDITMSG")))))))
+
+(defun/who gptel-pull-request ()
+  "Generate a GitHub pull request description by diffing with origin/master."
+  (interactive)
+  (let* ((diff-buffer
+          (with-temp-buffer
+            (magit-diff-range "origin/master")
+            (buffer-string)))
+         (request-string
+          (concat
+           "Generate a pull request description summarizing the changes:\n\n"
+           diff-buffer)))
+    (ensure-gptel-directives-loaded)
+    (gptel-request/require
+     request-string
+     :system
+     (alist-get
+      'PullRequest
+      gptel-directives
+      "Summarize the changes for a GitHub pull request description.")
+     :callback
+     (lambda (response info)
+       (if (not response)
+           (message "%s failed with message: %s" who (plist-get info :status))
+         (kill-new response)
+         (with-current-buffer (get-buffer-create "*gptel-pull-request*")
+           (let ((inhibit-read-only t))
+             (erase-buffer)
+             (insert response))
+           (special-mode)
+           (pop-to-buffer (current-buffer))))))))
 
 (defun insert-issue-prefix ()
   (interactive)
