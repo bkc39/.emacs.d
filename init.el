@@ -40,6 +40,26 @@
        (dolist (,pkg ,to-install)
          (package-install ,pkg)))))
 
+(defmacro defun/who (name args &rest body)
+  "Define a function NAME with arguments ARGS and body BODY.
+Includes the function name as a local variable WHO within the body.
+
+Special keyword arguments:
+  :command -- If provided, make the function interactive."
+  (let* ((docstring (if (stringp (car body)) (pop body)))
+         (options (when (keywordp (car body)) (pop body)))
+         (command (progn
+                    (message "options was: %s" options)
+                    (eq :command options))))
+    `(defun ,name ,args
+       ,@(when docstring (list docstring))
+       ,@(when command '((interactive)))
+       (let ((who ',name))
+         ,@body))))
+
+(unless (get 'defun/who 'lisp-indent-function)
+  (put 'defun/who 'lisp-indent-function 'defun))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Straight.el config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -159,9 +179,8 @@
     :stream t)
   :bind (("C-c RET" . gptel-send)
          ("C-c q" . gptel-quick)
-         ("C-c M-d" . gptel-diff)))
-
-
+         ("C-c M-d" . gptel-diff)
+         ("C-c M-p" . gptel-pull-request)))
 
 (use-package lsp-mode
   :init
@@ -543,9 +562,6 @@ undefined symbol."
                  symbols))
          ,@body))))
 
-
-(defvar tmp "TEMP2")
-
 (defun pytest-watch ()
   "Run pytest in watch mode and display the output in a buffer."
   (interactive)
@@ -690,30 +706,66 @@ in the kill ring."
             (buffer-substring-no-properties (point-min) (point-max)))))
     (ensure-gptel-directives-loaded)
     (gptel-request/require
-        diff-str
-      :system
-      (alist-get
-       'commiter
-       gptel-directives
-       "Write a git commit message for this diff. Include ONLY the message.
+     diff-str
+     :system
+     (alist-get
+      'commiter
+      gptel-directives
+      "Write a git commit message for this diff. Include ONLY the message.
 Be terse. Provide messages whose lines are at most 80 characters")
-      :callback
-      (lambda (response info)
-        (if (not response)
-            (message
-             "gptel-diff failed with message: %s"
-             (plist-get info :status))
+     :callback
+     (lambda (response info)
+       (if (not response)
+           (message
+            "gptel-diff failed with message: %s"
+            (plist-get info :status))
 
-          (kill-new response)
-          (with-current-buffer (get-buffer-create "*gptel-diff*")
-            (let ((inhibit-read-only t))
-              (erase-buffer)
-              (insert response))
-            (special-mode)
-            (display-buffer (current-buffer)))
-          (when (get-buffer "COMMIT_EDITMSG")
-            (message "commit message in kill ring")
-            (pop-to-buffer "COMMIT_EDITMSG")))))))
+         (kill-new response)
+         (with-current-buffer (get-buffer-create "*gptel-diff*")
+           (let ((inhibit-read-only t))
+             (erase-buffer)
+             (insert response))
+           (special-mode)
+           (display-buffer (current-buffer)))
+         (when (get-buffer "COMMIT_EDITMSG")
+           (message "commit message in kill ring")
+           (pop-to-buffer "COMMIT_EDITMSG")))))))
+
+(defun/who gptel-pull-request ()
+  "Generate a GitHub pull request description by diffing with origin/master.
+
+Upon receiving the response from gptel, it places the generated message
+in a special buffer named *gptel-pull-request* and copies it to the
+clipboard and kill ring."
+  :command
+  (let* ((diff-buffer
+          (with-temp-buffer
+            (magit-diff-range "origin/master")
+            (buffer-string)))
+         (request-string
+          (concat
+           "Generate a pull request description summarizing the changes:\n\n"
+           diff-buffer)))
+    (ensure-gptel-directives-loaded)
+    (gptel-request/require
+     request-string
+     :system
+     (alist-get
+      'PullRequest
+      gptel-directives
+      "Summarize the changes for a GitHub pull request description.")
+     :callback
+     (lambda (response info)
+       (if (not response)
+           (message "%s failed with message: %s" who (plist-get info :status))
+         (with-current-buffer (get-buffer-create "*gptel-pull-request*")
+           (let ((inhibit-read-only t))
+             (erase-buffer)
+             (insert response))
+           (special-mode)
+           (pop-to-buffer (current-buffer))
+           (clipboard+kill-ring-save (point-min) (point-max))
+           (message "pull request body in kill ring")))))))
 
 (defun insert-issue-prefix ()
   (interactive)
