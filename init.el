@@ -727,7 +727,11 @@ Be terse. Provide messages whose lines are at most 80 characters")
            (pop-to-buffer "COMMIT_EDITMSG")))))))
 
 (defun/who gptel-pull-request ()
-  "Generate a GitHub pull request description by diffing with origin/master."
+  "Generate a GitHub pull request description by diffing with origin/master.
+
+Upon receiving the response from gptel, it places the generated message
+in a special buffer named *gptel-pull-request* and copies it to the kill
+ring."
   (interactive)
   (let* ((diff-buffer
           (with-temp-buffer
