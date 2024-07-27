@@ -40,8 +40,6 @@
        (dolist (,pkg ,to-install)
          (package-install ,pkg)))))
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Straight.el config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -96,6 +94,23 @@
   :after (proof-general)
   :hook (coq-mode . company-coq-mode)
   :init (setq company-coq-live-on-the-edge t))
+
+(use-package clojure-mode
+  :ensure t
+  :config
+  (add-hook 'clojure-mode-hook #'lsp-deferred)
+  (add-hook 'clojure-mode-hook #'enable-paredit-mode)
+  (add-hook 'clojure-mode-hook #'cider-mode))
+
+(use-package cider
+  :ensure t
+  :config
+  (setq nrepl-log-messages t)
+  (define-key cider-mode-map (kbd "C-c RET") nil)
+  ;; ^ delete the default key because we have that bound to gptel-send
+  (define-key cider-mode-map
+              (kbd "C-c C-r RET")
+              'cider-macroexpand-1))
 
 (use-package cmake-mode)
 
@@ -216,8 +231,6 @@ Optionally prompt for user-specified PATHS if prefix argument is supplied."
   :hook (python-mode . rebind-run-python-hotkey)
   :config
   (progn
-    (when (>= emacs-major-version 30)
-      (python-shell-calculate-command))
     (setq
      ;; python-shell-interpreter (search-venv-for-python-executable)
      blacken-executable (search-venv-for-black-executable))
