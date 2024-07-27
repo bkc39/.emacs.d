@@ -227,6 +227,8 @@ Optionally prompt for user-specified PATHS if prefix argument is supplied."
               (kbd "C-c C-p")
               'run-python-with-extra-pythonpaths))
 
+
+
 (use-package lsp-pyright
   :hook (python-mode . lsp-deferred)
   :hook (before-save . organize-python-imports)
@@ -246,6 +248,22 @@ Optionally prompt for user-specified PATHS if prefix argument is supplied."
                  pyright-stubs-dir)
         (setq lsp-pyright-stubs-path
               pyright-stubs-dir)))))
+
+(defun try-locate-venv-named (venv-name)
+  (let ((dir
+         (locate-dominating-file default-directory venv-name)))
+    (when dir
+      (concat (file-name-as-directory dir) venv-name))))
+
+(defun activate-default-venv (venv-path)
+  (interactive
+   (list
+    (read-directory-name
+     "venv: "
+     (or (try-locate-venv-named "venv")
+         (try-locate-venv-named ".venv")
+         default-directory))))
+  (pyvenv-activate venv-path))
 
 (use-package pyvenv
   :ensure t
