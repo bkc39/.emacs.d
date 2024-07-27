@@ -215,7 +215,9 @@ Optionally prompt for user-specified PATHS if prefix argument is supplied."
   (setq python-shell-extra-pythonpaths
         (append (if (listp paths) paths (list paths))
                 python-shell-extra-pythonpaths))
-  (run-python))
+  (run-python)
+  (python-shell-switch-to-shell
+   "run-python-with-extra-pythonpaths: could not switch to python shell?"))
 
 (defun rebind-run-python-hotkey ()
   "Rebind the the run python hotkey.
