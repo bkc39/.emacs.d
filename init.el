@@ -664,17 +664,34 @@ gptel-request with ARGS."
 (defvar gptel-quick--history nil
   "History list for `gptel-quick' prompts.")
 
+(defun dynamic-prompt (make-prompt callback gptel-request-args)
+  "Send a dynamically calculated request to an LLM.
+
+MAKE-PROMPT is a thunk to calculate the prompt.  CALLBACK is an arity 2
+function whose arguments are the LLM response and info which is passed
+to gptel-request.  The of the GPTEL-REQUEST-ARGS are forwarded to the call to
+gptel-request"
+  (let* ((prompt
+          (funcall make-prompt))
+         (request-args
+          (cons prompt
+                (append (funcall gptel-request-args)
+                        (list :callback callback)))))
+    ;; (message "prompt: %s" prompt)
+    ;; (message "request args: %s" request-args)
+    (ensure-gptel-directives-loaded)
+    (apply #'gptel-request/require request-args)))
+
 (defun gptel-quick (prompt)
   "Send PROMPT to ChatGPT and display the response in a special buffer.
 If the PROMPT is empty, signals a user error."
   (interactive (list (read-string "Ask ChatGPT: " nil gptel-quick--history)))
-  (when (string= prompt "") (user-error "A prompt is required"))
-  (ensure-gptel-directives-loaded)
-  (gptel-request/require
-   prompt
-   :system (alist-get 'default gptel-directives "You are a helpful assistant.")
-   :callback
+  (dynamic-prompt
+   (lambda ()
+     (when (string= prompt "")
+       (user-error "A prompt is required")))
    (lambda (response info)
+     (message "got response: %s")
      (if (not response)
          (message "gptel-quick failed with message: %s" (plist-get info
                                                                    :status))
@@ -683,7 +700,11 @@ If the PROMPT is empty, signals a user error."
            (erase-buffer)
            (insert response))
          (special-mode)
-         (display-buffer (current-buffer)))))))
+         (display-buffer (current-buffer)))))
+   (lambda ()
+     (list :system
+           (alist-get 'default gptel-directives
+                      "You are a helpful assistant.")))))
 
 (defun gptel-diff ()
   "Generate a git commit message.
