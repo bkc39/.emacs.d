@@ -758,34 +758,32 @@ Upon receiving the response from gptel, it places the generated message
 in a special buffer named *gptel-pull-request* and copies it to the
 clipboard and kill ring."
   :command
-  (let* ((diff-buffer
-          (with-temp-buffer
-            (magit-diff-range "origin/master")
-            (buffer-string)))
-         (request-string
-          (concat
-           "Generate a pull request description summarizing the changes:\n\n"
-           diff-buffer)))
-    (ensure-gptel-directives-loaded)
-    (gptel-request/require
-     request-string
-     :system
-     (alist-get
-      'PullRequest
-      gptel-directives
-      "Summarize the changes for a GitHub pull request description.")
-     :callback
-     (lambda (response info)
-       (if (not response)
-           (message "%s failed with message: %s" who (plist-get info :status))
-         (with-current-buffer (get-buffer-create "*gptel-pull-request*")
-           (let ((inhibit-read-only t))
-             (erase-buffer)
-             (insert response))
-           (special-mode)
-           (pop-to-buffer (current-buffer))
-           (clipboard+kill-ring-save (point-min) (point-max))
-           (message "pull request body in kill ring")))))))
+  (dynamic-prompt
+   (lambda ()
+     (let ((diff-buffer
+            (with-temp-buffer
+              (magit-diff-range "origin/master")
+              (buffer-string))))
+       (concat
+        "Generate a pull request description summarizing the changes:\n\n"
+        diff-buffer)))
+   (lambda (response info)
+     (if (not response)
+         (message "%s failed with message: %s" who (plist-get info :status))
+       (with-current-buffer (get-buffer-create "*gptel-pull-request*")
+         (let ((inhibit-read-only t))
+           (erase-buffer)
+           (insert response))
+         (special-mode)
+         (pop-to-buffer (current-buffer))
+         (clipboard+kill-ring-save (point-min) (point-max))
+         (message "pull request body in kill ring"))))
+   (lambda ()
+     (list :system
+           (alist-get
+            'PullRequest
+            gptel-directives
+            "Summarize the changes for a GitHub pull request description.")))))
 
 (defun insert-issue-prefix ()
   (interactive)
