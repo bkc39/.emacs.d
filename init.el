@@ -755,6 +755,7 @@ Be terse. Provide messages whose lines are at most 80 characters")
              (erase-buffer)
              (insert response))
            (special-mode)
+           (message "pull request body in kill ring")
            (pop-to-buffer (current-buffer))))))))
 
 (defun insert-issue-prefix ()
