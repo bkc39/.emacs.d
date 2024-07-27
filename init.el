@@ -730,8 +730,8 @@ Be terse. Provide messages whose lines are at most 80 characters")
   "Generate a GitHub pull request description by diffing with origin/master.
 
 Upon receiving the response from gptel, it places the generated message
-in a special buffer named *gptel-pull-request* and copies it to the kill
-ring."
+in a special buffer named *gptel-pull-request* and copies it to the
+clipboard and kill ring."
   (interactive)
   (let* ((diff-buffer
           (with-temp-buffer
@@ -753,14 +753,14 @@ ring."
      (lambda (response info)
        (if (not response)
            (message "%s failed with message: %s" who (plist-get info :status))
-         (kill-new response)
          (with-current-buffer (get-buffer-create "*gptel-pull-request*")
            (let ((inhibit-read-only t))
              (erase-buffer)
              (insert response))
            (special-mode)
-           (message "pull request body in kill ring")
-           (pop-to-buffer (current-buffer))))))))
+           (pop-to-buffer (current-buffer))
+           (clipboard+kill-ring-save (point-min) (point-max))
+           (message "pull request body in kill ring")))))))
 
 (defun insert-issue-prefix ()
   (interactive)
