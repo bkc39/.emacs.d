@@ -682,6 +682,44 @@ gptel-request"
     (ensure-gptel-directives-loaded)
     (apply #'gptel-request/require request-args)))
 
+(defmacro defgptelfn (name args &rest stx)
+  "Define a function with dynamic prompt and body.
+NAME is the function name. ARGS are the arguments taken by the function.
+:command is the interactive command. :prompt is the prompt body.
+:body is the body of the function. :extra-args is for additional request arguments."
+  (let ((docstring
+         (when (stringp (car stx))
+           (pop stx)))
+        (stx-kwargs (-partition 2 stx))
+        (make-prompt (gensym))
+        (request-callback (gensym))
+        (request-args-thunk (gensym)))
+    `(defun ,name ,args
+       ,@(when docstring (list docstring))
+       ,@(awhen (assoc :command stx-kwargs)
+           `((interactive ,(cadr it))))
+       (let ((,make-prompt
+              (lambda ()
+                ,(aif (assoc :prompt stx-kwargs)
+                     (cadr it)
+                   (error
+                    "defgptelfn: missing required keyword argument :prompt"))))
+             (,request-callback
+              (lambda (*gptel-response* *gptel-response-info*)
+                ,(aif (assoc :body stx-kwargs)
+                     (cadr it)
+                   (error
+                    "defgptelfn: missing required keyword argument :body"))))
+             (,request-args-thunk
+              (lambda ()
+                ,@(aif (assoc :extra-args stx-kwargs)
+                      it
+                    (list nil)))))
+         (dynamic-prompt
+          ,make-prompt
+          ,request-callback
+          ,request-args-thunk)))))
+
 (defun gptel-quick (prompt)
   "Send PROMPT to ChatGPT and display the response in a special buffer.
 If the PROMPT is empty, signals a user error."
