@@ -42,11 +42,20 @@
 
 (defmacro defun/who (name args &rest body)
   "Define a function NAME with arguments ARGS and body BODY.
+Includes the function name as a local variable WHO within the body.
 
-Includes the function name as a local variable WHO within the body."
-  `(defun ,name ,args
-     (let ((who ',name))
-       ,@body)))
+Special keyword arguments:
+  :command -- If provided, make the function interactive."
+  (let* ((docstring (if (stringp (car body)) (pop body)))
+         (options (when (keywordp (car body)) (pop body)))
+         (command (progn
+                    (message "options was: %s" options)
+                    (eq :command options))))
+    `(defun ,name ,args
+       ,@(when docstring (list docstring))
+       ,@(when command '((interactive)))
+       (let ((who ',name))
+         ,@body))))
 
 (unless (get 'defun/who 'lisp-indent-function)
   (put 'defun/who 'lisp-indent-function 'defun))
@@ -170,9 +179,8 @@ Includes the function name as a local variable WHO within the body."
     :stream t)
   :bind (("C-c RET" . gptel-send)
          ("C-c q" . gptel-quick)
-         ("C-c M-d" . gptel-diff)))
-
-
+         ("C-c M-d" . gptel-diff)
+         ("C-c M-p" . gptel-pull-request)))
 
 (use-package lsp-mode
   :init
@@ -554,9 +562,6 @@ undefined symbol."
                  symbols))
          ,@body))))
 
-
-(defvar tmp "TEMP2")
-
 (defun pytest-watch ()
   "Run pytest in watch mode and display the output in a buffer."
   (interactive)
@@ -732,7 +737,7 @@ Be terse. Provide messages whose lines are at most 80 characters")
 Upon receiving the response from gptel, it places the generated message
 in a special buffer named *gptel-pull-request* and copies it to the
 clipboard and kill ring."
-  (interactive)
+  :command
   (let* ((diff-buffer
           (with-temp-buffer
             (magit-diff-range "origin/master")
