@@ -170,7 +170,15 @@
   :hook (js-mode . (lambda ()
                      (electric-indent-mode -1)
                      (lsp-deferred)))
-  :hook (rust-mode . #'lsp-deferred))
+  :hook (rust-mode . #'lsp-deferred)
+  :custom
+  (lsp-file-watch-ignored
+   '("[/\\\\]\\.venv$" "[/\\\\]venv$" "[/\\\\]\\.direnv$"
+     "[/\\\\]\\.mypy_cache$" "[/\\\\]\\.pytest_cache$"
+     "[/\\\\]__pycache__$" "[/\\\\]build$" "[/\\\\]dist$"))
+  :config
+  (setq lsp-enable-file-watchers nil
+        lsp-file-watch-threshold 10000))
 
 
 (defun check-for-python-executable-in-dir (dir bin-name)
@@ -721,7 +729,7 @@ Be terse. Provide messages whose lines are at most 80 characters")
       (insert (format "[#%s] " issue-number)))))
 
 (defun infer-issue-number-from-branch-name (branch-name)
-  "Gets the implied issue number out of the current branch"
+  "Gets the implied issue number out of BRANCH-NAME."
   (if (string-match "\\([[:alpha:]]+\\)\\([[:digit:]]+\\).*" branch-name)
       (match-string 2 branch-name)
     (progn
@@ -729,7 +737,7 @@ Be terse. Provide messages whose lines are at most 80 characters")
       "")))
 
 (defun issue-prefix-is-there ()
-  "Check if the buffer is prefixed by the issue prefix [#ISSUE-NUMBER]"
+  "Check if the buffer is prefixed by the issue prefix [#ISSUE-NUMBER]."
   (let ((buffer-prefix (car (split-string (buffer-string)))))
     (string-match "\\[\\#[[:digit:]]+\\]" buffer-prefix)))
 
