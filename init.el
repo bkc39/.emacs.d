@@ -611,8 +611,9 @@ FALLBACK is the fallback executable if none of the EXECUTABLES are found."
     (read (buffer-string))))
 
 (defun read-prompt-md-files (directory)
-  "Read files in DIRECTORY of the form PROMPT.md and return an
-alist (PROMPT . CONTENTS-OF-FILE)."
+  "Read files in DIRECTORY of the form PROMPT.md.
+
+Returns an alist (PROMPT . CONTENTS-OF-FILE)."
   (let ((files (directory-files directory t "\\`[^.].*\\.md\\'"))
         result)
     (dolist (file files)
