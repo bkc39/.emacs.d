@@ -718,39 +718,38 @@ to the kill ring.  If a buffer named 'COMMIT_EDITMSG' is also present, it
 will switch to that buffer and notify the user that the commit message is
 in the kill ring."
   (interactive)
-  (let* ((diff-buffer
-          (with-temp-buffer
-            (magit-diff-staged)
-            (buffer-name)))
-         (diff-str
-          (with-current-buffer diff-buffer
-            (buffer-substring-no-properties (point-min) (point-max)))))
-    (ensure-gptel-directives-loaded)
-    (gptel-request/require
-     diff-str
-     :system
-     (alist-get
-      'commiter
-      gptel-directives
-      "Write a git commit message for this diff. Include ONLY the message.
-Be terse. Provide messages whose lines are at most 80 characters")
-     :callback
-     (lambda (response info)
-       (if (not response)
-           (message
-            "gptel-diff failed with message: %s"
-            (plist-get info :status))
+  (dynamic-prompt
+   (lambda ()
+     (let ((diff-buffer
+            (with-temp-buffer
+              (magit-diff-staged)
+              (buffer-name))))
+       (with-current-buffer diff-buffer
+         (buffer-substring-no-properties (point-min) (point-max)))))
+   (lambda (response info)
+     (if (not response)
+         (message
+          "gptel-diff failed with message: %s"
+          (plist-get info :status))
 
-         (kill-new response)
-         (with-current-buffer (get-buffer-create "*gptel-diff*")
-           (let ((inhibit-read-only t))
-             (erase-buffer)
-             (insert response))
-           (special-mode)
-           (display-buffer (current-buffer)))
-         (when (get-buffer "COMMIT_EDITMSG")
-           (message "commit message in kill ring")
-           (pop-to-buffer "COMMIT_EDITMSG")))))))
+       (kill-new response)
+       (with-current-buffer (get-buffer-create "*gptel-diff*")
+         (let ((inhibit-read-only t))
+           (erase-buffer)
+           (insert response))
+         (special-mode)
+         (display-buffer (current-buffer)))
+       (when (get-buffer "COMMIT_EDITMSG")
+         (message "commit message in kill ring")
+         (pop-to-buffer "COMMIT_EDITMSG"))))
+   (lambda ()
+     (list
+      :system
+      (alist-get
+       'commiter
+       gptel-directives
+       "Write a git commit message for this diff. Include ONLY the message.
+Be terse. Provide messages whose lines are at most 80 characters")))))
 
 (defun/who gptel-pull-request ()
   "Generate a GitHub pull request description by diffing with origin/master.
