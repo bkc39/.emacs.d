@@ -40,6 +40,17 @@
        (dolist (,pkg ,to-install)
          (package-install ,pkg)))))
 
+(defmacro defun/who (name args &rest body)
+  "Define a function NAME with arguments ARGS and body BODY.
+
+Includes the function name as a local variable WHO within the body."
+  `(defun ,name ,args
+     (let ((who ',name))
+       ,@body)))
+
+(unless (get 'defun/who 'lisp-indent-function)
+  (put 'defun/who 'lisp-indent-function 'defun))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Straight.el config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
