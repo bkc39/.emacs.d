@@ -250,12 +250,22 @@ Optionally prompt for user-specified PATHS if prefix argument is supplied."
               pyright-stubs-dir)))))
 
 (defun try-locate-venv-named (venv-name)
+  "Try to locate a virtual environment named VENV-NAME.
+
+Looks in the current or any parent directory.  Return the full path
+to the virtual environment if found, or nil otherwise."
   (let ((dir
          (locate-dominating-file default-directory venv-name)))
     (when dir
       (concat (file-name-as-directory dir) venv-name))))
 
 (defun activate-default-venv (venv-path)
+  "Activate a Python virtual environment located at VENV-PATH.
+
+If called interactively, prompt the user for the virtual
+environment directory.  If a 'venv' or '.venv' virtual
+environment is found in the current or any parent directory, use
+that as the default suggestion."
   (interactive
    (list
     (read-directory-name
@@ -267,6 +277,7 @@ Optionally prompt for user-specified PATHS if prefix argument is supplied."
 
 (use-package pyvenv
   :ensure t
+  :after (lsp-pyright)
   :config
   (pyvenv-mode t)
   (setenv "WORKON_HOME"
@@ -279,7 +290,8 @@ Optionally prompt for user-specified PATHS if prefix argument is supplied."
   (setq pyvenv-post-deactivate-hooks
         (list
          (lambda ()
-           (setq python-shell-interpreter "python3")))))
+           (setq python-shell-interpreter "python3"))))
+  (define-key python-mode-map (kbd "C-c v a") #'activate-default-venv))
 
 
 (use-package lsp-sourcekit
