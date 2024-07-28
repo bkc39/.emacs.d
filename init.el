@@ -12,18 +12,7 @@
 
 ;;; Code:
 
-(defmacro on-system (system &rest body)
-  "Execute BODY only if SYSTEM matches the current system type."
-  `(when (eq system-type ',system)
-     ,@body))
 
-(defmacro on-macos (&rest body)
-  "Execute BODY if the current system is macOS."
-  `(on-system darwin ,@body))
-
-(defmacro on-linux (&rest body)
-  "Execute BODY if the current system is Linux."
-  `(on-system 'gnu/linux ,@body))
 
 (defmacro add-hookq (hook-name fn)
   "Add FN to the list of functions to be run by HOOK-NAME."
@@ -78,6 +67,111 @@ Returns:
     (put sym 'lisp-indent-function 'defun)))
 
 (indent-like-defun 'defun/who)
+
+(defun/who expand-syscond-clause (clause)
+  "Expand a single system type clause in a `syscond` macro.
+
+CLAUSE should be a form where the car is a symbol representing a system
+type (e.g., 'gnu, 'darwin, etc.) and the rest are forms to evaluate if
+the current system type matches.
+
+Valid system types include:
+- `gnu`
+- `gnu/linux`
+- `gnu/kfreebsd`
+- `darwin`
+- `ms-dos`
+- `windows-nt`
+- `cygwin`
+- `berkeley-unix`
+- `aix`
+- `hpux`
+- `usg-unix-v`
+
+During expansion, the function checks if the system type is valid,
+signaling an error if it isn't."
+  (let ((valid-system-types
+         '(gnu
+           gnu/linux
+           gnu/kfreebsd
+           darwin
+           ms-dos
+           windows-nt
+           cygwin
+           berkeley-unix
+           aix
+           hpux
+           usg-unix-v)))
+    (pcase clause
+      (`(,x ,y . ,rest)
+       (unless (memq x valid-system-types)
+         (user-error "In %s during the expansion of %s: invalid system type %s"
+                     'syscase
+                     who
+                     x))
+       `((equal ',x system-type)
+         (progn ,y ,@rest))))))
+
+(defmacro syscase (&rest clauses)
+  "Macro that conditionally evaluates forms based on the system type.
+
+CLAUSES should be a list of forms, where each form is structured as:
+    (SYSTEM-TYPE BODY...)
+
+SYSTEM-TYPE should be one of the valid system types recognized by
+`expand-syscond-clause`.
+
+BODY... is a series of forms that will be evaluated if the current system
+type matches SYSTEM-TYPE.
+
+Example usage:
+    (syscase
+     (darwin
+      (message \"on macOS\"))
+     (gnu/linux
+      (message \"on Linux\")))"
+  (let ((clause-expansions
+         (mapcar #'expand-syscond-clause clauses)))
+    `(cond
+      ,@clause-expansions)))
+
+(defmacro on-macos (&rest body)
+  "Execute BODY if the current system is macOS.
+
+This macro uses the `syscase` macro to check if the current system type is
+`darwin` (which represents macOS).  If the system type matches, it executes
+the BODY expressions.  If not, the BODY is not executed.
+
+Example usage:
+  (on-macos 'apple)
+
+Arguments:
+  BODY -- One or more forms to be executed if the current system type is macOS.
+
+Returns:
+  nil if the current system type is not macOS, otherwise executes the BODY
+  and returns the result of the last form."
+  `(syscase (darwin ,@body)))
+
+(defmacro on-linux (&rest body)
+  "Execute BODY if the current system type is GNU/Linux.
+
+This macro uses the `syscase` macro to check if the current system type is
+'gnu/linux'.  If the system type matches, it executes the BODY expressions.  If
+not, the BODY is not executed.
+
+Example usage:
+  (on-linux
+    (message \"This is a Linux system.\"))
+
+Arguments:
+  BODY -- One or more forms to be executed if the current system type is
+          GNU/Linux.
+
+Returns:
+  nil if the current system type is not GNU/Linux, otherwise executes the BODY
+  and returns the result of the last form."
+  `(syscase (gnu/linux ,@body)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Straight.el config
