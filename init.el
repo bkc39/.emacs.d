@@ -111,7 +111,7 @@ signaling an error if it isn't."
          (progn ,y ,@rest))))))
 
 (defmacro syscase (&rest clauses)
-  "Macro that conditionally evaluates forms based on the system type.
+  "Conditionally evaluate forms based on the system type.
 
 CLAUSES should be a list of forms, where each form is structured as:
     (SYSTEM-TYPE BODY...)
