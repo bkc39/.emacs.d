@@ -180,7 +180,8 @@ Special keyword arguments:
   :bind (("C-c RET" . gptel-send)
          ("C-c q" . gptel-quick)
          ("C-c M-d" . gptel-diff)
-         ("C-c M-p" . gptel-pull-request)))
+         ("C-c M-p" . gptel-pull-request)
+         ("C-c M-s" . gptel-document-symbol-at-point)))
 
 (use-package lsp-mode
   :init
@@ -821,6 +822,8 @@ clipboard and kill ring."
     gptel-directives
     "Summarize the changes for a GitHub pull request description.")))
 
+(defvar gptel-document-symbol-at-point--history nil)
+
 (defgptelfn gptel-document-symbol-at-point (sym)
   "Generate documentation for the symbol at point.
 
@@ -856,32 +859,32 @@ History:
   The function maintains a history of user inputs for the symbol prompt.
 "
   :command
-   (list
-    (read-string "Documentation for: "
-                 (symbol-name (symbol-at-point))
-                 gptel-document-symbol-at-point--history))
-   :prompt
-   (progn
-     (format
-      "Add documentation for %s defined below:\n%s"
-      sym
-      (buffer-string)))
-   :body
-   (if (not *gptel-response*)
-       (message "%s failed with message: %s"
-                'gptel-document-symbol-at-point
-                (plist-get *gptel-response-info* :status))
-     (with-current-buffer (get-buffer-create "*gptel-document-symbol-at-point*")
-       (let ((inhibit-read-only t))
-         (erase-buffer)
-         (insert *gptel-response*))
-       (special-mode)
-       (display-buffer (current-buffer))))
-   :extra-args
-   (list
-    :system
-    (alist-get 'Document gptel-directives
-               "Prefer making a docstring")))
+  (list
+   (read-string "Documentation for: "
+                (symbol-name (symbol-at-point))
+                gptel-document-symbol-at-point--history))
+  :prompt
+  (progn
+    (format
+     "Add documentation for %s defined below:\n%s"
+     sym
+     (buffer-string)))
+  :body
+  (if (not *gptel-response*)
+      (message "%s failed with message: %s"
+               'gptel-document-symbol-at-point
+               (plist-get *gptel-response-info* :status))
+    (with-current-buffer (get-buffer-create "*gptel-document-symbol-at-point*")
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert *gptel-response*))
+      (special-mode)
+      (display-buffer (current-buffer))))
+  :extra-args
+  (list
+   :system
+   (alist-get 'Document gptel-directives
+              "Prefer making a docstring")))
 
 (defun insert-issue-prefix ()
   (interactive)
