@@ -800,9 +800,9 @@ If the PROMPT is empty, signals a user error."
                 (insert *gptel-response*))
               (special-mode)
               (display-buffer (current-buffer)))))
-  :extra-args (list :system
-                    (alist-get 'default gptel-directives
-                               "You are a helpful assistant.")))
+  :extra-args
+  (make-gptel-system-prompt-args 'default "You are a helpful assistant."))
+
 
 (defgptelfn gptel-diff ()
   "Generate a git commit message.
@@ -839,13 +839,11 @@ in the kill ring."
       (message "commit message in kill ring")
       (pop-to-buffer "COMMIT_EDITMSG")))
   :extra-args
-  (list
-   :system
-   (alist-get
-    'commiter
-    gptel-directives
-    "Write a git commit message for this diff. Include ONLY the message.
-Be terse. Provide messages whose lines are at most 80 characters")))
+  (make-gptel-system-prompt-args
+   'commiter
+   "Write a git commit message for this diff. Include ONLY the message.
+Be terse. Provide messages whose lines are at most 80 characters"))
+
 
 (defgptelfn gptel-pull-request ()
   "Generate a GitHub pull request description by diffing with origin/master.
@@ -876,12 +874,10 @@ clipboard and kill ring."
       (clipboard+kill-ring-save (point-min) (point-max))
       (message "pull request body in kill ring")))
   :extra-args
-  (list
-   :system
-   (alist-get
-    'pullrequest
-    gptel-directives
-    "Summarize the changes for a GitHub pull request description.")))
+  (make-gptel-system-prompt-args
+   'pullrequest
+   "Summarize the changes for a GitHub pull request description."))
+
 
 (defvar gptel-document-symbol-at-point--history nil)
 
@@ -946,10 +942,8 @@ History:
       (special-mode)
       (display-buffer (current-buffer))))
   :extra-args
-  (list
-   :system
-   (alist-get 'documentation gptel-directives
-              "Prefer making a docstring")))
+  (make-gptel-system-prompt-args 'documentation "Prefer making a docstring"))
+
 
 (defmacro with-gptel-directives (&rest body)
   "Ensures GPTel directives are loaded before executing BODY.
