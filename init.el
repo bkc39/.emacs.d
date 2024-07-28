@@ -720,29 +720,27 @@ NAME is the function name. ARGS are the arguments taken by the function.
           ,request-callback
           ,request-args-thunk)))))
 
-(defun gptel-quick (prompt)
+(defgptelfn gptel-quick (prompt)
   "Send PROMPT to ChatGPT and display the response in a special buffer.
 If the PROMPT is empty, signals a user error."
-  (interactive (list (read-string "Ask ChatGPT: " nil gptel-quick--history)))
-  (dynamic-prompt
-   (lambda ()
-     (when (string= prompt "")
-       (user-error "A prompt is required")))
-   (lambda (response info)
-     (message "got response: %s")
-     (if (not response)
-         (message "gptel-quick failed with message: %s" (plist-get info
-                                                                   :status))
-       (with-current-buffer (get-buffer-create "*gptel-quick*")
-         (let ((inhibit-read-only t))
-           (erase-buffer)
-           (insert response))
-         (special-mode)
-         (display-buffer (current-buffer)))))
-   (lambda ()
-     (list :system
-           (alist-get 'default gptel-directives
-                      "You are a helpful assistant.")))))
+  :command (list (read-string "Ask ChatGPT: " nil gptel-quick--history))
+  :prompt (progn
+            (if (string= prompt "")
+                (user-error "A prompt is required")
+              prompt))
+  :body (progn
+          (if (not *gptel-response*)
+              (message "gptel-quick failed with message: %s"
+                       (plist-get *gptel-info* :status))
+            (with-current-buffer (get-buffer-create "*gptel-quick*")
+              (let ((inhibit-read-only t))
+                (erase-buffer)
+                (insert *gptel-response*))
+              (special-mode)
+              (display-buffer (current-buffer)))))
+  :extra-args (list :system
+                    (alist-get 'default gptel-directives
+                               "You are a helpful assistant.")))
 
 (defun gptel-diff ()
   "Generate a git commit message.
