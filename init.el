@@ -57,8 +57,11 @@ Special keyword arguments:
        (let ((who ',name))
          ,@body))))
 
-(unless (get 'defun/who 'lisp-indent-function)
-  (put 'defun/who 'lisp-indent-function 'defun))
+(defun indent-like-defun (sym)
+  (unless (get sym 'lisp-indent-function)
+    (put sym 'lisp-indent-function 'defun)))
+
+(indent-like-defun 'defun/who)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Straight.el config
@@ -180,7 +183,8 @@ Special keyword arguments:
   :bind (("C-c RET" . gptel-send)
          ("C-c q" . gptel-quick)
          ("C-c M-d" . gptel-diff)
-         ("C-c M-p" . gptel-pull-request)))
+         ("C-c M-p" . gptel-pull-request)
+         ("C-c M-s" . gptel-document-symbol-at-point)))
 
 (use-package lsp-mode
   :init
@@ -664,28 +668,87 @@ gptel-request with ARGS."
 (defvar gptel-quick--history nil
   "History list for `gptel-quick' prompts.")
 
-(defun gptel-quick (prompt)
+(defun dynamic-prompt (make-prompt callback gptel-request-args)
+  "Send a dynamically calculated request to an LLM.
+
+MAKE-PROMPT is a thunk to calculate the prompt.  CALLBACK is an arity 2
+function whose arguments are the LLM response and info which is passed
+to gptel-request.  The of the GPTEL-REQUEST-ARGS are forwarded to the call to
+gptel-request"
+  (let* ((prompt
+          (funcall make-prompt))
+         (request-args
+          (cons prompt
+                (append (funcall gptel-request-args)
+                        (list :callback callback)))))
+    ;; (message "prompt: %s" prompt)
+    ;; (message "request args: %s" request-args)
+    (ensure-gptel-directives-loaded)
+    (apply #'gptel-request/require request-args)))
+
+(defmacro defgptelfn (name args &rest stx)
+  "Define a function with dynamic prompt and body.
+NAME is the function name. ARGS are the arguments taken by the function.
+:command is the interactive command. :prompt is the prompt body.
+:body is the body of the function. :extra-args is for additional request arguments."
+  (let ((docstring
+         (when (stringp (car stx))
+           (pop stx)))
+        (stx-kwargs (-partition 2 stx))
+        (make-prompt (gensym))
+        (request-callback (gensym))
+        (request-args-thunk (gensym)))
+    `(defun ,name ,args
+       ,@(when docstring (list docstring))
+       ,@(awhen (assoc :command stx-kwargs)
+           `((interactive ,(cadr it))))
+       (let ((,make-prompt
+              (lambda ()
+                ,(aif (assoc :prompt stx-kwargs)
+                     (cadr it)
+                   (error
+                    "defgptelfn: missing required keyword argument :prompt"))))
+             (,request-callback
+              (lambda (*gptel-response* *gptel-response-info*)
+                ,(aif (assoc :body stx-kwargs)
+                     (cadr it)
+                   (error
+                    "defgptelfn: missing required keyword argument :body"))))
+             (,request-args-thunk
+              (lambda ()
+                ,@(aif (assoc :extra-args stx-kwargs)
+                      it
+                    (list nil)))))
+         (dynamic-prompt
+          ,make-prompt
+          ,request-callback
+          ,request-args-thunk)))))
+
+(indent-like-defun 'defgptelfn)
+
+(defgptelfn gptel-quick (prompt)
   "Send PROMPT to ChatGPT and display the response in a special buffer.
 If the PROMPT is empty, signals a user error."
-  (interactive (list (read-string "Ask ChatGPT: " nil gptel-quick--history)))
-  (when (string= prompt "") (user-error "A prompt is required"))
-  (ensure-gptel-directives-loaded)
-  (gptel-request/require
-   prompt
-   :system (alist-get 'default gptel-directives "You are a helpful assistant.")
-   :callback
-   (lambda (response info)
-     (if (not response)
-         (message "gptel-quick failed with message: %s" (plist-get info
-                                                                   :status))
-       (with-current-buffer (get-buffer-create "*gptel-quick*")
-         (let ((inhibit-read-only t))
-           (erase-buffer)
-           (insert response))
-         (special-mode)
-         (display-buffer (current-buffer)))))))
+  :command (list (read-string "Ask ChatGPT: " nil gptel-quick--history))
+  :prompt (progn
+            (if (string= prompt "")
+                (user-error "A prompt is required")
+              prompt))
+  :body (progn
+          (if (not *gptel-response*)
+              (message "gptel-quick failed with message: %s"
+                       (plist-get *gptel-info* :status))
+            (with-current-buffer (get-buffer-create "*gptel-quick*")
+              (let ((inhibit-read-only t))
+                (erase-buffer)
+                (insert *gptel-response*))
+              (special-mode)
+              (display-buffer (current-buffer)))))
+  :extra-args (list :system
+                    (alist-get 'default gptel-directives
+                               "You are a helpful assistant.")))
 
-(defun gptel-diff ()
+(defgptelfn gptel-diff ()
   "Generate a git commit message.
 
 This function uses `magit-diff-staged` to obtain the current staged diffs
@@ -696,76 +759,137 @@ the generated message in a special buffer named *gptel-diff* and copies it
 to the kill ring.  If a buffer named 'COMMIT_EDITMSG' is also present, it
 will switch to that buffer and notify the user that the commit message is
 in the kill ring."
-  (interactive)
-  (let* ((diff-buffer
-          (with-temp-buffer
-            (magit-diff-staged)
-            (buffer-name)))
-         (diff-str
-          (with-current-buffer diff-buffer
-            (buffer-substring-no-properties (point-min) (point-max)))))
-    (ensure-gptel-directives-loaded)
-    (gptel-request/require
-     diff-str
-     :system
-     (alist-get
-      'commiter
-      gptel-directives
-      "Write a git commit message for this diff. Include ONLY the message.
-Be terse. Provide messages whose lines are at most 80 characters")
-     :callback
-     (lambda (response info)
-       (if (not response)
-           (message
-            "gptel-diff failed with message: %s"
-            (plist-get info :status))
+  :command nil
+  :prompt
+  (let ((diff-buffer
+         (with-temp-buffer
+           (magit-diff-staged)
+           (buffer-name))))
+    (with-current-buffer diff-buffer
+      (buffer-substring-no-properties (point-min) (point-max))))
+  :body
+  (if (not *gptel-response*)
+      (message
+       "gptel-diff failed with message: %s"
+       (plist-get *gptel-request-info* :status))
+    (kill-new *gptel-response*)
+    (with-current-buffer (get-buffer-create "*gptel-diff*")
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert *gptel-response*))
+      (special-mode)
+      (display-buffer (current-buffer)))
+    (when (get-buffer "COMMIT_EDITMSG")
+      (message "commit message in kill ring")
+      (pop-to-buffer "COMMIT_EDITMSG")))
+  :extra-args
+  (list
+   :system
+   (alist-get
+    'commiter
+    gptel-directives
+    "Write a git commit message for this diff. Include ONLY the message.
+Be terse. Provide messages whose lines are at most 80 characters")))
 
-         (kill-new response)
-         (with-current-buffer (get-buffer-create "*gptel-diff*")
-           (let ((inhibit-read-only t))
-             (erase-buffer)
-             (insert response))
-           (special-mode)
-           (display-buffer (current-buffer)))
-         (when (get-buffer "COMMIT_EDITMSG")
-           (message "commit message in kill ring")
-           (pop-to-buffer "COMMIT_EDITMSG")))))))
-
-(defun/who gptel-pull-request ()
+(defgptelfn gptel-pull-request ()
   "Generate a GitHub pull request description by diffing with origin/master.
 
 Upon receiving the response from gptel, it places the generated message
 in a special buffer named *gptel-pull-request* and copies it to the
 clipboard and kill ring."
+  :command nil
+  :prompt
+  (let ((diff-buffer
+         (with-temp-buffer
+           (magit-diff-range "origin/master")
+           (buffer-string))))
+    (concat
+     "Generate a pull request description summarizing the changes:\n\n"
+     diff-buffer))
+  :body
+  (if (not *gptel-response*)
+      (message "%s failed with message: %s"
+               'gptel-pull-request
+               (plist-get *gptel-request-info* :status))
+    (with-current-buffer (get-buffer-create "*gptel-pull-request*")
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert *gptel-response*))
+      (special-mode)
+      (pop-to-buffer (current-buffer))
+      (clipboard+kill-ring-save (point-min) (point-max))
+      (message "pull request body in kill ring")))
+  :extra-args
+  (list
+   :system
+   (alist-get
+    'PullRequest
+    gptel-directives
+    "Summarize the changes for a GitHub pull request description.")))
+
+(defvar gptel-document-symbol-at-point--history nil)
+
+(defgptelfn gptel-document-symbol-at-point (sym)
+  "Generate documentation for the symbol at point.
+
+This function prompts the user to input a symbol, suggests the symbol at point by default, and generates documentation for that symbol. The generated documentation is then displayed in a special mode buffer.
+
+Usage:
+  1. Place the cursor on or near the symbol you want to document.
+  2. Run the command `gptel-document-symbol-at-point`.
+  3. Confirm or modify the prompted symbol name.
+  4. The generated documentation will be displayed in a special mode buffer.
+
+Arguments:
+  SYM: The symbol for which documentation is to be generated.
+
+Prompts:
+  - The function reads a symbol from the user, suggesting the symbol at point by default.
+
+Output:
+  - Displays the generated documentation in a buffer named `*gptel-document-symbol-at-point*`.
+
+The function leverages ChatGPT to generate high-quality documentation.
+
+Example:
+```
+  (defun example-fun (arg)
+     \"An example function.\"
+     ;; Place the cursor here and run `M-x gptel-document-symbol-at-point`
+     ;; Confirm or modify the prompted symbol name (e.g., `example-fun`)
+     ;; The generated documentation will appear in the buffer `*gptel-document-symbol-at-point*`
+     (message \"Example argument: %s\" arg))
+
+History:
+  The function maintains a history of user inputs for the symbol prompt.
+"
   :command
-  (let* ((diff-buffer
-          (with-temp-buffer
-            (magit-diff-range "origin/master")
-            (buffer-string)))
-         (request-string
-          (concat
-           "Generate a pull request description summarizing the changes:\n\n"
-           diff-buffer)))
-    (ensure-gptel-directives-loaded)
-    (gptel-request/require
-     request-string
-     :system
-     (alist-get
-      'PullRequest
-      gptel-directives
-      "Summarize the changes for a GitHub pull request description.")
-     :callback
-     (lambda (response info)
-       (if (not response)
-           (message "%s failed with message: %s" who (plist-get info :status))
-         (with-current-buffer (get-buffer-create "*gptel-pull-request*")
-           (let ((inhibit-read-only t))
-             (erase-buffer)
-             (insert response))
-           (special-mode)
-           (pop-to-buffer (current-buffer))
-           (clipboard+kill-ring-save (point-min) (point-max))
-           (message "pull request body in kill ring")))))))
+  (list
+   (read-string "Documentation for: "
+                (symbol-name (symbol-at-point))
+                gptel-document-symbol-at-point--history))
+  :prompt
+  (progn
+    (format
+     "Add documentation for %s defined below:\n%s"
+     sym
+     (buffer-string)))
+  :body
+  (if (not *gptel-response*)
+      (message "%s failed with message: %s"
+               'gptel-document-symbol-at-point
+               (plist-get *gptel-response-info* :status))
+    (with-current-buffer (get-buffer-create "*gptel-document-symbol-at-point*")
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert *gptel-response*))
+      (special-mode)
+      (display-buffer (current-buffer))))
+  :extra-args
+  (list
+   :system
+   (alist-get 'Document gptel-directives
+              "Prefer making a docstring")))
 
 (defun insert-issue-prefix ()
   (interactive)
