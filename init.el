@@ -821,6 +821,68 @@ clipboard and kill ring."
     gptel-directives
     "Summarize the changes for a GitHub pull request description.")))
 
+(defgptelfn gptel-document-symbol-at-point (sym)
+  "Generate documentation for the symbol at point.
+
+This function prompts the user to input a symbol, suggests the symbol at point by default, and generates documentation for that symbol. The generated documentation is then displayed in a special mode buffer.
+
+Usage:
+  1. Place the cursor on or near the symbol you want to document.
+  2. Run the command `gptel-document-symbol-at-point`.
+  3. Confirm or modify the prompted symbol name.
+  4. The generated documentation will be displayed in a special mode buffer.
+
+Arguments:
+  SYM: The symbol for which documentation is to be generated.
+
+Prompts:
+  - The function reads a symbol from the user, suggesting the symbol at point by default.
+
+Output:
+  - Displays the generated documentation in a buffer named `*gptel-document-symbol-at-point*`.
+
+The function leverages ChatGPT to generate high-quality documentation.
+
+Example:
+```
+  (defun example-fun (arg)
+     \"An example function.\"
+     ;; Place the cursor here and run `M-x gptel-document-symbol-at-point`
+     ;; Confirm or modify the prompted symbol name (e.g., `example-fun`)
+     ;; The generated documentation will appear in the buffer `*gptel-document-symbol-at-point*`
+     (message \"Example argument: %s\" arg))
+
+History:
+  The function maintains a history of user inputs for the symbol prompt.
+"
+  :command
+   (list
+    (read-string "Documentation for: "
+                 (symbol-name (symbol-at-point))
+                 gptel-document-symbol-at-point--history))
+   :prompt
+   (progn
+     (format
+      "Add documentation for %s defined below:\n%s"
+      sym
+      (buffer-string)))
+   :body
+   (if (not *gptel-response*)
+       (message "%s failed with message: %s"
+                'gptel-document-symbol-at-point
+                (plist-get *gptel-response-info* :status))
+     (with-current-buffer (get-buffer-create "*gptel-document-symbol-at-point*")
+       (let ((inhibit-read-only t))
+         (erase-buffer)
+         (insert *gptel-response*))
+       (special-mode)
+       (display-buffer (current-buffer))))
+   :extra-args
+   (list
+    :system
+    (alist-get 'Document gptel-directives
+               "Prefer making a docstring")))
+
 (defun insert-issue-prefix ()
   (interactive)
   (unless (fboundp 'magit-get-current-branch)
