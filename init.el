@@ -58,6 +58,22 @@ Special keyword arguments:
          ,@body))))
 
 (defun indent-like-defun (sym)
+  "Set the `lisp-indent-function` property of SYM to `defun`.
+
+This function checks whether SYM has the `lisp-indent-function` property set.
+If not, it assigns `defun` as its `lisp-indent-function`, allowing SYM to be
+indented like a standard Emacs `defun`.  This function is typically used for
+macros that define new constructs or syntax that follow the same indentation
+rules as regular function definitions in Lisp languages.
+
+Example usage:
+  (indent-like-defun 'my-custom-macro)
+
+Arguments:
+  SYM -- The symbol to set the `lisp-indent-function` property for.
+
+Returns:
+  nil"
   (unless (get sym 'lisp-indent-function)
     (put sym 'lisp-indent-function 'defun)))
 
@@ -663,7 +679,9 @@ gptel-request with ARGS."
 (defun ensure-gptel-directives-loaded ()
   "Ensure that `gptel-directives` is defined."
   (unless (boundp 'gptel-directives)
-    (setq gptel-directives (or (read-prompt-md-files "~/.llm-prompts") '()))))
+    (setq gptel-directives
+          (when (file-exists-p "~/.llm-prompts")
+                (read-prompt-md-files "~/.llm-prompts")))))
 
 (defvar gptel-quick--history nil
   "History list for `gptel-quick' prompts.")
