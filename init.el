@@ -12,8 +12,6 @@
 
 ;;; Code:
 
-
-
 (defmacro add-hookq (hook-name fn)
   "Add FN to the list of functions to be run by HOOK-NAME."
   `(add-hook ',hook-name ,fn))
@@ -592,6 +590,15 @@ that as the default suggestion."
    (shell-command-on-region beg end "pbcopy")
    (deactivate-mark)))
 
+
+(defun/who xclip-buffer (selection-type)
+  (if (memq selection-type '(primary secondary clipboard))
+      (call-process-region
+       (point-min) (point-max)
+       "xclip" nil nil nil "-selection" (symbol-name selection-type))
+    (message "%s: invalid selection type %s"
+             who selection-type)))
+
 (defun copy-to-clipboard/linux (beg end)
   "Copy the region from BEG to END to the system clipboard."
   (interactive "r")
@@ -600,14 +607,31 @@ that as the default suggestion."
        (let ((text (buffer-substring-no-properties beg end)))
          (with-temp-buffer
            (insert text)
-           (call-process-region
-            (point-min) (point-max)
-            "xclip" nil nil nil "-selection" "clipboard")))
+           (xclip-buffer 'primary)
+           (xclip-buffer 'clipboard)))
      (message "No region selected"))))
 
-
 (defun clipboard+kill-ring-save (beg end)
-  "Copies selection to x-clipboard."
+  "Copy selection to kill ring and system clipboard.
+
+This function copies the selected region (from BEG to END) to the
+kill ring, which is Emacs' internal clipboard.  Additionally,
+depending on the system type, it also copies the region to the
+system clipboard, making the text accessible outside of Emacs.
+
+On macOS, it uses the `pbcopy` command to copy the text to the
+system clipboard.  On GNU/Linux, it uses `xclip` to copy the
+text.
+
+Arguments:
+  BEG -- The beginning position of the selected region.
+  END -- The ending position of the selected region.
+
+Example usage:
+  (clipboard+kill-ring-save BEG END)
+
+This can be bound to a key for convenient access:
+  (global-set-key (kbd \"M-w\") 'clipboard+kill-ring-save)"
   (interactive "r")
   (syscase
    (darwin
@@ -868,13 +892,13 @@ Example usage:
                 ,(aif (assoc :prompt stx-kwargs)
                      (cadr it)
                    (error
-                    "defgptelfn: missing required keyword argument :prompt"))))
+                    "Error - defgptelfn: missing required keyword argument :prompt"))))
              (,request-callback
               (lambda (*gptel-response* *gptel-response-info*)
                 ,(aif (assoc :body stx-kwargs)
                      (cadr it)
                    (error
-                    "defgptelfn: missing required keyword argument :body"))))
+                    "Error - defgptelfn: missing required keyword argument :body"))))
              (,request-args-thunk
               (lambda ()
                 ,@(aif (assoc :extra-args stx-kwargs)
