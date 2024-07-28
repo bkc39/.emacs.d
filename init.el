@@ -696,9 +696,8 @@ the `gptel-directives` alist.
 Usage:
   (try-reload-gptel-directives)
 
-Returns:
-  An alist of GPT directives if `*llm-prompts-dir*` exists and contains
-  valid files, or nil otherwise."
+Returns: nil. Sets the variables `gptel-directives` with the prompts from
+`*llm-prompts-dir*` as a side-effect."
   :command
   (if (file-exists-p *llm-prompts-dir*)
       (setq gptel-directives
@@ -951,6 +950,80 @@ History:
    :system
    (alist-get 'documentation gptel-directives
               "Prefer making a docstring")))
+
+(defmacro with-gptel-directives (&rest body)
+  "Ensures GPTel directives are loaded before executing BODY.
+
+This macro guarantees that the GPTel directives are available by
+reloading them if necessary before evaluating the BODY.
+
+Example usage:
+  (with-gptel-directives
+    (do-something-with-directives))
+
+Arguments:
+  BODY -- The body of code to execute after ensuring directives are loaded.
+
+Returns:
+  The result of evaluating BODY."
+  `(progn
+     (ensure-gptel-directives-loaded)
+     ,@body))
+
+(defun make-gptel-system-prompt-args (directive default-directive)
+  "Generate system prompt arguments for GPTel requests.
+
+This function ensures GPTel directives are available and retrieves the
+system directive for the specified DIRECTIVE.  If the directive is not
+found, it uses the DEFAULT-DIRECTIVE.
+
+Example usage:
+  (make-gptel-system-prompt-args 'testing \"Default directive text\")
+
+Arguments:
+  DIRECTIVE -- The directive key to look up in the GPTel directives.
+  DEFAULT-DIRECTIVE -- The fallback directive text to use if DIRECTIVE
+  is not found.
+
+Returns:
+  A list containing the system directive to be used for GPTel requests."
+  (with-gptel-directives
+   (list
+    :system (alist-get directive gptel-directives default-directive))))
+
+
+(defvar gptel-tests-for-symbol-at-point nil
+  "History for `gptel-tests-for-symbol-at-point`.")
+
+(defgptelfn gptel-tests-for-symbol-at-point (sym)
+  :command
+  (list
+   (read-string "Make tests for: "
+                (symbol-name (symbol-at-point))
+                gptel-document-symbol-at-point--history))
+  :prompt
+  (progn
+    (format
+     "Add test cases for %s defined below:\n%s"
+     sym
+     (buffer-string)))
+  :body
+  (if (not *gptel-response*)
+      (message "%s failed with message: %s"
+               'gptel-document-symbol-at-point
+               (plist-get *gptel-response-info* :status))
+    (with-current-buffer (get-buffer-create "*gptel-tests-for-symbol-at-point*")
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert *gptel-response*))
+      (special-mode)
+      (display-buffer (current-buffer))))
+  :extra-args
+  (make-gptel-system-prompt-args
+   'testing
+   "Generate test cases using the idiomatic language features and libraries
+for the code provided"))
+
 
 (defun insert-issue-prefix ()
   (interactive)
