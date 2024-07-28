@@ -185,8 +185,8 @@ Returns:
   :ensure t
   :config
   (setq gptel-model "gpt-4o"
-        gptel-api-key (get-openai-api-key)
-        gptel-directives (try-reload-gptel-directives))
+        gptel-api-key (get-openai-api-key))
+  (ensure-gptel-directives-loaded)
   (setq-default
    gptel--system-message
    (alist-get 'default gptel-directives "You are a helpful assistant."))
@@ -679,7 +679,7 @@ gptel-request with ARGS."
 (defvar *llm-prompts-dir* "~/.llm-prompts"
   "Directory containing the PROMPT.md files.")
 
-(defun/who try-reload-gptel-directives ()
+(defun/who reload-gptel-directives ()
   "Try reloading `gptel-directives` from `*llm-prompts-dir*`.
 
 This function attempts to load GPT-3 directives from the files located in the
@@ -701,7 +701,8 @@ Returns:
   valid files, or nil otherwise."
   :command
   (if (file-exists-p *llm-prompts-dir*)
-      (read-prompt-md-files *llm-prompts-dir*)
+      (setq gptel-directives
+            (read-prompt-md-files *llm-prompts-dir*))
     (message "%s: LLM prompts directory %s does not exist!"
              who
              *llm-prompts-dir*)))
@@ -709,8 +710,7 @@ Returns:
 (defun ensure-gptel-directives-loaded ()
   "Ensure that `gptel-directives` is defined."
   (unless (boundp 'gptel-directives)
-    (setq gptel-directives (try-reload-gptel-directives))))
-
+    (reload-gptel-directives)))
 
 (defvar gptel-quick--history nil
   "History list for `gptel-quick' prompts.")
