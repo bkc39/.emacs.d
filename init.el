@@ -186,8 +186,7 @@ Returns:
   :config
   (setq gptel-model "gpt-4o"
         gptel-api-key (get-openai-api-key)
-        gptel-directives (or (read-prompt-md-files "~/.llm-prompts")
-                             gptel-directives))
+        gptel-directives (try-reload-gptel-directives))
   (setq-default
    gptel--system-message
    (alist-get 'default gptel-directives "You are a helpful assistant."))
@@ -667,6 +666,7 @@ Returns an alist (PROMPT . CONTENTS-OF-FILE)."
                           (insert-file-contents file)
                           (buffer-string))))
           (push (cons (intern prompt) contents) result))))
+    (message "prompts loaded from %s" directory)
     result))
 
 (defun gptel-request/require (&rest args)
@@ -676,23 +676,66 @@ gptel-request with ARGS."
     (require 'gptel))
   (apply #'gptel-request args))
 
+(defvar *llm-prompts-dir* "~/.llm-prompts"
+  "Directory containing the PROMPT.md files.")
+
+(defun/who try-reload-gptel-directives ()
+  "Try reloading `gptel-directives` from `*llm-prompts-dir*`.
+
+This function attempts to load GPT-3 directives from the files located in the
+`*llm-prompts-dir*` directory and updates the `gptel-directives` variable with
+the contents of these files.  This is useful for dynamically updating GPT
+directives without having to restart Emacs.
+
+`*llm-prompts-dir*` should point to a directory containing markdown files
+with directives.  Each file should be named using the pattern `PROMPT.md`,
+where `PROMPT` is a key representing the directive.  The contents of each
+file will be read and stored as the value for the corresponding key in
+the `gptel-directives` alist.
+
+Usage:
+  (try-reload-gptel-directives)
+
+Returns:
+  An alist of GPT directives if `*llm-prompts-dir*` exists and contains
+  valid files, or nil otherwise."
+  :command
+  (if (file-exists-p *llm-prompts-dir*)
+      (read-prompt-md-files *llm-prompts-dir*)
+    (message "%s: LLM prompts directory %s does not exist!"
+             who
+             *llm-prompts-dir*)))
+
 (defun ensure-gptel-directives-loaded ()
   "Ensure that `gptel-directives` is defined."
   (unless (boundp 'gptel-directives)
-    (setq gptel-directives
-          (when (file-exists-p "~/.llm-prompts")
-                (read-prompt-md-files "~/.llm-prompts")))))
+    (setq gptel-directives (try-reload-gptel-directives))))
+
 
 (defvar gptel-quick--history nil
   "History list for `gptel-quick' prompts.")
 
 (defun dynamic-prompt (make-prompt callback gptel-request-args)
-  "Send a dynamically calculated request to an LLM.
+  "Generate a dynamic prompt for ChatGPT queries.
 
-MAKE-PROMPT is a thunk to calculate the prompt.  CALLBACK is an arity 2
-function whose arguments are the LLM response and info which is passed
-to gptel-request.  The of the GPTEL-REQUEST-ARGS are forwarded to the call to
-gptel-request"
+This function orchestrates the process of dynamically generating a prompt,
+sending it to GPT-3 (via `gptel-request`), and handling the response with a
+given callback.  It uses `ensure-gptel-directives-loaded` to load default GPT-3
+directives if they are not already defined.
+
+Arguments:
+- `MAKE-PROMPT`: A function that generates the prompt to be sent to GPT-3. This
+  function should not take any parameters.
+- `CALLBACK`: A function to handle the GPT-3 response.  It should accept two
+  parameters: the GPT-3 response and the response information.
+- `GPTEL-REQUEST-ARGS`: A thunk that generates additional arguments to be
+  passed to `gptel-request`.  This thunk should not take any parameters.
+
+Example usage:
+  (dynamic-prompt
+    (lambda () \"What is the weather like?\")
+    (lambda (response info) (message \"Response: %s\" response))
+    (lambda () '(:system \"default system message\")))"
   (let* ((prompt
           (funcall make-prompt))
          (request-args
@@ -705,10 +748,6 @@ gptel-request"
     (apply #'gptel-request/require request-args)))
 
 (defmacro defgptelfn (name args &rest stx)
-  "Define a function with dynamic prompt and body.
-NAME is the function name. ARGS are the arguments taken by the function.
-:command is the interactive command. :prompt is the prompt body.
-:body is the body of the function. :extra-args is for additional request arguments."
   (let ((docstring
          (when (stringp (car stx))
            (pop stx)))
@@ -841,7 +880,7 @@ clipboard and kill ring."
   (list
    :system
    (alist-get
-    'PullRequest
+    'pullrequest
     gptel-directives
     "Summarize the changes for a GitHub pull request description.")))
 
@@ -850,7 +889,9 @@ clipboard and kill ring."
 (defgptelfn gptel-document-symbol-at-point (sym)
   "Generate documentation for the symbol at point.
 
-This function prompts the user to input a symbol, suggests the symbol at point by default, and generates documentation for that symbol. The generated documentation is then displayed in a special mode buffer.
+This function prompts the user to input a symbol, suggests the symbol at
+point by default, and generates documentation for that symbol. The
+generated documentation is then displayed in a special mode buffer.
 
 Usage:
   1. Place the cursor on or near the symbol you want to document.
@@ -862,10 +903,12 @@ Arguments:
   SYM: The symbol for which documentation is to be generated.
 
 Prompts:
-  - The function reads a symbol from the user, suggesting the symbol at point by default.
+  - The function reads a symbol from the user, suggesting the
+symbol at point by default.
 
 Output:
-  - Displays the generated documentation in a buffer named `*gptel-document-symbol-at-point*`.
+  - Displays the generated documentation in a buffer named
+`*gptel-document-symbol-at-point*`.
 
 The function leverages ChatGPT to generate high-quality documentation.
 
@@ -875,12 +918,12 @@ Example:
      \"An example function.\"
      ;; Place the cursor here and run `M-x gptel-document-symbol-at-point`
      ;; Confirm or modify the prompted symbol name (e.g., `example-fun`)
-     ;; The generated documentation will appear in the buffer `*gptel-document-symbol-at-point*`
+     ;; The generated documentation will appear in the buffer
+     ;; `*gptel-document-symbol-at-point*`
      (message \"Example argument: %s\" arg))
 
 History:
-  The function maintains a history of user inputs for the symbol prompt.
-"
+  The function maintains a history of user inputs for the symbol prompt."
   :command
   (list
    (read-string "Documentation for: "
@@ -906,7 +949,7 @@ History:
   :extra-args
   (list
    :system
-   (alist-get 'Document gptel-directives
+   (alist-get 'documentation gptel-directives
               "Prefer making a docstring")))
 
 (defun insert-issue-prefix ()
