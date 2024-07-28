@@ -12,19 +12,6 @@
 
 ;;; Code:
 
-(defmacro on-system (system &rest body)
-  "Execute BODY only if SYSTEM matches the current system type."
-  `(when (eq system-type ',system)
-     ,@body))
-
-(defmacro on-macos (&rest body)
-  "Execute BODY if the current system is macOS."
-  `(on-system darwin ,@body))
-
-(defmacro on-linux (&rest body)
-  "Execute BODY if the current system is Linux."
-  `(on-system 'gnu/linux ,@body))
-
 (defmacro add-hookq (hook-name fn)
   "Add FN to the list of functions to be run by HOOK-NAME."
   `(add-hook ',hook-name ,fn))
@@ -48,9 +35,7 @@ Special keyword arguments:
   :command -- If provided, make the function interactive."
   (let* ((docstring (if (stringp (car body)) (pop body)))
          (options (when (keywordp (car body)) (pop body)))
-         (command (progn
-                    (message "options was: %s" options)
-                    (eq :command options))))
+         (command (eq :command options)))
     `(defun ,name ,args
        ,@(when docstring (list docstring))
        ,@(when command '((interactive)))
@@ -78,6 +63,111 @@ Returns:
     (put sym 'lisp-indent-function 'defun)))
 
 (indent-like-defun 'defun/who)
+
+(defun/who expand-syscond-clause (clause)
+  "Expand a single system type clause in a `syscond` macro.
+
+CLAUSE should be a form where the car is a symbol representing a system
+type (e.g., 'gnu, 'darwin, etc.) and the rest are forms to evaluate if
+the current system type matches.
+
+Valid system types include:
+- `gnu`
+- `gnu/linux`
+- `gnu/kfreebsd`
+- `darwin`
+- `ms-dos`
+- `windows-nt`
+- `cygwin`
+- `berkeley-unix`
+- `aix`
+- `hpux`
+- `usg-unix-v`
+
+During expansion, the function checks if the system type is valid,
+signaling an error if it isn't."
+  (let ((valid-system-types
+         '(gnu
+           gnu/linux
+           gnu/kfreebsd
+           darwin
+           ms-dos
+           windows-nt
+           cygwin
+           berkeley-unix
+           aix
+           hpux
+           usg-unix-v)))
+    (pcase clause
+      (`(,x ,y . ,rest)
+       (unless (memq x valid-system-types)
+         (user-error "In %s during the expansion of %s: invalid system type %s"
+                     'syscase
+                     who
+                     x))
+       `((equal ',x system-type)
+         (progn ,y ,@rest))))))
+
+(defmacro syscase (&rest clauses)
+  "Conditionally evaluate forms based on the system type.
+
+CLAUSES should be a list of forms, where each form is structured as:
+    (SYSTEM-TYPE BODY...)
+
+SYSTEM-TYPE should be one of the valid system types recognized by
+`expand-syscond-clause`.
+
+BODY... is a series of forms that will be evaluated if the current system
+type matches SYSTEM-TYPE.
+
+Example usage:
+    (syscase
+     (darwin
+      (message \"on macOS\"))
+     (gnu/linux
+      (message \"on Linux\")))"
+  (let ((clause-expansions
+         (mapcar #'expand-syscond-clause clauses)))
+    `(cond
+      ,@clause-expansions)))
+
+(defmacro on-macos (&rest body)
+  "Execute BODY if the current system is macOS.
+
+This macro uses the `syscase` macro to check if the current system type is
+`darwin` (which represents macOS).  If the system type matches, it executes
+the BODY expressions.  If not, the BODY is not executed.
+
+Example usage:
+  (on-macos 'apple)
+
+Arguments:
+  BODY -- One or more forms to be executed if the current system type is macOS.
+
+Returns:
+  nil if the current system type is not macOS, otherwise executes the BODY
+  and returns the result of the last form."
+  `(syscase (darwin ,@body)))
+
+(defmacro on-linux (&rest body)
+  "Execute BODY if the current system type is GNU/Linux.
+
+This macro uses the `syscase` macro to check if the current system type is
+'gnu/linux'.  If the system type matches, it executes the BODY expressions.  If
+not, the BODY is not executed.
+
+Example usage:
+  (on-linux
+    (message \"This is a Linux system.\"))
+
+Arguments:
+  BODY -- One or more forms to be executed if the current system type is
+          GNU/Linux.
+
+Returns:
+  nil if the current system type is not GNU/Linux, otherwise executes the BODY
+  and returns the result of the last form."
+  `(syscase (gnu/linux ,@body)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Straight.el config
@@ -496,22 +586,61 @@ that as the default suggestion."
 
 (defun copy-to-clipboard/macos (beg end)
   (interactive "r")
-  (when (eq system-type 'darwin)
-   (shell-command-on-region beg end "pbcopy"))
-  (deactivate-mark))
+  (on-macos
+   (shell-command-on-region beg end "pbcopy")
+   (deactivate-mark)))
+
+
+(defun/who xclip-buffer (selection-type)
+  (if (memq selection-type '(primary secondary clipboard))
+      (call-process-region
+       (point-min) (point-max)
+       "xclip" nil nil nil "-selection" (symbol-name selection-type))
+    (message "%s: invalid selection type %s"
+             who selection-type)))
+
+(defun copy-to-clipboard/linux (beg end)
+  "Copy the region from BEG to END to the system clipboard."
+  (interactive "r")
+  (on-linux
+   (if (use-region-p)
+       (let ((text (buffer-substring-no-properties beg end)))
+         (with-temp-buffer
+           (insert text)
+           (xclip-buffer 'primary)
+           (xclip-buffer 'clipboard)))
+     (message "No region selected"))))
 
 (defun clipboard+kill-ring-save (beg end)
-  "Copies selection to x-clipboard."
+  "Copy selection to kill ring and system clipboard.
+
+This function copies the selected region (from BEG to END) to the
+kill ring, which is Emacs' internal clipboard.  Additionally,
+depending on the system type, it also copies the region to the
+system clipboard, making the text accessible outside of Emacs.
+
+On macOS, it uses the `pbcopy` command to copy the text to the
+system clipboard.  On GNU/Linux, it uses `xclip` to copy the
+text.
+
+Arguments:
+  BEG -- The beginning position of the selected region.
+  END -- The ending position of the selected region.
+
+Example usage:
+  (clipboard+kill-ring-save BEG END)
+
+This can be bound to a key for convenient access:
+  (global-set-key (kbd \"M-w\") 'clipboard+kill-ring-save)"
   (interactive "r")
-  (copy-to-clipboard/macos beg end)
+  (syscase
+   (darwin
+    (copy-to-clipboard/macos beg end))
+   (gnu/linux
+    (copy-to-clipboard/linux beg end)))
   (kill-ring-save beg end))
 
 (global-set-key (kbd "M-w") 'clipboard+kill-ring-save)
-
-(global-set-key (kbd "C-x p")
-                (lambda ()
-                  (interactive)
-                  (other-window -1)))
 
 (global-set-key (kbd "C-x p")
                 (lambda ()
@@ -763,13 +892,13 @@ Example usage:
                 ,(aif (assoc :prompt stx-kwargs)
                      (cadr it)
                    (error
-                    "defgptelfn: missing required keyword argument :prompt"))))
+                    "Error - defgptelfn: missing required keyword argument :prompt"))))
              (,request-callback
               (lambda (*gptel-response* *gptel-response-info*)
                 ,(aif (assoc :body stx-kwargs)
                      (cadr it)
                    (error
-                    "defgptelfn: missing required keyword argument :body"))))
+                    "Error - defgptelfn: missing required keyword argument :body"))))
              (,request-args-thunk
               (lambda ()
                 ,@(aif (assoc :extra-args stx-kwargs)
