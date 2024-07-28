@@ -58,6 +58,22 @@ Special keyword arguments:
          ,@body))))
 
 (defun indent-like-defun (sym)
+  "Set the `lisp-indent-function` property of SYM to `defun`.
+
+This function checks whether SYM has the `lisp-indent-function` property set.
+If not, it assigns `defun` as its `lisp-indent-function`, allowing SYM to be
+indented like a standard Emacs `defun`.  This function is typically used for
+macros that define new constructs or syntax that follow the same indentation
+rules as regular function definitions in Lisp languages.
+
+Example usage:
+  (indent-like-defun 'my-custom-macro)
+
+Arguments:
+  SYM -- The symbol to set the `lisp-indent-function` property for.
+
+Returns:
+  nil"
   (unless (get sym 'lisp-indent-function)
     (put sym 'lisp-indent-function 'defun)))
 
@@ -169,9 +185,8 @@ Special keyword arguments:
   :ensure t
   :config
   (setq gptel-model "gpt-4o"
-        gptel-api-key (get-openai-api-key)
-        gptel-directives (or (read-prompt-md-files "~/.llm-prompts")
-                             gptel-directives))
+        gptel-api-key (get-openai-api-key))
+  (ensure-gptel-directives-loaded)
   (setq-default
    gptel--system-message
    (alist-get 'default gptel-directives "You are a helpful assistant."))
@@ -651,6 +666,7 @@ Returns an alist (PROMPT . CONTENTS-OF-FILE)."
                           (insert-file-contents file)
                           (buffer-string))))
           (push (cons (intern prompt) contents) result))))
+    (message "prompts loaded from %s" directory)
     result))
 
 (defun gptel-request/require (&rest args)
@@ -660,21 +676,65 @@ gptel-request with ARGS."
     (require 'gptel))
   (apply #'gptel-request args))
 
+(defvar *llm-prompts-dir* "~/.llm-prompts"
+  "Directory containing the PROMPT.md files.")
+
+(defun/who reload-gptel-directives ()
+  "Try reloading `gptel-directives` from `*llm-prompts-dir*`.
+
+This function attempts to load GPT-3 directives from the files located in the
+`*llm-prompts-dir*` directory and updates the `gptel-directives` variable with
+the contents of these files.  This is useful for dynamically updating GPT
+directives without having to restart Emacs.
+
+`*llm-prompts-dir*` should point to a directory containing markdown files
+with directives.  Each file should be named using the pattern `PROMPT.md`,
+where `PROMPT` is a key representing the directive.  The contents of each
+file will be read and stored as the value for the corresponding key in
+the `gptel-directives` alist.
+
+Usage:
+  (try-reload-gptel-directives)
+
+Returns: nil. Sets the variables `gptel-directives` with the prompts from
+`*llm-prompts-dir*` as a side-effect."
+  :command
+  (if (file-exists-p *llm-prompts-dir*)
+      (setq gptel-directives
+            (read-prompt-md-files *llm-prompts-dir*))
+    (message "%s: LLM prompts directory %s does not exist!"
+             who
+             *llm-prompts-dir*)))
+
 (defun ensure-gptel-directives-loaded ()
   "Ensure that `gptel-directives` is defined."
   (unless (boundp 'gptel-directives)
-    (setq gptel-directives (or (read-prompt-md-files "~/.llm-prompts") '()))))
+    (reload-gptel-directives)))
 
 (defvar gptel-quick--history nil
   "History list for `gptel-quick' prompts.")
 
 (defun dynamic-prompt (make-prompt callback gptel-request-args)
-  "Send a dynamically calculated request to an LLM.
+  "Generate a dynamic prompt for ChatGPT queries.
 
-MAKE-PROMPT is a thunk to calculate the prompt.  CALLBACK is an arity 2
-function whose arguments are the LLM response and info which is passed
-to gptel-request.  The of the GPTEL-REQUEST-ARGS are forwarded to the call to
-gptel-request"
+This function orchestrates the process of dynamically generating a prompt,
+sending it to GPT-3 (via `gptel-request`), and handling the response with a
+given callback.  It uses `ensure-gptel-directives-loaded` to load default GPT-3
+directives if they are not already defined.
+
+Arguments:
+- `MAKE-PROMPT`: A function that generates the prompt to be sent to GPT-3. This
+  function should not take any parameters.
+- `CALLBACK`: A function to handle the GPT-3 response.  It should accept two
+  parameters: the GPT-3 response and the response information.
+- `GPTEL-REQUEST-ARGS`: A thunk that generates additional arguments to be
+  passed to `gptel-request`.  This thunk should not take any parameters.
+
+Example usage:
+  (dynamic-prompt
+    (lambda () \"What is the weather like?\")
+    (lambda (response info) (message \"Response: %s\" response))
+    (lambda () '(:system \"default system message\")))"
   (let* ((prompt
           (funcall make-prompt))
          (request-args
@@ -687,10 +747,6 @@ gptel-request"
     (apply #'gptel-request/require request-args)))
 
 (defmacro defgptelfn (name args &rest stx)
-  "Define a function with dynamic prompt and body.
-NAME is the function name. ARGS are the arguments taken by the function.
-:command is the interactive command. :prompt is the prompt body.
-:body is the body of the function. :extra-args is for additional request arguments."
   (let ((docstring
          (when (stringp (car stx))
            (pop stx)))
@@ -744,9 +800,9 @@ If the PROMPT is empty, signals a user error."
                 (insert *gptel-response*))
               (special-mode)
               (display-buffer (current-buffer)))))
-  :extra-args (list :system
-                    (alist-get 'default gptel-directives
-                               "You are a helpful assistant.")))
+  :extra-args
+  (make-gptel-system-prompt-args 'default "You are a helpful assistant."))
+
 
 (defgptelfn gptel-diff ()
   "Generate a git commit message.
@@ -783,13 +839,11 @@ in the kill ring."
       (message "commit message in kill ring")
       (pop-to-buffer "COMMIT_EDITMSG")))
   :extra-args
-  (list
-   :system
-   (alist-get
-    'commiter
-    gptel-directives
-    "Write a git commit message for this diff. Include ONLY the message.
-Be terse. Provide messages whose lines are at most 80 characters")))
+  (make-gptel-system-prompt-args
+   'commiter
+   "Write a git commit message for this diff. Include ONLY the message.
+Be terse. Provide messages whose lines are at most 80 characters"))
+
 
 (defgptelfn gptel-pull-request ()
   "Generate a GitHub pull request description by diffing with origin/master.
@@ -820,19 +874,19 @@ clipboard and kill ring."
       (clipboard+kill-ring-save (point-min) (point-max))
       (message "pull request body in kill ring")))
   :extra-args
-  (list
-   :system
-   (alist-get
-    'PullRequest
-    gptel-directives
-    "Summarize the changes for a GitHub pull request description.")))
+  (make-gptel-system-prompt-args
+   'pullrequest
+   "Summarize the changes for a GitHub pull request description."))
+
 
 (defvar gptel-document-symbol-at-point--history nil)
 
 (defgptelfn gptel-document-symbol-at-point (sym)
   "Generate documentation for the symbol at point.
 
-This function prompts the user to input a symbol, suggests the symbol at point by default, and generates documentation for that symbol. The generated documentation is then displayed in a special mode buffer.
+This function prompts the user to input a symbol, suggests the symbol at
+point by default, and generates documentation for that symbol. The
+generated documentation is then displayed in a special mode buffer.
 
 Usage:
   1. Place the cursor on or near the symbol you want to document.
@@ -844,10 +898,12 @@ Arguments:
   SYM: The symbol for which documentation is to be generated.
 
 Prompts:
-  - The function reads a symbol from the user, suggesting the symbol at point by default.
+  - The function reads a symbol from the user, suggesting the
+symbol at point by default.
 
 Output:
-  - Displays the generated documentation in a buffer named `*gptel-document-symbol-at-point*`.
+  - Displays the generated documentation in a buffer named
+`*gptel-document-symbol-at-point*`.
 
 The function leverages ChatGPT to generate high-quality documentation.
 
@@ -857,12 +913,12 @@ Example:
      \"An example function.\"
      ;; Place the cursor here and run `M-x gptel-document-symbol-at-point`
      ;; Confirm or modify the prompted symbol name (e.g., `example-fun`)
-     ;; The generated documentation will appear in the buffer `*gptel-document-symbol-at-point*`
+     ;; The generated documentation will appear in the buffer
+     ;; `*gptel-document-symbol-at-point*`
      (message \"Example argument: %s\" arg))
 
 History:
-  The function maintains a history of user inputs for the symbol prompt.
-"
+  The function maintains a history of user inputs for the symbol prompt."
   :command
   (list
    (read-string "Documentation for: "
@@ -886,10 +942,82 @@ History:
       (special-mode)
       (display-buffer (current-buffer))))
   :extra-args
+  (make-gptel-system-prompt-args 'documentation "Prefer making a docstring"))
+
+
+(defmacro with-gptel-directives (&rest body)
+  "Ensures GPTel directives are loaded before executing BODY.
+
+This macro guarantees that the GPTel directives are available by
+reloading them if necessary before evaluating the BODY.
+
+Example usage:
+  (with-gptel-directives
+    (do-something-with-directives))
+
+Arguments:
+  BODY -- The body of code to execute after ensuring directives are loaded.
+
+Returns:
+  The result of evaluating BODY."
+  `(progn
+     (ensure-gptel-directives-loaded)
+     ,@body))
+
+(defun make-gptel-system-prompt-args (directive default-directive)
+  "Generate system prompt arguments for GPTel requests.
+
+This function ensures GPTel directives are available and retrieves the
+system directive for the specified DIRECTIVE.  If the directive is not
+found, it uses the DEFAULT-DIRECTIVE.
+
+Example usage:
+  (make-gptel-system-prompt-args 'testing \"Default directive text\")
+
+Arguments:
+  DIRECTIVE -- The directive key to look up in the GPTel directives.
+  DEFAULT-DIRECTIVE -- The fallback directive text to use if DIRECTIVE
+  is not found.
+
+Returns:
+  A list containing the system directive to be used for GPTel requests."
+  (with-gptel-directives
+   (list
+    :system (alist-get directive gptel-directives default-directive))))
+
+
+(defvar gptel-tests-for-symbol-at-point nil
+  "History for `gptel-tests-for-symbol-at-point`.")
+
+(defgptelfn gptel-tests-for-symbol-at-point (sym)
+  :command
   (list
-   :system
-   (alist-get 'Document gptel-directives
-              "Prefer making a docstring")))
+   (read-string "Make tests for: "
+                (symbol-name (symbol-at-point))
+                gptel-document-symbol-at-point--history))
+  :prompt
+  (progn
+    (format
+     "Add test cases for %s defined below:\n%s"
+     sym
+     (buffer-string)))
+  :body
+  (if (not *gptel-response*)
+      (message "%s failed with message: %s"
+               'gptel-document-symbol-at-point
+               (plist-get *gptel-response-info* :status))
+    (with-current-buffer (get-buffer-create "*gptel-tests-for-symbol-at-point*")
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert *gptel-response*))
+      (special-mode)
+      (display-buffer (current-buffer))))
+  :extra-args
+  (make-gptel-system-prompt-args
+   'testing
+   "Generate test cases using the idiomatic language features and libraries
+for the code provided"))
+
 
 (defun insert-issue-prefix ()
   (interactive)
