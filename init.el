@@ -594,18 +594,30 @@ that as the default suggestion."
    (shell-command-on-region beg end "pbcopy"))
   (deactivate-mark))
 
+(defun copy-to-clipboard/linux (beg end)
+  "Copy the region from BEG to END to the system clipboard."
+  (interactive "r")
+  (if (use-region-p)
+      (let ((text (buffer-substring-no-properties beg end)))
+        (with-temp-buffer
+          (insert text)
+          (call-process-region
+           (point-min) (point-max)
+           "xclip" nil nil nil "-selection" "clipboard")))
+    (message "No region selected")))
+
+
 (defun clipboard+kill-ring-save (beg end)
   "Copies selection to x-clipboard."
   (interactive "r")
-  (copy-to-clipboard/macos beg end)
+  (syscase
+   (darwin
+    (copy-to-clipboard/macos beg end))
+   (gnu/linux
+    (copy-to-clipboard/linux beg end)))
   (kill-ring-save beg end))
 
 (global-set-key (kbd "M-w") 'clipboard+kill-ring-save)
-
-(global-set-key (kbd "C-x p")
-                (lambda ()
-                  (interactive)
-                  (other-window -1)))
 
 (global-set-key (kbd "C-x p")
                 (lambda ()
