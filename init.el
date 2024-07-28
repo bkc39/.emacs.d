@@ -37,9 +37,7 @@ Special keyword arguments:
   :command -- If provided, make the function interactive."
   (let* ((docstring (if (stringp (car body)) (pop body)))
          (options (when (keywordp (car body)) (pop body)))
-         (command (progn
-                    (message "options was: %s" options)
-                    (eq :command options))))
+         (command (eq :command options)))
     `(defun ,name ,args
        ,@(when docstring (list docstring))
        ,@(when command '((interactive)))
@@ -590,21 +588,22 @@ that as the default suggestion."
 
 (defun copy-to-clipboard/macos (beg end)
   (interactive "r")
-  (when (eq system-type 'darwin)
-   (shell-command-on-region beg end "pbcopy"))
-  (deactivate-mark))
+  (on-macos
+   (shell-command-on-region beg end "pbcopy")
+   (deactivate-mark)))
 
 (defun copy-to-clipboard/linux (beg end)
   "Copy the region from BEG to END to the system clipboard."
   (interactive "r")
-  (if (use-region-p)
-      (let ((text (buffer-substring-no-properties beg end)))
-        (with-temp-buffer
-          (insert text)
-          (call-process-region
-           (point-min) (point-max)
-           "xclip" nil nil nil "-selection" "clipboard")))
-    (message "No region selected")))
+  (on-linux
+   (if (use-region-p)
+       (let ((text (buffer-substring-no-properties beg end)))
+         (with-temp-buffer
+           (insert text)
+           (call-process-region
+            (point-min) (point-max)
+            "xclip" nil nil nil "-selection" "clipboard")))
+     (message "No region selected"))))
 
 
 (defun clipboard+kill-ring-save (beg end)
