@@ -742,7 +742,7 @@ If the PROMPT is empty, signals a user error."
                     (alist-get 'default gptel-directives
                                "You are a helpful assistant.")))
 
-(defun gptel-diff ()
+(defgptelfn gptel-diff ()
   "Generate a git commit message.
 
 This function uses `magit-diff-staged` to obtain the current staged diffs
@@ -753,39 +753,37 @@ the generated message in a special buffer named *gptel-diff* and copies it
 to the kill ring.  If a buffer named 'COMMIT_EDITMSG' is also present, it
 will switch to that buffer and notify the user that the commit message is
 in the kill ring."
-  (interactive)
-  (dynamic-prompt
-   (lambda ()
-     (let ((diff-buffer
-            (with-temp-buffer
-              (magit-diff-staged)
-              (buffer-name))))
-       (with-current-buffer diff-buffer
-         (buffer-substring-no-properties (point-min) (point-max)))))
-   (lambda (response info)
-     (if (not response)
+  :command nil
+  :prompt
+  (let ((diff-buffer
+           (with-temp-buffer
+             (magit-diff-staged)
+             (buffer-name))))
+      (with-current-buffer diff-buffer
+        (buffer-substring-no-properties (point-min) (point-max))))
+  :body
+  (if (not *gptel-response*)
          (message
           "gptel-diff failed with message: %s"
-          (plist-get info :status))
-
-       (kill-new response)
+          (plist-get *gptel-request-info* :status))
+       (kill-new *gptel-response*)
        (with-current-buffer (get-buffer-create "*gptel-diff*")
          (let ((inhibit-read-only t))
            (erase-buffer)
-           (insert response))
+           (insert *gptel-response*))
          (special-mode)
          (display-buffer (current-buffer)))
        (when (get-buffer "COMMIT_EDITMSG")
          (message "commit message in kill ring")
-         (pop-to-buffer "COMMIT_EDITMSG"))))
-   (lambda ()
-     (list
-      :system
-      (alist-get
-       'commiter
-       gptel-directives
-       "Write a git commit message for this diff. Include ONLY the message.
-Be terse. Provide messages whose lines are at most 80 characters")))))
+         (pop-to-buffer "COMMIT_EDITMSG")))
+  :extra-args
+  (list
+   :system
+   (alist-get
+    'commiter
+    gptel-directives
+    "Write a git commit message for this diff. Include ONLY the message.
+Be terse. Provide messages whose lines are at most 80 characters")))
 
 (defun/who gptel-pull-request ()
   "Generate a GitHub pull request description by diffing with origin/master.
