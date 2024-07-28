@@ -57,8 +57,11 @@ Special keyword arguments:
        (let ((who ',name))
          ,@body))))
 
-(unless (get 'defun/who 'lisp-indent-function)
-  (put 'defun/who 'lisp-indent-function 'defun))
+(defun indent-like-defun (sym)
+  (unless (get sym 'lisp-indent-function)
+    (put sym 'lisp-indent-function 'defun)))
+
+(indent-like-defun 'defun/who)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Straight.el config
@@ -721,6 +724,8 @@ NAME is the function name. ARGS are the arguments taken by the function.
           ,request-callback
           ,request-args-thunk)))))
 
+(indent-like-defun 'defgptelfn)
+
 (defgptelfn gptel-quick (prompt)
   "Send PROMPT to ChatGPT and display the response in a special buffer.
 If the PROMPT is empty, signals a user error."
@@ -757,26 +762,26 @@ in the kill ring."
   :command nil
   :prompt
   (let ((diff-buffer
-           (with-temp-buffer
-             (magit-diff-staged)
-             (buffer-name))))
-      (with-current-buffer diff-buffer
-        (buffer-substring-no-properties (point-min) (point-max))))
+         (with-temp-buffer
+           (magit-diff-staged)
+           (buffer-name))))
+    (with-current-buffer diff-buffer
+      (buffer-substring-no-properties (point-min) (point-max))))
   :body
   (if (not *gptel-response*)
-         (message
-          "gptel-diff failed with message: %s"
-          (plist-get *gptel-request-info* :status))
-       (kill-new *gptel-response*)
-       (with-current-buffer (get-buffer-create "*gptel-diff*")
-         (let ((inhibit-read-only t))
-           (erase-buffer)
-           (insert *gptel-response*))
-         (special-mode)
-         (display-buffer (current-buffer)))
-       (when (get-buffer "COMMIT_EDITMSG")
-         (message "commit message in kill ring")
-         (pop-to-buffer "COMMIT_EDITMSG")))
+      (message
+       "gptel-diff failed with message: %s"
+       (plist-get *gptel-request-info* :status))
+    (kill-new *gptel-response*)
+    (with-current-buffer (get-buffer-create "*gptel-diff*")
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert *gptel-response*))
+      (special-mode)
+      (display-buffer (current-buffer)))
+    (when (get-buffer "COMMIT_EDITMSG")
+      (message "commit message in kill ring")
+      (pop-to-buffer "COMMIT_EDITMSG")))
   :extra-args
   (list
    :system
