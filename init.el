@@ -289,7 +289,8 @@ Returns:
          ("C-c q" . gptel-quick)
          ("C-c M-d" . gptel-diff)
          ("C-c M-p" . gptel-pull-request)
-         ("C-c M-s" . gptel-document-symbol-at-point)))
+         ("C-c M-s" . gptel-document-symbol-at-point)
+         ("C-c M-t" . gptel-tests-for-symbol-at-point)))
 
 (use-package lsp-mode
   :init
