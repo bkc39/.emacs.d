@@ -285,6 +285,9 @@ Returns:
     :host "localhost:11434"
     :models '("llama3:8b" "codellama:latest" "codellama:13b" "gemma2:9b")
     :stream t)
+  (gptel-make-anthropic "Claude"
+    :stream t
+    :key (get-anthropic-api-key))
   :bind (("C-c RET" . gptel-send)
          ("C-c q" . gptel-quick)
          ("C-c M-d" . gptel-diff)
@@ -684,15 +687,58 @@ environment variable OPENAI_API_KEY."
             (message "OpenAI API key loaded successfully.")))
       (message "Error: ~/.openai file not found or is not readable."))))
 
+(defun get-api-key-from-env-or-file (env-var api-key-file)
+  "Get the API key from ENV-VAR or from API-KEY-FILE.
+
+Arguments:
+  ENV-VAR -- The environment variable to check for the API key.
+
+  API-KEY-FILE -- The file to read the API key from if the environment
+  variable is not set.
+
+Returns:
+  The API key as a string.
+
+Example usage:
+  (get-api-key-from-env-or-file
+    \"MY_API_KEY_ENV\"
+    \"~/.my_api_key_file\")"
+  (let ((api-key (getenv env-var))
+        (key-file (expand-file-name api-key-file)))
+    (unless api-key
+      (if (file-readable-p key-file)
+          (with-temp-buffer
+            (insert-file-contents key-file)
+            (setq api-key (string-trim (buffer-string)))
+            (setenv env-var api-key)
+            (message "API key loaded successfully."))
+        (message "Error: %s file not found or is not readable." key-file)))
+    api-key))
+
 (defun get-openai-api-key ()
   "Get the OpenAI API key from the environment variable OPENAI_API_KEY.
 If the environment variable is not defined, load the key from the
 ~/.openai file.  Return the API key as a string."
-  (let ((api-key (getenv "OPENAI_API_KEY")))
-    (unless api-key
-      (load-openai-api-key)
-      (setq api-key (getenv "OPENAI_API_KEY")))
-    api-key))
+  (get-api-key-from-env-or-file "OPENAI_API_KEY" "~/.openai"))
+
+(defun get-anthropic-api-key ()
+  "Get the Anthropic API key from the environment variable 'ANTHROPIC_API_KEY'.
+
+If the environment variable is not defined, load the key from the
+~/.anthropic file.  Returns the API key as a string.
+
+Example Usage:
+  (get-anthropic-api-key)
+
+This will return the API key string from the environment variable
+'ANTHROPIC_API_KEY' or from the ~/.anthropic file.
+
+Returns:
+  string: The Anthropic API key.
+
+Raises:
+  Error if the API key cannot be loaded."
+  (get-api-key-from-env-or-file "ANTHROPIC_API_KEY" "~/.anthropic"))
 
 (defmacro with-defined-functions (symbols &rest body)
   "Execute BODY only if all SYMBOLS are bound as functions.
