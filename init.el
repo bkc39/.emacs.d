@@ -485,19 +485,20 @@ that as the default suggestion."
 
 (use-package racket-mode
   :mode ("\\.rkt\\'" . racket-mode)
-  :hook (racket-mode . (lambda ()
-                         (racket-xp-mode t)))
+  :hook (racket-mode . racket-unicode-input-method-enable)
   :config
-  (racket-unicode-input-method-enable)
-  (add-hookq racket-xp-mode-hook
-             (lambda ()
-               (remove-hook 'pre-redisplay-functions
-                            #'racket-xp-pre-redisplay
-                            t))))
-
+  (with-temp-buffer
+    (racket-unicode-input-method-enable)
+    (set-input-method "racket-unicode")
+    (let ((quail-current-package (assoc "racket-unicode"
+                                        quail-package-alist)))
+      (quail-define-rules
+       ((append . t))
+       ("oplus" ["⊕"])
+       ("otimes" ["⊗"])))))
 
 (defun rust-run-with-args ()
-  "Run with cargo run and additional command line arguments"
+  "Run with cargo run and additional command line arguments."
   (interactive)
   (let ((args
          (read-string "Command line args: ")))
