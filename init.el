@@ -485,6 +485,7 @@ that as the default suggestion."
 
 (use-package racket-mode
   :mode ("\\.rkt\\'" . racket-mode)
+  :mode ("\\.scrbl'" . racket-hash-lang-mode)
   :hook (racket-mode . racket-unicode-input-method-enable)
   :config
   (with-temp-buffer
