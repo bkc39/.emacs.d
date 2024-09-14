@@ -484,13 +484,19 @@ that as the default suggestion."
     "Cpdt")))
 
 (use-package racket-mode
+  :straight (el-patch
+             :type git
+             :host github
+             :repo "greghendershott/racket-mode"
+             :fork (:host github
+                    :repo "bkc39/racket-mode"
+                    :branch "custom-unicode-input-method"))
   :mode ("\\.rkt\\'" . racket-mode)
   :mode ("\\.scrbl'" . racket-hash-lang-mode)
   :hook (racket-mode . racket-unicode-input-method-enable)
   :config
   (with-temp-buffer
     (racket-unicode-input-method-enable)
-    (set-input-method "racket-unicode")
     (let ((quail-current-package (assoc "racket-unicode"
                                         quail-package-alist)))
       (quail-define-rules
