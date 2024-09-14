@@ -528,8 +528,6 @@ that as the default suggestion."
   :hook (swift-mode . #'lsp-deferred))
 
 (use-package solidity-mode)
-;; (use-package tree-sitter)
-;; (use-package tree-sitter-langs)
 
 (defun setup-tide-mode ()
   "hook to setup tide"
