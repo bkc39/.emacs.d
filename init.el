@@ -312,7 +312,6 @@ Returns:
   (setq lsp-enable-file-watchers nil
         lsp-file-watch-threshold 10000))
 
-
 (defun check-for-python-executable-in-dir (dir bin-name)
   (let ((executable (concat dir "/" bin-name)))
     (and (file-exists-p executable) executable)))
@@ -366,8 +365,6 @@ Optionally prompt for user-specified PATHS if prefix argument is supplied."
   (define-key python-mode-map
               (kbd "C-c C-p")
               'run-python-with-extra-pythonpaths))
-
-
 
 (use-package lsp-pyright
   :hook (python-mode . lsp-deferred)
@@ -484,13 +481,6 @@ that as the default suggestion."
     "Cpdt")))
 
 (use-package racket-mode
-  :straight (el-patch
-             :type git
-             :host github
-             :repo "greghendershott/racket-mode"
-             :fork (:host github
-                    :repo "bkc39/racket-mode"
-                    :branch "custom-unicode-input-method"))
   :mode ("\\.rkt\\'" . racket-mode)
   :mode ("\\.scrbl'" . racket-hash-lang-mode)
   :hook (racket-mode . racket-unicode-input-method-enable)
