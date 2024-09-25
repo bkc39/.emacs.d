@@ -652,6 +652,11 @@ This can be bound to a key for convenient access:
  #'(lambda ()
      (electric-indent-mode -1)))
 
+(add-hookq
+ tex-mode-hook
+ (lambda ()
+   (local-unset-key (kbd "C-c RET"))))
+
 ;; open up the init file in the background on startup
 (add-hookq
  emacs-startup-hook
