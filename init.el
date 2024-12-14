@@ -241,9 +241,15 @@ Returns:
               (kbd "C-c C-r RET")
               'cider-macroexpand-1))
 
-(use-package cmake-mode)
+(use-package cmake-mode
+  :ensure t
+  :mode ("CMakeLists\\.txt\\'" "\\.cmake\\'"))
 
 (use-package ein)
+
+(use-package modern-cpp-font-lock
+  :ensure t
+  :hook (c++-mode . modern-c++-font-lock-mode))
 
 (use-package eshell-prompt-extras
   :config
@@ -302,7 +308,9 @@ Returns:
   :hook (js-mode . (lambda ()
                      (electric-indent-mode -1)
                      (lsp-deferred)))
-  :hook (rust-mode . #'lsp-deferred)
+  :hook ((rust-mode . #'lsp-deferred)
+         (c++-mode . #'lsp-deferred)
+         (c-mode . #'lsp-deferred))
   :custom
   (lsp-file-watch-ignored
    '("[/\\\\]\\.venv$" "[/\\\\]venv$" "[/\\\\]\\.direnv$"
@@ -1227,3 +1235,17 @@ for the code provided"))
 ;; ## added by OPAM user-setup for emacs / base ## 56ab50dc8996d2bb95e7856a6eddb17b ## you can edit, but keep this line
 (require 'opam-user-setup "~/.emacs.d/opam-user-setup.el")
 ;; ## end of OPAM user-setup addition for emacs / base ## keep this line
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(lsp-file-watch-ignored-directories
+   '("[/\\\\]\\.venv$" "[/\\\\]venv$" "[/\\\\]\\.direnv$" "[/\\\\]\\.mypy_cache$" "[/\\\\]\\.pytest_cache$" "[/\\\\]__pycache__$" "[/\\\\]build$" "[/\\\\]dist$") nil nil "Customized with use-package lsp-mode")
+ '(safe-local-variable-values '((project-root . "."))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
