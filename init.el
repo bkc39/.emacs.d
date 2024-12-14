@@ -241,9 +241,18 @@ Returns:
               (kbd "C-c C-r RET")
               'cider-macroexpand-1))
 
+(use-package clang-format
+  :ensure t)
+
 (use-package cmake-mode
   :ensure t
   :mode ("CMakeLists\\.txt\\'" "\\.cmake\\'"))
+
+(use-package cmake-ide
+  :ensure t
+  :config
+  (cmake-ide-setup))
+
 
 (use-package ein)
 
@@ -1229,6 +1238,12 @@ for the code provided"))
   "Check if the buffer is prefixed by the issue prefix [#ISSUE-NUMBER]."
   (let ((buffer-prefix (car (split-string (buffer-string)))))
     (string-match "\\[\\#[[:digit:]]+\\]" buffer-prefix)))
+
+(defun clang-format-on-save ()
+  "Add clang-format-buffer to before-save-hook for the current buffer."
+  (when (executable-find "clang-format")
+    (add-hook 'before-save-hook #'clang-format-buffer nil 'local)))
+(add-hook 'c++-mode-hook #'clang-format-on-save)
 
 (provide 'init)
 ;;; init.el ends here
