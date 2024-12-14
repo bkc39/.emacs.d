@@ -1233,7 +1233,10 @@ for the code provided"))
 (provide 'init)
 ;;; init.el ends here
 ;; ## added by OPAM user-setup for emacs / base ## 56ab50dc8996d2bb95e7856a6eddb17b ## you can edit, but keep this line
-(require 'opam-user-setup "~/.emacs.d/opam-user-setup.el")
+(let ((opam-user-setup-file
+       "~/.emacs.d/opam-user-setup.el"))
+  (when (file-exists-p opam-user-setup-file)
+      (require 'opam-user-setup )))
 ;; ## end of OPAM user-setup addition for emacs / base ## keep this line
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
