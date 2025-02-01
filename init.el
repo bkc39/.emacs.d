@@ -367,11 +367,12 @@ Optionally prompt for user-specified PATHS if prefix argument is supplied."
               'run-python-with-extra-pythonpaths))
 
 (use-package lsp-pyright
-  :hook (python-mode . lsp-deferred)
+  ;; :hook (python-mode . lsp-deferred)
   :hook (before-save . organize-python-imports)
-  :hook (python-mode . rebind-run-python-hotkey)
+  ;; :hook (python-mode . rebind-run-python-hotkey)
   :config
   (progn
+
     (setq
      ;; python-shell-interpreter (search-venv-for-python-executable)
      blacken-executable (search-venv-for-black-executable))
@@ -603,13 +604,14 @@ that as the default suggestion."
   "Copy the region from BEG to END to the system clipboard."
   (interactive "r")
   (on-linux
-   (if (use-region-p)
-       (let ((text (buffer-substring-no-properties beg end)))
-         (with-temp-buffer
-           (insert text)
-           (xclip-buffer 'primary)
-           (xclip-buffer 'clipboard)))
-     (message "No region selected"))))
+   (when (executable-find "xclip")
+     (if (use-region-p)
+         (let ((text (buffer-substring-no-properties beg end)))
+           (with-temp-buffer
+             (insert text)
+             (xclip-buffer 'primary)
+             (xclip-buffer 'clipboard)))
+       (message "No region selected")))))
 
 (defun clipboard+kill-ring-save (beg end)
   "Copy selection to kill ring and system clipboard.
@@ -647,6 +649,12 @@ This can be bound to a key for convenient access:
                   (interactive)
                   (other-window -1)))
 
+(defun read-file-into-string (file-path)
+  "Return the contents of the file at FILE-PATH as a string."
+  (with-temp-buffer
+    (insert-file-contents file-path)
+    (buffer-string)))
+
 (add-hookq
  after-change-major-mode-hook
  #'(lambda ()
@@ -663,8 +671,14 @@ This can be bound to a key for convenient access:
  (lambda ()
    (find-file-noselect user-init-file)))
 
-;; (add-hookq after-make-frame-functions
-;;            #'set-frame-font-to-anonymous-pro)
+(add-hookq
+ python-mode-hook
+ (lambda ()
+   (let ((system-name-file "~/.vm-name"))
+     (when (and
+            (file-exists-p system-name-file)
+            (string= (read-file-into-string system-name-file) (system-name)))
+       (setq python-shell-interpreter "twix-python")))))
 
 (defun restart-server ()
   "Restart the emacs server and close all clients"
@@ -1221,6 +1235,19 @@ for the code provided"))
   "Check if the buffer is prefixed by the issue prefix [#ISSUE-NUMBER]."
   (let ((buffer-prefix (car (split-string (buffer-string)))))
     (string-match "\\[\\#[[:digit:]]+\\]" buffer-prefix)))
+
+(defun add-blacken-buffer-to-on-save-hook ()
+  "Add 'blacken-buffer to 'before-save-hook' when appropriate.
+
+Check file local variables, if owner is 'bkc', add 'blacken-buffer' to
+'before-save-hook'."
+  (when (or
+         (not (string= (system-name) "vm-3d-bkc"))
+         (and (string= (system-name) "vm-3d-bkc")
+              (boundp 'file-local-variables-alist)
+              (assoc 'owner file-local-variables-alist)
+              (string= (cdr (assoc 'owner file-local-variables-alist)) "bkc")))
+    (add-hook 'before-save-hook #'blacken-buffer nil t)))
 
 (provide 'init)
 ;;; init.el ends here
