@@ -213,6 +213,10 @@ Returns:
   (setq blacken-line-length 80)
   :hook (python-mode . blacken-mode))
 
+;; (use-package codeium
+;;   :ensure t
+;;   :hook (prog-mode . codeium-mode))
+
 (use-package company
   :ensure t
   :hook (prog-mode . company-mode)
