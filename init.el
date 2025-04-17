@@ -371,8 +371,23 @@ Optionally prompt for user-specified PATHS if prefix argument is supplied."
               (kbd "C-c C-p")
               'run-python-with-extra-pythonpaths))
 
-(defvar pinely-devdocker-hostname
-  "vm-3d-bkc")
+
+(defvar system-name-file "~/.vm-name")
+
+(defun on-pinely-host ()
+  "Check if we are on the pinely host.
+
+Warn if the file specified by `system-name-file` does not exist."
+  (interactive)
+  (let ((absolute-path (expand-file-name system-name-file)))
+    (if (not (file-exists-p absolute-path))
+        (progn
+          (warn "File not found: %s" absolute-path)
+          nil)
+      (let ((file-content (with-temp-buffer
+                            (insert-file-contents absolute-path)
+                            (string-trim (buffer-string)))))
+        (string= file-content (system-name))))))
 
 (use-package lsp-pyright
   ;; :hook (python-mode . lsp-deferred)
@@ -689,13 +704,9 @@ This can be bound to a key for convenient access:
 (add-hookq
  python-mode-hook
  (lambda ()
-   (let ((system-name-file "~/.vm-name"))
-     (when (and
-            (file-exists-p system-name-file)
-            (string= (read-file-into-string system-name-file)
-                     (system-name)))
-       (setq python-shell-interpreter "twix-python")
-       (setq python-shell-interpreter-args "-m IPython --simple-prompt -i")))))
+   (when (on-pinely-host)
+     (setq python-shell-interpreter "twix-python")
+     (setq python-shell-interpreter-args "-m IPython --simple-prompt -i"))))
 
 (defun restart-server ()
   "Restart the emacs server and close all clients"
