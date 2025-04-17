@@ -210,7 +210,7 @@ Returns:
 (use-package blacken
   :ensure t
   :config
-  (setq blacken-line-length 80)
+  (setq blacken-line-length 120)
   :hook (python-mode . blacken-mode))
 
 (use-package company
@@ -243,6 +243,11 @@ Returns:
 
 (use-package cmake-mode)
 
+(use-package doom-themes
+  :config
+  (setq doom-themes-enable-bold t
+        doom-themes-enable-italic t))
+
 (use-package ein)
 
 (use-package eshell-prompt-extras
@@ -274,7 +279,7 @@ Returns:
 (use-package gptel
   :ensure t
   :config
-  (setq gptel-model "gpt-4o"
+  (setq gptel-model "o3-mini"
         gptel-api-key (get-openai-api-key))
   (ensure-gptel-directives-loaded)
   (setq-default
@@ -366,15 +371,20 @@ Optionally prompt for user-specified PATHS if prefix argument is supplied."
               (kbd "C-c C-p")
               'run-python-with-extra-pythonpaths))
 
+(defvar pinely-devdocker-hostname
+  "vm-3d-bkc")
+
 (use-package lsp-pyright
   ;; :hook (python-mode . lsp-deferred)
   :hook (before-save . organize-python-imports)
   ;; :hook (python-mode . rebind-run-python-hotkey)
   :config
   (progn
+    (when (string= (system-name)
+                   pinely-devdocker-hostname)
+      (setq python-shell-interpreter "twix-python"))
 
     (setq
-     ;; python-shell-interpreter (search-venv-for-python-executable)
      blacken-executable (search-venv-for-black-executable))
     (setq lsp-pyright-use-library-code-for-types t)
     (let* ((pyright-stubs-root-dir
@@ -540,7 +550,7 @@ that as the default suggestion."
 
 (use-package whitespace
   :config
-  (setq whitespace-line-column 80)
+  (setq whitespace-line-column 120)
   (setq whitespace-style '(face lines trailing empty))
   :hook (prog-mode . whitespace-mode)
   :hook (before-save . whitespace-cleanup))
@@ -574,6 +584,12 @@ that as the default suggestion."
 (setq-default indent-tabs-mode nil)
 (setq-default truncate-lines t)
 
+(defun reread-current-buffer-from-disk ()
+  (interactive)
+  (revert-buffer nil t))
+
+(global-set-key (kbd "C-x C-R") 'reread-current-buffer-from-disk)
+
 ;; set the font to anonymous pro when in GUI if its installed
 (defun set-frame-font-to-anonymous-pro ()
   "set frame font to anonymous pro if GUI is there"
@@ -590,7 +606,6 @@ that as the default suggestion."
   (on-macos
    (shell-command-on-region beg end "pbcopy")
    (deactivate-mark)))
-
 
 (defun/who xclip-buffer (selection-type)
   (if (memq selection-type '(primary secondary clipboard))
@@ -677,8 +692,10 @@ This can be bound to a key for convenient access:
    (let ((system-name-file "~/.vm-name"))
      (when (and
             (file-exists-p system-name-file)
-            (string= (read-file-into-string system-name-file) (system-name)))
-       (setq python-shell-interpreter "twix-python")))))
+            (string= (read-file-into-string system-name-file)
+                     (system-name)))
+       (setq python-shell-interpreter "twix-python")
+       (setq python-shell-interpreter-args "-m IPython --simple-prompt -i")))))
 
 (defun restart-server ()
   "Restart the emacs server and close all clients"
@@ -1255,3 +1272,21 @@ Check file local variables, if owner is 'bkc', add 'blacken-buffer' to
 (when (executable-find "ocaml")
   (require 'opam-user-setup "~/.emacs.d/opam-user-setup.el"))
 ;; ## end of OPAM user-setup addition for emacs / base ## keep this line
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("f87c86fa3d38be32dc557ba3d4cedaaea7bc3d97ce816c0e518dfe9633250e34"
+     "30d174000ea9cbddecd6cc695943afb7dba66b302a14f9db5dd65074e70cc744"
+     "2b20b4633721cc23869499012a69894293d49e147feeb833663fdc968f240873"
+     "34cf3305b35e3a8132a0b1bdf2c67623bc2cb05b125f8d7d26bd51fd16d547ec"
+     "b5fd9c7429d52190235f2383e47d340d7ff769f141cd8f9e7a4629a81abc6b19"
+     default)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
