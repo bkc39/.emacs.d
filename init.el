@@ -195,6 +195,28 @@ Returns:
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
 
+(defun my/company-face-tweaks ()
+  (set-face-attribute
+   'company-tooltip-selection nil
+   :background nil
+   :foreground "gray")
+  (set-face-attribute
+   'company-tooltip-common-selection nil
+   :background nil
+   :foreground "gray")
+  (set-face-attribute
+   'company-tooltip nil
+   :background nil
+   :foreground "gray")
+  (set-face-attribute
+   'company-tooltip-common nil
+   :background nil
+   :foreground "gray"))
+
+(add-hookq after-load-theme-hook #'my/company-face-tweaks)
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Package configs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -217,7 +239,8 @@ Returns:
   :ensure t
   :hook (prog-mode . company-mode)
   :config
-  (setq company-idle-delay 0.3))
+  (setq company-idle-delay 0.3)
+  )
 
 (use-package company-coq
   :after (proof-general)
@@ -395,10 +418,8 @@ Warn if the file specified by `system-name-file` does not exist."
   ;; :hook (python-mode . rebind-run-python-hotkey)
   :config
   (progn
-    (when (string= (system-name)
-                   pinely-devdocker-hostname)
+    (when (on-pinely-host)
       (setq python-shell-interpreter "twix-python"))
-
     (setq
      blacken-executable (search-venv-for-black-executable))
     (setq lsp-pyright-use-library-code-for-types t)
@@ -582,7 +603,17 @@ that as the default suggestion."
   :config
   (progn
     (load-theme 'zenburn t t)
-    (enable-theme 'zenburn)))
+    (enable-theme 'zenburn)
+    (with-eval-after-load 'company
+      (set-face-attribute
+       'company-preview nil
+       :background nil
+       :foreground "gray")
+      (set-face-attribute
+       'company-preview-common nil
+       :background nil
+       :foreground "gray"))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Other configs
@@ -1300,4 +1331,4 @@ Check file local variables, if owner is 'bkc', add 'blacken-buffer' to
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(company-preview ((t (:background nil :foreground "gray")))))
