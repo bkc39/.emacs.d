@@ -302,7 +302,7 @@ Returns:
 (use-package gptel
   :ensure t
   :config
-  (setq gptel-model "o3-mini"
+  (setq gptel-model "gpt-4.5-preview"
         gptel-api-key (get-openai-api-key))
   (ensure-gptel-directives-loaded)
   (setq-default
