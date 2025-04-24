@@ -1332,3 +1332,7 @@ Check file local variables, if owner is 'bkc', add 'blacken-buffer' to
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(company-preview ((t (:background nil :foreground "gray")))))
+
+(defvar test
+  'test
+  "Checking if this worked.")
