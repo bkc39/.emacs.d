@@ -201,6 +201,23 @@ Returns:
 
 (use-package ag)
 
+(use-package agda2-mode
+  :straight (agda :type git
+                  :host github
+                  :repo "agda/agda"
+                  :tag "v2.7.0.1"
+                  :files (:defaults "src/data/emacs-mode/*.el"))
+  :mode ("\\.agda\\'" "\\.lagda\\.md\\'")
+  :init
+  ;; Optional: Add Agda binary path to exec-path, adjust the path as needed
+  ;;(add-to-list 'exec-path "/path/to/agda/bin/")
+  :config
+  ;; Additional configuration can be added here
+  )
+
+(use-package doom-themes
+  :ensure t)
+
 (use-package aweshell
   :straight (:host github
                    :repo "manateelazycat/aweshell"
@@ -501,15 +518,16 @@ that as the default suggestion."
   :mode ("\\.rkt\\'" . racket-mode)
   :mode ("\\.scrbl'" . racket-hash-lang-mode)
   :hook (racket-mode . racket-unicode-input-method-enable)
-  :config
-  (with-temp-buffer
-    (racket-unicode-input-method-enable)
-    (let ((quail-current-package (assoc "racket-unicode"
-                                        quail-package-alist)))
-      (quail-define-rules
-       ((append . t))
-       ("oplus" ["⊕"])
-       ("otimes" ["⊗"])))))
+  ;; :config
+  ;; (with-temp-buffer
+  ;;   (racket-unicode-input-method-enable)
+  ;;   (let ((quail-current-package (assoc "racket-unicode"
+  ;;                                       quail-package-alist)))
+  ;;     (quail-define-rules
+  ;;      ((append . t))
+  ;;      ("oplus" ["⊕"])
+  ;;      ("otimes" ["⊗"]))))
+  )
 
 (defun rust-run-with-args ()
   "Run with cargo run and additional command line arguments."
@@ -1226,6 +1244,27 @@ for the code provided"))
       (goto-char (point-min))
       (insert (format "[#%s] " issue-number)))))
 
+(defun tree-to-buffer (&optional directory tree-args)
+  "Run 'tree' on DIRECTORY (defaults to current buffer's directory) with TREE-ARGS and dump output into a buffer.
+Checks if 'tree' is installed first.
+
+With prefix argument, prompts for DIRECTORY and TREE-ARGS."
+  (interactive
+   (if current-prefix-arg
+       (list (read-directory-name "Directory for tree: " default-directory)
+             (read-string "Arguments for tree (e.g., -L 2 -a): "))
+     (list nil nil)))
+  (if (executable-find "tree")
+      (let* ((dir (expand-file-name (or directory default-directory)))
+             (args (or tree-args ""))
+             (buffer (generate-new-buffer "*tree output*")))
+        (with-current-buffer buffer
+          (insert (shell-command-to-string
+                   (string-join (list "tree" args (shell-quote-argument dir)) " ")))
+          (read-only-mode 1))
+        (pop-to-buffer buffer))
+    (error "The 'tree' command is not installed")))
+
 (defun infer-issue-number-from-branch-name (branch-name)
   "Gets the implied issue number out of BRANCH-NAME."
   (if (string-match "\\([[:alpha:]]+\\)\\([[:digit:]]+\\).*" branch-name)
@@ -1267,3 +1306,6 @@ for the code provided"))
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
+(load-file (let ((coding-system-for-read 'utf-8))
+                (shell-command-to-string "agda --emacs-mode locate")))
