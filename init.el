@@ -260,11 +260,7 @@ Returns:
 
 (use-package clang-format
   :ensure t
-  :hook ((c-mode c++-mode) . (lambda ()
-                               (add-hook 'before-save-hook
-                                         'clang-format-buffer
-                                         nil
-                                         t)))
+  :hook ((c-mode c++-mode) . #'clang-format-on-save)
   :config
   (let ((clang-format-exec
          (executable-find "clang-format")))
@@ -282,7 +278,10 @@ Returns:
   (cmake-ide-setup))
 
 (use-package compile
-  :ensure t)
+  :ensure t
+  :bind (:map
+         c++-mode-map
+         ()))
 
 (use-package ein)
 
@@ -469,6 +468,9 @@ that as the default suggestion."
 (use-package pyvenv
   :ensure t
   :after (lsp-pyright)
+  :bind (:map
+         python-mode-map
+         ("C-c v a" . activate-default-venv))
   :config
   (pyvenv-mode t)
   (setenv "WORKON_HOME"
@@ -481,9 +483,7 @@ that as the default suggestion."
   (setq pyvenv-post-deactivate-hooks
         (list
          (lambda ()
-           (setq python-shell-interpreter "python3"))))
-  (define-key python-mode-map (kbd "C-c v a") #'activate-default-venv))
-
+           (setq python-shell-interpreter "python3")))))
 
 (use-package lsp-sourcekit
   :after lsp-mode
@@ -1302,7 +1302,84 @@ With prefix argument, prompts for DIRECTORY and TREE-ARGS."
   "Add clang-format-buffer to before-save-hook for the current buffer."
   (when (executable-find "clang-format")
     (add-hook 'before-save-hook #'clang-format-buffer nil 'local)))
-(add-hook 'c++-mode-hook #'clang-format-on-save)
+
+(defun my/c-family-inferred-build-system ()
+  "Return the C-family build system inferred from the current directory.
+Checks for \"CMakeLists.txt\", \"autoconf.ac\" and \"Makefile\".
+Returns one of the symbols: 'cmake, 'autotools, 'make, or 'unknown."
+  (cond
+   ((locate-dominating-file default-directory "CMakeLists.txt") 'cmake)
+   ((locate-dominating-file default-directory "autoconf.ac")    'autotools)
+   ((locate-dominating-file default-directory "Makefile")      'make)
+   (t                                                           'unknown)))
+
+(defun my/c-family-project-root ()
+  "Return the root directory of the current C-family project.
+Checks for an LSP workspace root, or the nearest directory containing
+.git, CMakeLists.txt, autoconf.ac, or Makefile."
+  (or (when (fboundp 'lsp-workspace-root) (lsp-workspace-root))
+      (locate-dominating-file default-directory ".git")
+      (locate-dominating-file default-directory "CMakeLists.txt")
+      (locate-dominating-file default-directory "autoconf.ac")
+      (locate-dominating-file default-directory "Makefile")))
+
+(defun my/cmake-configure-command (project-root-dir)
+  "Return a CMake configure command for PROJECT-ROOT-DIR."
+  (format "cmake -S %s -B %s -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+          project-root-dir
+          (file-name-concat project-root-dir "build")))
+
+(defun my/cmake-compile-command (project-root-dir)
+  "Return a CMake build command for PROJECT-ROOT-DIR."
+  (format "cmake --build %s"
+          (file-name-concat project-root-dir "build")))
+
+(defun my/cmake-test-command (project-root-dir)
+  "Return a CTest command for PROJECT-ROOT-DIR."
+  (format "ctest --test-dir %s --output-on-failure"
+          (file-name-concat project-root-dir "build")))
+
+(defun my/c-family-infer-configure-command ()
+  "Infer and return the configure command for the current C-family project."
+  (let ((root   (my/c-family-project-root))
+        (system (my/c-family-inferred-build-system)))
+    (if root
+        (cond
+         ((eq system 'cmake) (my/cmake-configure-command root))
+         (t (error "my/c-family-infer-configure-command: %s not supported" system)))
+      (error "my/c-family-infer-configure-command: unable to infer project root"))))
+
+(defun my/c-family-infer-build-command ()
+  "Infer and return the build command for the current C-family project."
+  (let ((root   (my/c-family-project-root))
+        (system (my/c-family-inferred-build-system)))
+    (if root
+        (cond
+         ((eq system 'cmake) (my/cmake-compile-command root))
+         (t (error "my/c-family-infer-build-command: %s not supported" system)))
+      (error "my/c-family-infer-build-command: unable to infer project root"))))
+
+(defun my/c-family-infer-test-command ()
+  "Infer and return the test command for the current C-family project."
+  (let ((root   (my/c-family-project-root))
+        (system (my/c-family-inferred-build-system)))
+    (if root
+        (cond
+         ((eq system 'cmake) (my/cmake-test-command root))
+         (t (error "my/c-family-infer-test-command: %s not supported" system)))
+      (error "my/c-family-infer-test-command: unable to infer project root"))))
+
+(defun my/c-family-configure ()
+  "Run the configure command for the current C-family project."
+  (compile (my/c-family-infer-configure-command)))
+
+(defun my/c-family-build ()
+  "Run the build command for the current C-family project."
+  (compile (my/c-family-infer-build-command)))
+
+(defun my/c-family-test ()
+  "Run the test command for the current C-family project."
+  (compile (my/c-family-infer-test-command)))
 
 (provide 'init)
 ;;; init.el ends here
