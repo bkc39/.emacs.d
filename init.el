@@ -259,7 +259,18 @@ Returns:
               'cider-macroexpand-1))
 
 (use-package clang-format
-  :ensure t)
+  :ensure t
+  :hook ((c-mode c++-mode) . (lambda ()
+                               (add-hook 'before-save-hook
+                                         'clang-format-buffer
+                                         nil
+                                         t)))
+  :config
+  (let ((clang-format-exec
+         (executable-find "clang-format")))
+    (if clang-format-exec
+        (setq clang-format-executable clang-format-exec)
+      (warn "clang-format not found!"))))
 
 (use-package cmake-mode
   :ensure t
@@ -270,6 +281,8 @@ Returns:
   :config
   (cmake-ide-setup))
 
+(use-package compile
+  :ensure t)
 
 (use-package ein)
 
@@ -292,7 +305,9 @@ Returns:
 
 (use-package flycheck
   :ensure t
-  :hook (emacs-lisp-mode . flycheck-mode))
+  :hook ((emacs-lisp-mode . flycheck-mode)
+         (c-mode . flycheck-mode)
+         (c++-mode . flycheck-mode)))
 
 (use-package go-mode
   :after lsp-mode
@@ -344,7 +359,12 @@ Returns:
      "[/\\\\]__pycache__$" "[/\\\\]build$" "[/\\\\]dist$"))
   :config
   (setq lsp-enable-file-watchers nil
-        lsp-file-watch-threshold 10000))
+        lsp-file-watch-threshold 10000
+        lsp-prefer-flymake nil
+        lsp-clients-clangd-args '("--clang-tidy"))
+  (awhen (executable-find "clangd")
+    (setq lsp-clangd-binary-path it)))
+
 
 (defun check-for-python-executable-in-dir (dir bin-name)
   (let ((executable (concat dir "/" bin-name)))
