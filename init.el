@@ -279,9 +279,11 @@ Returns:
 
 (use-package compile
   :ensure t
-  :bind (:map
-         c++-mode-map
-         ()))
+  :after cc-mode
+  :bind (:map c++-mode-map
+              ("C-c C-f" . my/c-family-configure)
+              ("C-c C-c" . my/c-family-build)
+              ("C-c C-t" . my/c-family-test)))
 
 (use-package ein)
 
@@ -1371,14 +1373,17 @@ Checks for an LSP workspace root, or the nearest directory containing
 
 (defun my/c-family-configure ()
   "Run the configure command for the current C-family project."
+  (interactive)
   (compile (my/c-family-infer-configure-command)))
 
 (defun my/c-family-build ()
   "Run the build command for the current C-family project."
+  (interactive)
   (compile (my/c-family-infer-build-command)))
 
 (defun my/c-family-test ()
   "Run the test command for the current C-family project."
+  (interactive)
   (compile (my/c-family-infer-test-command)))
 
 (provide 'init)
