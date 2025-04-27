@@ -201,6 +201,23 @@ Returns:
 
 (use-package ag)
 
+(use-package agda2-mode
+  :straight (agda :type git
+                  :host github
+                  :repo "agda/agda"
+                  :tag "v2.7.0.1"
+                  :files (:defaults "src/data/emacs-mode/*.el"))
+  :mode ("\\.agda\\'" "\\.lagda\\.md\\'")
+  :init
+  ;; Optional: Add Agda binary path to exec-path, adjust the path as needed
+  ;;(add-to-list 'exec-path "/path/to/agda/bin/")
+  :config
+  ;; Additional configuration can be added here
+  )
+
+(use-package doom-themes
+  :ensure t)
+
 (use-package aweshell
   :straight (:host github
                    :repo "manateelazycat/aweshell"
@@ -241,9 +258,38 @@ Returns:
               (kbd "C-c C-r RET")
               'cider-macroexpand-1))
 
-(use-package cmake-mode)
+(use-package clang-format
+  :ensure t
+  :hook ((c-mode c++-mode) . #'clang-format-on-save)
+  :config
+  (let ((clang-format-exec
+         (executable-find "clang-format")))
+    (if clang-format-exec
+        (setq clang-format-executable clang-format-exec)
+      (warn "clang-format not found!"))))
+
+(use-package cmake-mode
+  :ensure t
+  :mode ("CMakeLists\\.txt\\'" "\\.cmake\\'"))
+
+(use-package cmake-ide
+  :ensure t
+  :config
+  (cmake-ide-setup))
+
+(use-package compile
+  :ensure t
+  :after cc-mode
+  :bind (:map c++-mode-map
+              ("C-c C-f" . my/c-family-configure)
+              ("C-c C-c" . my/c-family-build)
+              ("C-c C-t" . my/c-family-test)))
 
 (use-package ein)
+
+(use-package modern-cpp-font-lock
+  :ensure t
+  :hook (c++-mode . modern-c++-font-lock-mode))
 
 (use-package eshell-prompt-extras
   :config
@@ -260,7 +306,9 @@ Returns:
 
 (use-package flycheck
   :ensure t
-  :hook (emacs-lisp-mode . flycheck-mode))
+  :hook ((emacs-lisp-mode . flycheck-mode)
+         (c-mode . flycheck-mode)
+         (c++-mode . flycheck-mode)))
 
 (use-package go-mode
   :after lsp-mode
@@ -302,7 +350,9 @@ Returns:
   :hook (js-mode . (lambda ()
                      (electric-indent-mode -1)
                      (lsp-deferred)))
-  :hook (rust-mode . #'lsp-deferred)
+  :hook ((rust-mode . #'lsp-deferred)
+         (c++-mode . #'lsp-deferred)
+         (c-mode . #'lsp-deferred))
   :custom
   (lsp-file-watch-ignored
    '("[/\\\\]\\.venv$" "[/\\\\]venv$" "[/\\\\]\\.direnv$"
@@ -310,7 +360,12 @@ Returns:
      "[/\\\\]__pycache__$" "[/\\\\]build$" "[/\\\\]dist$"))
   :config
   (setq lsp-enable-file-watchers nil
-        lsp-file-watch-threshold 10000))
+        lsp-file-watch-threshold 10000
+        lsp-prefer-flymake nil
+        lsp-clients-clangd-args '("--clang-tidy"))
+  (awhen (executable-find "clangd")
+    (setq lsp-clangd-binary-path it)))
+
 
 (defun check-for-python-executable-in-dir (dir bin-name)
   (let ((executable (concat dir "/" bin-name)))
@@ -415,6 +470,9 @@ that as the default suggestion."
 (use-package pyvenv
   :ensure t
   :after (lsp-pyright)
+  :bind (:map
+         python-mode-map
+         ("C-c v a" . activate-default-venv))
   :config
   (pyvenv-mode t)
   (setenv "WORKON_HOME"
@@ -427,9 +485,7 @@ that as the default suggestion."
   (setq pyvenv-post-deactivate-hooks
         (list
          (lambda ()
-           (setq python-shell-interpreter "python3"))))
-  (define-key python-mode-map (kbd "C-c v a") #'activate-default-venv))
-
+           (setq python-shell-interpreter "python3")))))
 
 (use-package lsp-sourcekit
   :after lsp-mode
@@ -484,15 +540,16 @@ that as the default suggestion."
   :mode ("\\.rkt\\'" . racket-mode)
   :mode ("\\.scrbl'" . racket-hash-lang-mode)
   :hook (racket-mode . racket-unicode-input-method-enable)
-  :config
-  (with-temp-buffer
-    (racket-unicode-input-method-enable)
-    (let ((quail-current-package (assoc "racket-unicode"
-                                        quail-package-alist)))
-      (quail-define-rules
-       ((append . t))
-       ("oplus" ["⊕"])
-       ("otimes" ["⊗"])))))
+  ;; :config
+  ;; (with-temp-buffer
+  ;;   (racket-unicode-input-method-enable)
+  ;;   (let ((quail-current-package (assoc "racket-unicode"
+  ;;                                       quail-package-alist)))
+  ;;     (quail-define-rules
+  ;;      ((append . t))
+  ;;      ("oplus" ["⊕"])
+  ;;      ("otimes" ["⊗"]))))
+  )
 
 (defun rust-run-with-args ()
   "Run with cargo run and additional command line arguments."
@@ -1209,6 +1266,27 @@ for the code provided"))
       (goto-char (point-min))
       (insert (format "[#%s] " issue-number)))))
 
+(defun tree-to-buffer (&optional directory tree-args)
+  "Run 'tree' on DIRECTORY (defaults to current buffer's directory) with TREE-ARGS and dump output into a buffer.
+Checks if 'tree' is installed first.
+
+With prefix argument, prompts for DIRECTORY and TREE-ARGS."
+  (interactive
+   (if current-prefix-arg
+       (list (read-directory-name "Directory for tree: " default-directory)
+             (read-string "Arguments for tree (e.g., -L 2 -a): "))
+     (list nil nil)))
+  (if (executable-find "tree")
+      (let* ((dir (expand-file-name (or directory default-directory)))
+             (args (or tree-args ""))
+             (buffer (generate-new-buffer "*tree output*")))
+        (with-current-buffer buffer
+          (insert (shell-command-to-string
+                   (string-join (list "tree" args (shell-quote-argument dir)) " ")))
+          (read-only-mode 1))
+        (pop-to-buffer buffer))
+    (error "The 'tree' command is not installed")))
+
 (defun infer-issue-number-from-branch-name (branch-name)
   "Gets the implied issue number out of BRANCH-NAME."
   (if (string-match "\\([[:alpha:]]+\\)\\([[:digit:]]+\\).*" branch-name)
@@ -1222,9 +1300,116 @@ for the code provided"))
   (let ((buffer-prefix (car (split-string (buffer-string)))))
     (string-match "\\[\\#[[:digit:]]+\\]" buffer-prefix)))
 
+(defun clang-format-on-save ()
+  "Add clang-format-buffer to before-save-hook for the current buffer."
+  (when (executable-find "clang-format")
+    (add-hook 'before-save-hook #'clang-format-buffer nil 'local)))
+
+(defun my/c-family-inferred-build-system ()
+  "Return the C-family build system inferred from the current directory.
+Checks for \"CMakeLists.txt\", \"autoconf.ac\" and \"Makefile\".
+Returns one of the symbols: 'cmake, 'autotools, 'make, or 'unknown."
+  (cond
+   ((locate-dominating-file default-directory "CMakeLists.txt") 'cmake)
+   ((locate-dominating-file default-directory "autoconf.ac")    'autotools)
+   ((locate-dominating-file default-directory "Makefile")      'make)
+   (t                                                           'unknown)))
+
+(defun my/c-family-project-root ()
+  "Return the root directory of the current C-family project.
+Checks for an LSP workspace root, or the nearest directory containing
+.git, CMakeLists.txt, autoconf.ac, or Makefile."
+  (or (when (fboundp 'lsp-workspace-root) (lsp-workspace-root))
+      (locate-dominating-file default-directory ".git")
+      (locate-dominating-file default-directory "CMakeLists.txt")
+      (locate-dominating-file default-directory "autoconf.ac")
+      (locate-dominating-file default-directory "Makefile")))
+
+(defun my/cmake-configure-command (project-root-dir)
+  "Return a CMake configure command for PROJECT-ROOT-DIR."
+  (format "cmake -S %s -B %s -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+          project-root-dir
+          (file-name-concat project-root-dir "build")))
+
+(defun my/cmake-compile-command (project-root-dir)
+  "Return a CMake build command for PROJECT-ROOT-DIR."
+  (format "cmake --build %s"
+          (file-name-concat project-root-dir "build")))
+
+(defun my/cmake-test-command (project-root-dir)
+  "Return a CTest command for PROJECT-ROOT-DIR."
+  (format "ctest --test-dir %s --output-on-failure"
+          (file-name-concat project-root-dir "build")))
+
+(defun my/c-family-infer-configure-command ()
+  "Infer and return the configure command for the current C-family project."
+  (let ((root   (my/c-family-project-root))
+        (system (my/c-family-inferred-build-system)))
+    (if root
+        (cond
+         ((eq system 'cmake) (my/cmake-configure-command root))
+         (t (error "my/c-family-infer-configure-command: %s not supported" system)))
+      (error "my/c-family-infer-configure-command: unable to infer project root"))))
+
+(defun my/c-family-infer-build-command ()
+  "Infer and return the build command for the current C-family project."
+  (let ((root   (my/c-family-project-root))
+        (system (my/c-family-inferred-build-system)))
+    (if root
+        (cond
+         ((eq system 'cmake) (my/cmake-compile-command root))
+         (t (error "my/c-family-infer-build-command: %s not supported" system)))
+      (error "my/c-family-infer-build-command: unable to infer project root"))))
+
+(defun my/c-family-infer-test-command ()
+  "Infer and return the test command for the current C-family project."
+  (let ((root   (my/c-family-project-root))
+        (system (my/c-family-inferred-build-system)))
+    (if root
+        (cond
+         ((eq system 'cmake) (my/cmake-test-command root))
+         (t (error "my/c-family-infer-test-command: %s not supported" system)))
+      (error "my/c-family-infer-test-command: unable to infer project root"))))
+
+(defun my/c-family-configure ()
+  "Run the configure command for the current C-family project."
+  (interactive)
+  (compile (my/c-family-infer-configure-command)))
+
+(defun my/c-family-build ()
+  "Run the build command for the current C-family project."
+  (interactive)
+  (compile (my/c-family-infer-build-command)))
+
+(defun my/c-family-test ()
+  "Run the test command for the current C-family project."
+  (interactive)
+  (compile (my/c-family-infer-test-command)))
+
 (provide 'init)
 ;;; init.el ends here
 ;; ## added by OPAM user-setup for emacs / base ## 56ab50dc8996d2bb95e7856a6eddb17b ## you can edit, but keep this line
-(when (executable-find "ocaml")
-  (require 'opam-user-setup "~/.emacs.d/opam-user-setup.el"))
+
+(let ((opam-user-setup-file
+       "~/.emacs.d/opam-user-setup.el"))
+  (when (file-exists-p opam-user-setup-file)
+    (require 'opam-user-setup "~/.emacs.d/opam-user-setup.el")))
+
 ;; ## end of OPAM user-setup addition for emacs / base ## keep this line
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(lsp-file-watch-ignored-directories
+   '("[/\\\\]\\.venv$" "[/\\\\]venv$" "[/\\\\]\\.direnv$" "[/\\\\]\\.mypy_cache$" "[/\\\\]\\.pytest_cache$" "[/\\\\]__pycache__$" "[/\\\\]build$" "[/\\\\]dist$") nil nil "Customized with use-package lsp-mode")
+ '(safe-local-variable-values '((project-root . "."))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+
+(load-file (let ((coding-system-for-read 'utf-8))
+                (shell-command-to-string "agda --emacs-mode locate")))
