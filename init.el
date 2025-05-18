@@ -319,10 +319,12 @@ Returns:
       (add-hookq go-mode-hook #'lsp-deferred)
     (message "go-mode LSP plugin gopls is not installed!")))
 
+(use-package uuidgen)
+
 (use-package gptel
   :ensure t
   :config
-  (setq gptel-model "gpt-4o"
+  (setq gptel-model "o4-mini"
         gptel-api-key (get-openai-api-key))
   (ensure-gptel-directives-loaded)
   (setq-default
