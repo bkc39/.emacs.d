@@ -338,6 +338,9 @@ Returns:
   (gptel-make-anthropic "Claude"
     :stream t
     :key (get-anthropic-api-key))
+  (gptel-make-xai "xAI"
+    :stream t
+    :key #'get-xai-api-key)
   :bind (("C-c RET" . gptel-send)
          ("C-c q" . gptel-quick)
          ("C-c M-d" . gptel-diff)
@@ -799,6 +802,29 @@ Returns:
 Raises:
   Error if the API key cannot be loaded."
   (get-api-key-from-env-or-file "ANTHROPIC_API_KEY" "~/.anthropic"))
+
+
+
+;; Step 1: Define get-xai-api-key function
+(defun get-xai-api-key ()
+  "Get the xAI API key from the environment variable 'XAI_API_KEY'.
+
+If the environment variable is not defined, load the key from the
+~/.xai file. Returns the API key as a string.
+
+Example Usage:
+  (get-xai-api-key)
+
+This will return the API key string from the environment variable
+'XAI_API_KEY' or from the ~/.xai file.
+
+Returns:
+  string: The xAI API key.
+
+Raises:
+  Error if the API key cannot be loaded."
+  ;; Step 2: Use get-api-key-from-env-or-file to implement
+  (get-api-key-from-env-or-file "XAI_API_KEY" "~/.xai"))
 
 (defmacro with-defined-functions (symbols &rest body)
   "Execute BODY only if all SYMBOLS are bound as functions.
