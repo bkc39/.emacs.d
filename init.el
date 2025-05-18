@@ -325,7 +325,7 @@ Returns:
   :ensure t
   :config
   (setq gptel-model "o4-mini"
-        gptel-api-key (get-openai-api-key))
+        gptel-api-key #'get-openai-api-key)
   (ensure-gptel-directives-loaded)
   (setq-default
    gptel--system-message
@@ -337,7 +337,7 @@ Returns:
     :stream t)
   (gptel-make-anthropic "Claude"
     :stream t
-    :key (get-anthropic-api-key))
+    :key #'get-anthropic-api-key)
   (gptel-make-xai "xAI"
     :stream t
     :key #'get-xai-api-key)
