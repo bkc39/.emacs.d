@@ -323,6 +323,39 @@ Returns:
          ("C-c M-s" . gptel-document-symbol-at-point)
          ("C-c M-t" . gptel-tests-for-symbol-at-point)))
 
+(defvar bkc-org-directory "~/.org"
+  "Default value for ORG-DIRECTORY.")
+
+(defvar bkc-default-notes "todo.org"
+  "Default todo list file.")
+
+(defun bkc-todo-file ()
+  "Get the default value of the todo list file."
+  (file-name-concat bkc-org-directory bkc-default-notes))
+
+(use-package org
+  :ensure nil
+  :hook (org-mode . visual-line-mode)
+  :bind (("C-c c" . org-capture)
+         ("C-c a" . org-agenda))
+  :init
+  (setq org-directory bkc-org-directory
+        org-default-notes-file (bkc-todo-file)
+        org-agenda-files (list (bkc-todo-file))
+        org-todo-keywords '((sequence "TODO(t)" "IN-PROGRESS(i)" "BLOCKER(b@/!)" "|" "DONE(d)" "CANCELED(c@)"))
+        org-highest-priority ?A
+        org-lowest-priority ?C
+        org-default-priority ?B
+        org-log-done 'time
+        org-tag-alist '(("research" . ?w) ("infra" . ?e))
+        org-fast-tag-selection-single-key 'expert
+        org-clock-persist 'history)
+  :config
+  (org-clock-persistence-insinuate)
+  (setq org-capture-templates
+        '(("t" "Todo" entry (file+headline (bkc-todo-file) "Inbox")
+           "* TODO %?\n  %u\n  %a"))))
+
 (use-package lsp-mode
   :init
   (setq lsp-keymap-prefix "C-c l")
