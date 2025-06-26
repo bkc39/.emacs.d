@@ -1341,6 +1341,49 @@ Check file local variables, if owner is 'bkc', add 'blacken-buffer' to
               (string= (cdr (assoc 'owner file-local-variables-alist)) "bkc")))
     (add-hook 'before-save-hook #'blacken-buffer nil t)))
 
+(setq org-todo-keywords
+      '((sequence "TODO" "STARTED" "DONE")))
+
+(defvar twix-mate-root-directory "/home/bkc/repos/rl_dml_slave/"
+  "Root directory for twix mate project.")
+
+(defvar twix-pytest-test-directories
+  '("rl_research/networks/datasets/statarb/tests/")
+  "List of directories to pass to pytest.")
+
+(require 'ansi-color)
+
+(defun twix--pytest-build-command ()
+  (format "MATE_ROOT=%s pytest %s"
+          (shell-quote-argument twix-mate-root-directory)
+          (mapconcat (lambda (dir)
+                       (shell-quote-argument (expand-file-name dir twix-mate-root-directory)))
+                     twix-pytest-test-directories " ")))
+
+(defun twix--pytest-filter (proc string)
+  (let ((buffer (process-buffer proc)))
+    (when (buffer-live-p buffer)
+      (with-current-buffer buffer
+        (let ((inhibit-read-only t)
+              (moving (= (point) (process-mark proc))))
+          (save-excursion
+            (goto-char (process-mark proc))
+            (insert (ansi-color-apply string))
+            (set-marker (process-mark proc) (point)))
+          (if moving (goto-char (process-mark proc))))))))
+
+(defun run-twix-pytest ()
+  (interactive)
+  (let ((buffer-name "*twix-pytest*"))
+    (with-current-buffer (get-buffer-create buffer-name)
+      (erase-buffer)
+      (let ((proc (start-process-shell-command "twix-pytest"
+                                               (current-buffer)
+                                               (twix--pytest-build-command))))
+        (set-process-filter proc 'twix--pytest-filter))
+      (display-buffer (current-buffer)))))
+
+
 (provide 'init)
 ;;; init.el ends here
 ;; ## added by OPAM user-setup for emacs / base ## 56ab50dc8996d2bb95e7856a6eddb17b ## you can edit, but keep this line
@@ -1365,7 +1408,3 @@ Check file local variables, if owner is 'bkc', add 'blacken-buffer' to
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(company-preview ((t (:background nil :foreground "gray")))))
-
-(defvar test
-  'test
-  "Checking if this worked.")
