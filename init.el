@@ -232,7 +232,16 @@ Returns:
 (use-package blacken
   :ensure t
   :config
-  (setq blacken-line-length 120)
+  (if (on-pinely-host)
+      (progn
+        (setq blacken-executable "twix-python")
+        (setq blacken-command-line-args
+              (list
+               "-m" "black"
+               "--config"  (concat (getenv "MATE_ROOT")
+                                   "/pyproject.toml"))))
+    (progn
+      (setq blacken-line-length 80)))
   :hook (python-mode . blacken-mode))
 
 (use-package company
@@ -450,21 +459,30 @@ Warn if the file specified by `system-name-file` does not exist."
   :hook (before-save . organize-python-imports)
   ;; :hook (python-mode . rebind-run-python-hotkey)
   :config
-  (progn
-    (when (on-pinely-host)
-      (setq python-shell-interpreter "twix-python"))
-    (setq
-     blacken-executable (search-venv-for-black-executable))
-    (setq lsp-pyright-use-library-code-for-types t)
-    (let* ((pyright-stubs-root-dir
-            (getenv "PYRIGHT_TYPE_STUBS_ROOT"))
-           (pyright-stubs-dir
-            (concat pyright-stubs-root-dir
-                    "/python-type-stubs")))
-      (when (and pyright-stubs-root-dir
-                 pyright-stubs-dir)
-        (setq lsp-pyright-stubs-path
-              pyright-stubs-dir)))))
+  (if (on-pinely-host)
+      (progn
+        (setq python-shell-interpreter "twix-python")
+        (setq lsp-pyright-python-executable-cmd "twix-python")
+        (setq lsp-pyright-langserver-command
+              '("/usr/bin/twix-python"
+                "-m" "pyright"
+                "--pythonpath" "/usr/bin/twix-python"
+                "--project" "/home/bkc/repos/rl_dml_slave/pyproject.toml")))
+
+    (progn
+      (setq
+       blacken-executable (search-venv-for-black-executable))
+      (setq lsp-pyright-use-library-code-for-types t)
+      (let* ((pyright-stubs-root-dir
+              (getenv "PYRIGHT_TYPE_STUBS_ROOT"))
+             (pyright-stubs-dir
+              (concat pyright-stubs-root-dir
+                      "/python-type-stubs")))
+        (when (and pyright-stubs-root-dir
+                   pyright-stubs-dir)
+          (setq lsp-pyright-stubs-path
+                pyright-stubs-dir))))))
+
 
 (defun try-locate-venv-named (venv-name)
   "Try to locate a virtual environment named VENV-NAME.
@@ -1127,6 +1145,28 @@ in the kill ring."
    "Write a git commit message for this diff. Include ONLY the message.
 Be terse. Provide messages whose lines are at most 80 characters"))
 
+(defun my/magit-diff-master ()
+  (let ((diff-buffer
+         (with-temp-buffer
+           (magit-diff-range "origin/master")
+           (buffer-string))))
+    (concat
+     "Generate a pull request description summarizing the changes:\n\n"
+     diff-buffer)))
+
+(defun my/magit-pull-master-body (gptel-response)
+  (if (not gptel-response)
+      (message "%s failed with message: %s"
+               'gptel-pull-request
+               (plist-get *gptel-request-info* :status))
+    (with-current-buffer (get-buffer-create "*gptel-pull-request*")
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert gptel-response))
+      (special-mode)
+      (pop-to-buffer (current-buffer))
+      (clipboard+kill-ring-save (point-min) (point-max))
+      (message "pull request body in kill ring"))))
 
 (defgptelfn gptel-pull-request ()
   "Generate a GitHub pull request description by diffing with origin/master.
@@ -1136,26 +1176,38 @@ in a special buffer named *gptel-pull-request* and copies it to the
 clipboard and kill ring."
   :command nil
   :prompt
+  (my/magit-diff-master)
+  :body
+  (my/magit-pull-master-body *gptel-response*)
+  :extra-args
+  (make-gptel-system-prompt-args
+   'pullrequest
+   "Summarize the changes for a GitHub pull request description."))
+
+(defgptelfn gptel-pinely-merge ()
+  "Generate a GitHub pull request description from staged changes."
+  :command nil
+  :prompt
   (let ((diff-buffer
          (with-temp-buffer
-           (magit-diff-range "origin/master")
-           (buffer-string))))
-    (concat
-     "Generate a pull request description summarizing the changes:\n\n"
-     diff-buffer))
+           (magit-diff-staged)
+           (buffer-name))))
+    (with-current-buffer diff-buffer
+      (buffer-substring-no-properties (point-min) (point-max))))
   :body
   (if (not *gptel-response*)
       (message "%s failed with message: %s"
-               'gptel-pull-request
+               'gptel-pinely-merge
                (plist-get *gptel-request-info* :status))
-    (with-current-buffer (get-buffer-create "*gptel-pull-request*")
+    (with-current-buffer
+        (get-buffer-create "*gptel-pinely-merge*")
       (let ((inhibit-read-only t))
         (erase-buffer)
         (insert *gptel-response*))
       (special-mode)
       (pop-to-buffer (current-buffer))
       (clipboard+kill-ring-save (point-min) (point-max))
-      (message "pull request body in kill ring")))
+      (message "pinely merge body in kill ring")))
   :extra-args
   (make-gptel-system-prompt-args
    'pullrequest
