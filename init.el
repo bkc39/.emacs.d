@@ -234,14 +234,11 @@ Returns:
   :config
   (if (on-pinely-host)
       (progn
-        (setq blacken-executable "twix-python")
-        (setq blacken-command-line-args
-              (list
-               "-m" "black"
-               "--config"  (concat (getenv "MATE_ROOT")
-                                   "/pyproject.toml"))))
+        (setq blacken-executable "/home/bkc/twix-black.sh"))
+
     (progn
       (setq blacken-line-length 80)))
+
   :hook (python-mode . blacken-mode))
 
 (use-package company
@@ -311,7 +308,7 @@ Returns:
 (use-package gptel
   :ensure t
   :config
-  (setq gptel-model "gpt-4.5-preview"
+  (setq gptel-model "gpt-4.1"
         gptel-api-key (get-openai-api-key))
   (ensure-gptel-directives-loaded)
   (setq-default
@@ -369,10 +366,6 @@ Returns:
   :init
   (setq lsp-keymap-prefix "C-c l")
   :commands lsp
-  :hook (js-mode . (lambda ()
-                     (electric-indent-mode -1)
-                     (lsp-deferred)))
-  :hook (rust-mode . #'lsp-deferred)
   :custom
   (lsp-file-watch-ignored
    '("[/\\\\]\\.venv$" "[/\\\\]venv$" "[/\\\\]\\.direnv$"
@@ -391,6 +384,25 @@ Returns:
   (interactive)
   (when (and (eq major-mode 'python-mode) (bound-and-true-p lsp-mode))
     (lsp-pyright-organize-imports)))
+
+(defun python-file-to-import-path ()
+  "Return the Python import path of the current python file.
+
+Prefixes with 'twix' and stripping MATE_ROOT.  Copies path to kill ring.
+Interactive."
+  (interactive)
+  (let* ((filename (or buffer-file-name default-directory))
+         (root (file-name-as-directory (getenv "MATE_ROOT"))))
+    (if (and filename (string-match-p "\\.py\\'" filename))
+        (let* ((relative (if (string-prefix-p root filename)
+                             (substring filename (length root))
+                           filename))
+               (base (file-name-sans-extension relative))
+               (import-path (concat "import twix." (replace-regexp-in-string "/" "." base))))
+          (kill-new import-path)
+          (message "%s" import-path)
+          import-path)
+      (user-error "Not visiting a .py file"))))
 
 (defun reset-lsp-python-workspace (folder)
   "Reset LSP Python workspace.
@@ -454,35 +466,59 @@ Warn if the file specified by `system-name-file` does not exist."
                             (string-trim (buffer-string)))))
         (string= file-content (system-name))))))
 
+(when (and (on-pinely-host) (not (getenv "MATE_ROOT")))
+  (setenv "MATE_ROOT" "/home/bkc/twix"))
+
+;; (use-package lsp-pyright
+;;   ;; :hook (python-mode . lsp-deferred)
+;;   :after lsp-mode
+;;   :hook (before-save . organize-python-imports)
+;;   ;; :hook (python-mode . rebind-run-python-hotkey)
+;;   :init (when (on-pinely-host)
+;;           (setq
+;;            lsp-pyright-extra-paths
+;;            '("/usr/twix/python3.11/lib/python3.11/site-packages")))
+;;   :config
+;;   (if (on-pinely-host)
+;;       (progn
+;;         (setq python-shell-interpreter "twix-python")
+;;         (setq lsp-pyright-python-executable-cmd "twix-python")
+;;         (setq lsp-pyright-langserver-command (list (or (executable-find "pyright-langserver") "pyright")))
+;;         (setq lsp-pyright-langserver-command-args
+;;               '("--stdio" "--project" "/home/bkc/repos/rl_dml_slave/pyproject.toml"))
+;;         (setq lsp-pyright-disable-language-service nil)
+;;         (setq lsp-pyright-disable-organize-imports nil)
+;;         (setq lsp-pyright-auto-import-completions t)
+;;         (setq lsp-pyright-use-library-code-for-types t))
+;;     (progn
+;;       (setq
+;;        blacken-executable (search-venv-for-black-executable))
+;;       (setq lsp-pyright-use-library-code-for-types t)
+;;       (let* ((pyright-stubs-root-dir
+;;               (getenv "PYRIGHT_TYPE_STUBS_ROOT"))
+;;              (pyright-stubs-dir
+;;               (concat pyright-stubs-root-dir
+;;                       "/python-type-stubs")))
+;;         (when (and pyright-stubs-root-dir
+;;                    pyright-stubs-dir)
+;;           (setq lsp-pyright-stubs-path
+;;                 pyright-stubs-dir))))))
+
+
+(defun python-buffer-whitespace-cleanup ()
+  "Clean up whitespace in the current Python buffer."
+  (when (and (buffer-file-name)
+             (string-match-p "\\.py'" (buffer-file-name)))
+    (whitespace-cleanup)))
+
+
 (use-package lsp-pyright
-  ;; :hook (python-mode . lsp-deferred)
-  :hook (before-save . organize-python-imports)
-  ;; :hook (python-mode . rebind-run-python-hotkey)
-  :config
-  (if (on-pinely-host)
-      (progn
-        (setq python-shell-interpreter "twix-python")
-        (setq lsp-pyright-python-executable-cmd "twix-python")
-        (setq lsp-pyright-langserver-command
-              '("/usr/bin/twix-python"
-                "-m" "pyright"
-                "--pythonpath" "/usr/bin/twix-python"
-                "--project" "/home/bkc/repos/rl_dml_slave/pyproject.toml")))
-
-    (progn
-      (setq
-       blacken-executable (search-venv-for-black-executable))
-      (setq lsp-pyright-use-library-code-for-types t)
-      (let* ((pyright-stubs-root-dir
-              (getenv "PYRIGHT_TYPE_STUBS_ROOT"))
-             (pyright-stubs-dir
-              (concat pyright-stubs-root-dir
-                      "/python-type-stubs")))
-        (when (and pyright-stubs-root-dir
-                   pyright-stubs-dir)
-          (setq lsp-pyright-stubs-path
-                pyright-stubs-dir))))))
-
+  :ensure t
+  :after lsp-mode
+  :hook
+  ((python-mode . lsp-deferred)
+   (before-save . python-buffer-whitespace-cleanup)
+   (before-save . organize-python-imports)))
 
 (defun try-locate-venv-named (venv-name)
   "Try to locate a virtual environment named VENV-NAME.
@@ -510,23 +546,23 @@ that as the default suggestion."
          default-directory))))
   (pyvenv-activate venv-path))
 
-(use-package pyvenv
-  :ensure t
-  :after (lsp-pyright)
-  :config
-  (pyvenv-mode t)
-  (setenv "WORKON_HOME"
-          (expand-file-name "~/.python-virtual-envs"))
-  (setq pyvenv-post-activate-hooks
-        (list
-         (lambda ()
-           (setq python-shell-interpreter
-                 (concat pyvenv-virtual-env "/bin/python3")))))
-  (setq pyvenv-post-deactivate-hooks
-        (list
-         (lambda ()
-           (setq python-shell-interpreter "python3"))))
-  (define-key python-mode-map (kbd "C-c v a") #'activate-default-venv))
+;; (use-package pyvenv
+;;   :ensure t
+;;   :after (lsp-pyright)
+;;   :config
+;;   (pyvenv-mode t)
+;;   (setenv "WORKON_HOME"
+;;           (expand-file-name "~/.python-virtual-envs"))
+;;   (setq pyvenv-post-activate-hooks
+;;         (list
+;;          (lambda ()
+;;            (setq python-shell-interpreter
+;;                  (concat pyvenv-virtual-env "/bin/python3")))))
+;;   (setq pyvenv-post-deactivate-hooks
+;;         (list
+;;          (lambda ()
+;;            (setq python-shell-interpreter "python3"))))
+;;   (define-key python-mode-map (kbd "C-c v a") #'activate-default-venv))
 
 
 (use-package lsp-sourcekit
@@ -1435,6 +1471,36 @@ Check file local variables, if owner is 'bkc', add 'blacken-buffer' to
         (set-process-filter proc 'twix--pytest-filter))
       (display-buffer (current-buffer)))))
 
+(use-package copilot
+  :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
+  :hook (prog-mode . copilot-mode)
+  :bind (:map copilot-completion-map
+              ("<tab>" . copilot-accept-completion)
+              ("TAB" . copilot-accept-completion)
+              ("C-c C-n" . copilot-next-completion)
+              ("C-c C-p" . copilot-previous-completion))
+  :config
+  (setq copilot-indent-offset-warning-disable t))
+
+(defvar my/todo-org-file "~/todo.org"
+  "Path to the Org file containing my TODO items.")
+
+(defun my/open-todo-org-file ()
+  "Open `my/todo-org-file', creating it if it doesn't exist, and pop to its buffer."
+  (interactive)
+  (let ((file (expand-file-name my/todo-org-file)))
+    (find-file file)
+    (pop-to-buffer (current-buffer))))
+
+(defvar my/kill-file "~/.kill.txt")
+
+(defun my/region-to-kill-txt (beg end)
+  "Overwrite ~/kill.txt with the contents of the region from BEG to END."
+  (interactive "r")
+  (let ((region-text (buffer-substring-no-properties beg end))
+        (kill-file (expand-file-name my/kill-file)))
+    (with-temp-file kill-file
+      (insert region-text))))
 
 (provide 'init)
 ;;; init.el ends here
