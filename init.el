@@ -205,7 +205,7 @@ Returns:
   :straight (agda :type git
                   :host github
                   :repo "agda/agda"
-                  :tag "v2.7.0.1"
+                  :tag "v2.8.0"
                   :files (:defaults "src/data/emacs-mode/*.el"))
   :mode ("\\.agda\\'" "\\.lagda\\.md\\'")
   :init
