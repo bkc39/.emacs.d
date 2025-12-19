@@ -305,10 +305,15 @@ Returns:
       (add-hookq go-mode-hook #'lsp-deferred)
     (message "go-mode LSP plugin gopls is not installed!")))
 
+
+;; TODO: you need this when you are using gpt-5 and some 4 based models
+;; (setq gptel-stream nil)
+
 (use-package gptel
   :ensure t
   :config
-  (setq gptel-model "gpt-4.1"
+  (setq gptel-model "gpt-5-mini"
+        gptel-stream nil
         gptel-api-key (get-openai-api-key))
   (ensure-gptel-directives-loaded)
   (setq-default
@@ -1480,6 +1485,7 @@ Check file local variables, if owner is 'bkc', add 'blacken-buffer' to
               ("C-c C-n" . copilot-next-completion)
               ("C-c C-p" . copilot-previous-completion))
   :config
+  (setq copilot-idle-delay 3.0)
   (setq copilot-indent-offset-warning-disable t))
 
 (defvar my/todo-org-file "~/todo.org"
@@ -1502,12 +1508,10 @@ Check file local variables, if owner is 'bkc', add 'blacken-buffer' to
     (with-temp-file kill-file
       (insert region-text))))
 
-(provide 'init)
-;;; init.el ends here
-;; ## added by OPAM user-setup for emacs / base ## 56ab50dc8996d2bb95e7856a6eddb17b ## you can edit, but keep this line
 (when (executable-find "ocaml")
   (require 'opam-user-setup "~/.emacs.d/opam-user-setup.el"))
 ;; ## end of OPAM user-setup addition for emacs / base ## keep this line
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -1526,3 +1530,6 @@ Check file local variables, if owner is 'bkc', add 'blacken-buffer' to
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(company-preview ((t (:background nil :foreground "gray")))))
+
+(provide 'init)
+;;; init.el ends here
