@@ -93,6 +93,8 @@
 (use-package exec-path-from-shell
   :if (or (memq window-system '(mac ns))
           (memq system-type '(darwin gnu/linux)))
+  :init
+  (setq exec-path-from-shell-check-startup-files nil)
   :config
   (exec-path-from-shell-initialize))
 

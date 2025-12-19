@@ -87,19 +87,19 @@ Special keyword arguments:
 (defun my/company-face-tweaks ()
   (set-face-attribute
    'company-tooltip-selection nil
-   :background nil
+   :background 'unspecified
    :foreground "gray")
   (set-face-attribute
    'company-tooltip-common-selection nil
-   :background nil
+   :background 'unspecified
    :foreground "gray")
   (set-face-attribute
    'company-tooltip nil
-   :background nil
+   :background 'unspecified
    :foreground "gray")
   (set-face-attribute
    'company-tooltip-common nil
-   :background nil
+   :background 'unspecified
    :foreground "gray"))
 
 (add-hookq after-load-theme-hook #'my/company-face-tweaks)
@@ -568,7 +568,7 @@ Special keyword arguments:
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(company-preview ((t (:background nil :foreground "gray")))))
+ '(company-preview ((t (:background unspecified :foreground "gray")))))
 
 (provide 'config)
 

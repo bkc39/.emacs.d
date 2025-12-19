@@ -67,12 +67,12 @@
   "A list of packages to ensure are installed at launch.")
 
 ;; function to ensure that all of the above packages are installed.
-(eval-when-compile (require 'cl))
+(require 'cl-lib)
 (defun packages-installed-p ()
   "Check if packages are installed."
-  (loop for p in required-packages
-        when (not (package-installed-p p)) do (return nil)
-        finally (return t)))
+  (cl-loop for p in required-packages
+           when (not (package-installed-p p)) do (cl-return nil)
+           finally (cl-return t)))
 
 ;; If not all packages are installed, check them one by one and
 ;; install the missing ones.
