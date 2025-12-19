@@ -41,13 +41,17 @@
   (scroll-bar-mode -1))
 
 ;; Turn off the damn bell
+(add-to-list 'default-frame-alist '(tool-bar-lines . 0))
+(add-to-list 'initial-frame-alist '(tool-bar-lines . 0))
+(set-frame-parameter nil 'tool-bar-lines 0)
 (setq ring-bell-function 'ignore)
 
 ;; Turn off start message
 (setq inhibit-startup-message t)
 
-;; Turns off the tool bar
-(tool-bar-mode -1)
+;; Turns off the tool bar when available (not defined in some builds)
+(when (fboundp 'tool-bar-mode)
+  (tool-bar-mode -1))
 
 ;; Turn off the menu bar
 (menu-bar-mode -1)

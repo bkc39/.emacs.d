@@ -27,7 +27,6 @@
     ensime
     scheme-complete
     racket-mode
-    flycheck
     google-c-style
     ess
     auctex

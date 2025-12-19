@@ -5,6 +5,13 @@
 (require 'package)
 (require 'subr-x)
 
+(setq load-prefer-newer t) ;; prefer source over stale bytecode to avoid load cycles
+
+(dolist (w '((bytecomp) (cl-functions) (emacs)))
+  (add-to-list 'warning-suppress-types w))
+
+(setq native-comp-async-report-warnings-errors nil)
+
 (defmacro add-hookq (hook-name fn)
   "Add FN to the list of functions to be run by HOOK-NAME."
   `(add-hook ',hook-name ,fn))
@@ -189,10 +196,7 @@ Special keyword arguments:
   "Check if we are on the pinely host."
   (interactive)
   (let ((absolute-path (expand-file-name system-name-file)))
-    (if (not (file-exists-p absolute-path))
-        (progn
-          (warn "File not found: %s" absolute-path)
-          nil)
+    (when (file-exists-p absolute-path)
       (let ((file-content (with-temp-buffer
                             (insert-file-contents absolute-path)
                             (string-trim (buffer-string)))))
@@ -364,7 +368,6 @@ Special keyword arguments:
   "Hook to setup tide."
   (interactive)
   (tide-setup)
-  (flycheck-mode +1)
   (eldoc-mode +1)
   (tide-hl-identifier-mode +1)
   (company-mode +1))
@@ -378,8 +381,12 @@ Special keyword arguments:
 (setq column-number-mode t)
 (when (boundp 'scroll-bar-mode)
   (scroll-bar-mode -1))
+(add-to-list 'default-frame-alist '(tool-bar-lines . 0))
+(add-to-list 'initial-frame-alist '(tool-bar-lines . 0))
+(set-frame-parameter nil 'tool-bar-lines 0)
 (setq ring-bell-function 'ignore)
-(tool-bar-mode -1)
+(when (fboundp 'tool-bar-mode)
+  (tool-bar-mode -1))
 (menu-bar-mode -1)
 (setq-default indent-tabs-mode nil)
 (setq-default truncate-lines t)
@@ -546,8 +553,10 @@ Special keyword arguments:
     (with-temp-file kill-file
       (insert region-text))))
 
-(when (executable-find "ocaml")
-  (require 'opam-user-setup "~/.emacs.d/opam-user-setup.el"))
+(let ((opam-setup-file "~/.emacs.d/opam-user-setup.el"))
+  (when (and (executable-find "ocaml")
+             (file-readable-p opam-setup-file))
+    (require 'opam-user-setup opam-setup-file)))
 ;; ## end of OPAM user-setup addition for emacs / base ## keep this line
 
 (provide 'config)

@@ -98,10 +98,6 @@
   :config
   (exec-path-from-shell-initialize))
 
-(use-package flycheck
-  :ensure t
-  :hook (emacs-lisp-mode . flycheck-mode))
-
 (use-package go-mode
   :after lsp-mode
   :hook (go-mode . (lambda ()
@@ -236,8 +232,6 @@
 
 (use-package web-mode
   :mode ("\\.tsx\\'" . web-mode)
-  :config
-  (flycheck-add-mode 'typescript-tslint 'web-mode)
   :custom
   (web-mode-markup-indent-offset 2)
   (web-mode-css-indent-offset 2)
