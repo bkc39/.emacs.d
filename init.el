@@ -277,6 +277,11 @@ Returns:
   (setq doom-themes-enable-bold t
         doom-themes-enable-italic t))
 
+(use-package desert-theme
+  :straight (:host github
+                   :repo "bkc39/desert-theme"
+                   :files ("*.el" "dist")))
+
 (use-package ein)
 
 (use-package eshell-prompt-extras
@@ -695,17 +700,7 @@ that as the default suggestion."
   :config
   (progn
     (load-theme 'zenburn t t)
-    (enable-theme 'zenburn)
-    (with-eval-after-load 'company
-      (set-face-attribute
-       'company-preview nil
-       :background nil
-       :foreground "gray")
-      (set-face-attribute
-       'company-preview-common nil
-       :background nil
-       :foreground "gray"))))
-
+    (enable-theme 'zenburn)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Other configs
@@ -1518,7 +1513,8 @@ Check file local variables, if owner is 'bkc', add 'blacken-buffer' to
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("f87c86fa3d38be32dc557ba3d4cedaaea7bc3d97ce816c0e518dfe9633250e34"
+   '("923cf2ebe5d4f7cf6cccf3f00ab3e6bf8070c2bc385b6a93bdd2bb8317368628"
+     "f87c86fa3d38be32dc557ba3d4cedaaea7bc3d97ce816c0e518dfe9633250e34"
      "30d174000ea9cbddecd6cc695943afb7dba66b302a14f9db5dd65074e70cc744"
      "2b20b4633721cc23869499012a69894293d49e147feeb833663fdc968f240873"
      "34cf3305b35e3a8132a0b1bdf2c67623bc2cb05b125f8d7d26bd51fd16d547ec"
