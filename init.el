@@ -202,6 +202,7 @@ Returns:
 (use-package ag)
 
 (use-package agda2-mode
+  :if (executable-find "agda")
   :straight (agda :type git
                   :host github
                   :repo "agda/agda"
@@ -1414,10 +1415,6 @@ Checks for an LSP workspace root, or the nearest directory containing
   (interactive)
   (compile (my/c-family-infer-test-command)))
 
-(provide 'init)
-;;; init.el ends here
-;; ## added by OPAM user-setup for emacs / base ## 56ab50dc8996d2bb95e7856a6eddb17b ## you can edit, but keep this line
-
 (let ((opam-user-setup-file
        "~/.emacs.d/opam-user-setup.el"))
   (when (file-exists-p opam-user-setup-file)
@@ -1439,5 +1436,11 @@ Checks for an LSP workspace root, or the nearest directory containing
  ;; If there is more than one, they won't work right.
  )
 
-(load-file (let ((coding-system-for-read 'utf-8))
-                (shell-command-to-string "agda --emacs-mode locate")))
+(when (executable-find "agda")
+  (load-file
+   (let ((coding-system-for-read 'utf-8))
+     (shell-command-to-string "agda --emacs-mode locate"))))
+
+(provide 'init)
+;;; init.el ends here
+;; ## added by OPAM user-setup for emacs / base ## 56ab50dc8996d2bb95e7856a6eddb17b ## you can edit, but keep this line
