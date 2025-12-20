@@ -1,6 +1,7 @@
 ;;; packages.el --- Package setup -*- lexical-binding: t; -*-
 
 (require 'config)
+(require 'seq)
 
 (require 'package)
 (setq package-archives
@@ -8,8 +9,29 @@
         ("nongnu" . "https://elpa.nongnu.org/nongnu/")
         ("melpa" . "https://melpa.org/packages/")))
 (package-initialize)
-(unless package-archive-contents
+(defun packages--archive-contents-stale-p ()
+  "Return non-nil when local package metadata is older than a day."
+  (let* ((archives '("gnu" "nongnu" "melpa"))
+         (stale-before (time-subtract (current-time) (days-to-time 1))))
+    (seq-some
+     (lambda (archive)
+       (let ((path (expand-file-name
+                    (format "elpa/archives/%s/archive-contents" archive)
+                    user-emacs-directory)))
+         (and (file-readable-p path)
+              (time-less-p (file-attribute-modification-time
+                            (file-attributes path))
+                           stale-before))))
+     archives)))
+(when (or (null package-archive-contents)
+          (packages--archive-contents-stale-p))
   (package-refresh-contents))
+
+;; Prefer the vendored use-package (with :vc support) over an older ELPA copy.
+(let ((use-package-dir (expand-file-name "straight/repos/use-package"
+                                         user-emacs-directory)))
+  (when (file-directory-p use-package-dir)
+    (add-to-list 'load-path use-package-dir)))
 
 (require 'use-package)
 (when (require 'package-vc nil 'noerror)
@@ -28,6 +50,7 @@
   :bind ("C-c x" . #'aweshell-dedicated-toggle))
 
 (use-package vterm
+  :vc (:url "https://github.com/akermu/emacs-libvterm.git")
   :commands vterm)
 
 (use-package codex-cli
@@ -131,6 +154,14 @@
          ("C-c M-p" . gptel-pull-request)
          ("C-c M-s" . gptel-document-symbol-at-point)
          ("C-c M-t" . gptel-tests-for-symbol-at-point)))
+
+(use-package claude-code
+  :after vterm
+  :vc (:url "https://github.com/yuya373/claude-code-emacs.git"))
+
+(use-package claude-code-ide
+  :after claude-code
+  :vc (:url "https://github.com/manzaltu/claude-code-ide.el.git"))
 
 (use-package lsp-mode
   :init
