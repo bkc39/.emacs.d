@@ -11,11 +11,14 @@
      "34cf3305b35e3a8132a0b1bdf2c67623bc2cb05b125f8d7d26bd51fd16d547ec"
      "b5fd9c7429d52190235f2383e47d340d7ff769f141cd8f9e7a4629a81abc6b19"
      default))
- '(package-selected-packages nil)
+ '(package-selected-packages '(cursor-agent))
  '(package-vc-selected-packages
-   '((copilot :url "https://github.com/copilot-emacs/copilot.el.git")
+   '((cursor-agent :url "https://github.com/bkc39/cursor-agent")
+     (claude-code-ide :url
+                      "https://github.com/manzaltu/claude-code-ide.el.git")
      (claude-code :url
                   "https://github.com/yuya373/claude-code-emacs.git")
+     (copilot :url "https://github.com/copilot-emacs/copilot.el.git")
      (desert-theme :url "https://github.com/bkc39/desert-theme.git")
      (codex-cli :url "https://github.com/bennfocus/codex-cli.el.git")
      (aweshell :url "https://github.com/manateelazycat/aweshell.git"))))

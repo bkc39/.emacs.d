@@ -56,6 +56,13 @@
 (use-package codex-cli
   :vc (:url "https://github.com/bennfocus/codex-cli.el.git"))
 
+(use-package cursor-agent
+  :vc (:url "https://github.com/bkc39/cursor-agent")
+  :when (and (executable-find "cursor-agent")
+             (locate-library "vterm"))
+  :after vterm
+  :commands (cursor-agent cursor-agent-run cursor-agent-restart))
+
 (use-package blacken
   :ensure t
   :config
