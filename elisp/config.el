@@ -7,8 +7,8 @@
 
 (setq load-prefer-newer t) ;; prefer source over stale bytecode to avoid load cycles
 
-(dolist (w '((bytecomp) (cl-functions) (emacs)))
-  (add-to-list 'warning-suppress-types w))
+;; (dolist (w '((bytecomp) (cl-functions) (emacs)))
+;;   (add-to-list 'warning-suppress-types w))
 
 (setq native-comp-async-report-warnings-errors nil)
 

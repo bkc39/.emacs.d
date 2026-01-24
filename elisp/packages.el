@@ -54,6 +54,7 @@
   :commands vterm)
 
 (use-package codex-cli
+  :when (executable-find "codex")
   :vc (:url "https://github.com/bennfocus/codex-cli.el.git"))
 
 (use-package cursor-agent
@@ -242,16 +243,12 @@
 (use-package racket-mode
   :mode ("\\.rkt\\'" . racket-mode)
   :mode ("\\.scrbl\\'" . racket-hash-lang-mode)
-  :hook (racket-mode . racket-unicode-input-method-enable)
+  :hook (racket-mode . racket-input-mode)
   :config
-  (with-temp-buffer
-    (racket-unicode-input-method-enable)
-    (let ((quail-current-package (assoc "racket-unicode"
-                                        quail-package-alist)))
-      (quail-define-rules
-       ((append . t))
-       ("oplus" ["⊕"])
-       ("otimes" ["⊗"])))))
+  (with-eval-after-load 'racket-input
+    (add-to-list 'racket-input-translations '("oplus" "⊕") t)
+    (add-to-list 'racket-input-translations '("otimes" "⊗") t)
+    (racket-input-setup)))
 
 (use-package rust-mode
   :hook (rust-mode . (lambda ()
@@ -289,6 +286,7 @@
 (use-package zenburn-theme)
 
 (use-package copilot
+  :when (executable-find "copilot")
   :vc (:url "https://github.com/copilot-emacs/copilot.el.git")
   :hook (prog-mode . copilot-mode)
   :bind (:map copilot-completion-map
