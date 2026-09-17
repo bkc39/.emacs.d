@@ -221,7 +221,7 @@ Be terse. Provide messages whose lines are at most 80 characters"))
    'pullrequest
    "Summarize the changes for a GitHub pull request description."))
 
-(defgptelfn gptel-pinely-merge ()
+(defgptelfn gptel-staged-pull-request ()
   "Generate a GitHub pull request description from staged changes."
   :command nil
   :prompt
@@ -234,17 +234,17 @@ Be terse. Provide messages whose lines are at most 80 characters"))
   :body
   (if (not *gptel-response*)
       (message "%s failed with message: %s"
-               'gptel-pinely-merge
+               'gptel-staged-pull-request
                (plist-get *gptel-request-info* :status))
     (with-current-buffer
-        (get-buffer-create "*gptel-pinely-merge*")
+        (get-buffer-create "*gptel-staged-pull-request*")
       (let ((inhibit-read-only t))
         (erase-buffer)
         (insert *gptel-response*))
       (special-mode)
       (pop-to-buffer (current-buffer))
       (clipboard+kill-ring-save (point-min) (point-max))
-      (message "pinely merge body in kill ring")))
+      (message "pull request body in kill ring")))
   :extra-args
   (make-gptel-system-prompt-args
    'pullrequest

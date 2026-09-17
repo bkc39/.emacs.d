@@ -66,9 +66,10 @@
 (use-package blacken
   :ensure t
   :config
-  (if (on-pinely-host)
-      (setq blacken-executable "/home/bkc/twix-black.sh")
-    (setq blacken-line-length 80))
+  (let ((executable (local-config-get '(python blacken-executable))))
+    (if executable
+        (setq blacken-executable executable)
+      (setq blacken-line-length 80)))
   :hook (python-mode . blacken-mode))
 
 (use-package company
@@ -232,12 +233,11 @@
   :hook (coq-mode . prettify-symbols-mode)
   :custom
   (coq-prog-args
-   (list
-    "-emacs"
-    "-R"
-    (or (getenv "CPDT_SRC_DIR")
-        "/Users/bkc/dev/coq/cpdt/src")
-    "Cpdt")))
+   (let ((cpdt-src (or (getenv "CPDT_SRC_DIR")
+                       (local-config-get '(coq cpdt-src)))))
+     (append '("-emacs")
+             (when cpdt-src
+               (list "-R" cpdt-src "Cpdt"))))))
 
 (use-package racket-mode
   :mode ("\\.rkt\\'" . racket-mode)
