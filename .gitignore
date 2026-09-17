@@ -21,3 +21,7 @@ pyvenv.cfg
 .mc-lists.el
 ido.last
 opam-user-setup.el
+# Untracked per-machine configuration (see local.example.eld).
+local.eld
+local.*.eld
+!local.example.eld
