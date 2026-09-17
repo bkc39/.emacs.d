@@ -205,7 +205,9 @@ fallback is the enclosing git checkout."
               (kbd "C-c C-p")
               'run-python-with-extra-pythonpaths))
 
-;; Machine-specific environment comes from the untracked local.eld.
+;; Identity and machine-specific environment come from the untracked
+;; local.eld.
+(local-config-apply-identity)
 (local-config-apply-env)
 
 (defun python-buffer-whitespace-cleanup ()

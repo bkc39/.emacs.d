@@ -5,7 +5,11 @@
 ;; s-expression.  It is read as data and is never evaluated.  Every key
 ;; is optional, and a missing key falls back to a neutral default.
 
-(;; Environment variables to set at startup unless already set.
+(;; Who you are.  Sets `user-full-name' and `user-mail-address'.
+ (identity . ((name  . "Your Name")
+              (email . "you@example.com")))
+
+ ;; Environment variables to set at startup unless already set.
  (env . (("SOME_PROJECT_ROOT" . "/path/to/project")))
 
  (python

@@ -81,6 +81,21 @@ When CONTENTS is nil the file does not exist."
       (should (equal "from-file" (getenv "LOCAL_CONFIG_TEST_NEW")))
       (should (equal "already" (getenv "LOCAL_CONFIG_TEST_SET"))))))
 
+(ert-deftest local-config-apply-identity-sets-only-what-is-given ()
+  (local-config-test--with-file "((identity . ((name . \"A Name\"))))"
+    (let ((user-full-name "before")
+          (user-mail-address "before@example.com"))
+      (local-config-apply-identity)
+      (should (equal "A Name" user-full-name))
+      (should (equal "before@example.com" user-mail-address))))
+  (local-config-test--with-file
+      "((identity . ((name . 42) (email . \"me@example.com\"))))"
+    (let ((user-full-name "before")
+          (user-mail-address "before@example.com"))
+      (local-config-apply-identity)
+      (should (equal "before" user-full-name))
+      (should (equal "me@example.com" user-mail-address)))))
+
 (defun local-config-test--git (&rest args)
   "Run git with ARGS in `default-directory' and require success."
   (should (zerop (apply #'process-file "git" nil nil nil args))))
