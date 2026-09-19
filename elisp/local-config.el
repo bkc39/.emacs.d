@@ -24,7 +24,7 @@
 The environment variable EMACS_LOCAL_CONFIG overrides the default.")
 
 (defconst local-config-known-keys
-  '(env python pytest coq deny-patterns)
+  '(identity env python pytest coq deny-patterns)
   "Top-level keys that `local-config-file' may contain.")
 
 (defvar local-config--data 'unloaded
@@ -99,6 +99,17 @@ value is nil, yields DEFAULT."
     (when (and (consp cell) (stringp (car cell)) (stringp (cdr cell))
                (not (getenv (car cell))))
       (setenv (car cell) (cdr cell)))))
+
+(defun local-config-apply-identity ()
+  "Set `user-full-name' and `user-mail-address' from the `identity' key.
+A value that is absent leaves the variable alone, so nothing that
+identifies a person has to appear in tracked code."
+  (let ((name (local-config-get '(identity name)))
+        (email (local-config-get '(identity email))))
+    (when (stringp name)
+      (setq user-full-name name))
+    (when (stringp email)
+      (setq user-mail-address email))))
 
 ;;;; Commit guard
 
