@@ -4,6 +4,7 @@
 (require 'ansi-color)
 (require 'package)
 (require 'subr-x)
+(require 'local-config)
 
 (setq load-prefer-newer t) ;; prefer source over stale bytecode to avoid load cycles
 
@@ -137,17 +138,31 @@ Special keyword arguments:
   (when (and (eq major-mode 'python-mode) (bound-and-true-p lsp-mode))
     (lsp-pyright-organize-imports)))
 
+(defun python-import-root ()
+  "Return the directory that Python import paths are relative to.
+The local configuration decides: the environment variable named by
+\='(python import-root-env), then \='(python import-root).  The
+fallback is the enclosing git checkout."
+  (let ((env (local-config-get '(python import-root-env))))
+    (expand-file-name
+     (or (and env (getenv env))
+         (local-config-get '(python import-root))
+         (locate-dominating-file default-directory ".git")
+         default-directory))))
+
 (defun python-file-to-import-path ()
   "Return the Python import path of the current python file."
   (interactive)
   (let* ((filename (or buffer-file-name default-directory))
-         (root (file-name-as-directory (getenv "MATE_ROOT"))))
+         (root (file-name-as-directory (python-import-root)))
+         (prefix (local-config-get '(python import-prefix) "")))
     (if (and filename (string-match-p "\\.py\\'" filename))
         (let* ((relative (if (string-prefix-p root filename)
                              (substring filename (length root))
                            filename))
                (base (file-name-sans-extension relative))
-               (import-path (concat "import twix." (replace-regexp-in-string "/" "." base))))
+               (import-path (concat "import " prefix
+                                    (replace-regexp-in-string "/" "." base))))
           (kill-new import-path)
           (message "%s" import-path)
           import-path)
@@ -190,20 +205,8 @@ Special keyword arguments:
               (kbd "C-c C-p")
               'run-python-with-extra-pythonpaths))
 
-(defvar system-name-file "~/.vm-name")
-
-(defun on-pinely-host ()
-  "Check if we are on the pinely host."
-  (interactive)
-  (let ((absolute-path (expand-file-name system-name-file)))
-    (when (file-exists-p absolute-path)
-      (let ((file-content (with-temp-buffer
-                            (insert-file-contents absolute-path)
-                            (string-trim (buffer-string)))))
-        (string= file-content (system-name))))))
-
-(when (and (on-pinely-host) (not (getenv "MATE_ROOT")))
-  (setenv "MATE_ROOT" "/home/bkc/twix"))
+;; Machine-specific environment comes from the untracked local.eld.
+(local-config-apply-env)
 
 (defun python-buffer-whitespace-cleanup ()
   "Clean up whitespace in the current Python buffer."
@@ -286,9 +289,12 @@ Special keyword arguments:
 (add-hookq
  python-mode-hook
  (lambda ()
-   (when (on-pinely-host)
-     (setq python-shell-interpreter "twix-python")
-     (setq python-shell-interpreter-args "-m IPython --simple-prompt -i"))))
+   (let ((interpreter (local-config-get '(python interpreter)))
+         (args (local-config-get '(python interpreter-args))))
+     (when interpreter
+       (setq python-shell-interpreter interpreter))
+     (when args
+       (setq python-shell-interpreter-args args)))))
 
 (defun restart-server ()
   "Restart the emacs server and close all clients."
@@ -481,14 +487,14 @@ Special keyword arguments:
     (string-match "\\[\\#[[:digit:]]+\\]" buffer-prefix)))
 
 (defun add-blacken-buffer-to-on-save-hook ()
-  "Add 'blacken-buffer to 'before-save-hook' when appropriate."
-  (when (or
-         (not (string= (system-name) "vm-3d-bkc"))
-         (and (string= (system-name) "vm-3d-bkc")
-              (boundp 'file-local-variables-alist)
-              (assoc 'owner file-local-variables-alist)
-              (string= (cdr (assoc 'owner file-local-variables-alist)) "bkc")))
-    (add-hook 'before-save-hook #'blacken-buffer nil t)))
+  "Add `blacken-buffer' to `before-save-hook' when appropriate.
+When the local configuration sets \='(python format-on-save-owner),
+only files whose file-local variable `owner' equals it are formatted."
+  (let ((owner (local-config-get '(python format-on-save-owner))))
+    (when (or (null owner)
+              (equal owner
+                     (cdr (assq 'owner file-local-variables-alist))))
+      (add-hook 'before-save-hook #'blacken-buffer nil t))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Org and project specifics
@@ -496,21 +502,29 @@ Special keyword arguments:
 (setq org-todo-keywords
       '((sequence "TODO" "STARTED" "DONE")))
 
-(defvar twix-mate-root-directory "/home/bkc/repos/rl_dml_slave/"
-  "Root directory for twix mate project.")
+;; The project root, its test directories and the environment variable
+;; that points pytest at the root all come from the untracked local.eld.
 
-(defvar twix-pytest-test-directories
-  '("rl_research/networks/datasets/statarb/tests/")
-  "List of directories to pass to pytest.")
+(defun project-pytest--root ()
+  "Return the configured pytest project root, or signal a `user-error'."
+  (or (local-config-get '(pytest root))
+      (user-error "No (pytest (root . ...)) entry in %s" local-config-file)))
 
-(defun twix--pytest-build-command ()
-  (format "MATE_ROOT=%s pytest %s"
-          (shell-quote-argument twix-mate-root-directory)
-          (mapconcat (lambda (dir)
-                       (shell-quote-argument (expand-file-name dir twix-mate-root-directory)))
-                     twix-pytest-test-directories " ")))
+(defun project-pytest--arguments ()
+  "Return the configured test directories as absolute paths."
+  (let ((root (project-pytest--root)))
+    (mapcar (lambda (dir) (expand-file-name dir root))
+            (local-config-get '(pytest test-directories)))))
 
-(defun twix--pytest-filter (proc string)
+(defun project-pytest--environment ()
+  "Return `process-environment' extended with the configured root variable."
+  (let ((root-env (local-config-get '(pytest root-env))))
+    (if root-env
+        (cons (format "%s=%s" root-env (project-pytest--root))
+              process-environment)
+      process-environment)))
+
+(defun project-pytest--filter (proc string)
   (let ((buffer (process-buffer proc)))
     (when (buffer-live-p buffer)
       (with-current-buffer buffer
@@ -522,15 +536,17 @@ Special keyword arguments:
             (set-marker (process-mark proc) (point)))
           (if moving (goto-char (process-mark proc))))))))
 
-(defun run-twix-pytest ()
+(defun run-project-pytest ()
+  "Run pytest over the test directories named in the local configuration."
   (interactive)
-  (let ((buffer-name "*twix-pytest*"))
+  (let ((buffer-name "*project-pytest*")
+        (arguments (project-pytest--arguments))
+        (process-environment (project-pytest--environment)))
     (with-current-buffer (get-buffer-create buffer-name)
       (erase-buffer)
-      (let ((proc (start-process-shell-command "twix-pytest"
-                                               (current-buffer)
-                                               (twix--pytest-build-command))))
-        (set-process-filter proc 'twix--pytest-filter))
+      (let ((proc (apply #'start-process "project-pytest"
+                         (current-buffer) "pytest" arguments)))
+        (set-process-filter proc #'project-pytest--filter))
       (display-buffer (current-buffer)))))
 
 (defvar my/todo-org-file "~/todo.org"
